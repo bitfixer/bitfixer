@@ -76,16 +76,18 @@ original basic program
 #define VMEM_START_2    0x8100
 #define VMEM_START_3    0x8200
 #define VMEM_START_4    0x82E8
-
+#define CURR_KEY        0x0097
+#define Q_KEY           64
 
 #define RUN_STOP 3
 
 int main (void)
 {
     unsigned char data;
+    unsigned char key = 0;
     int x;
     
-    while(1)
+    while(key != Q_KEY)
     {
     
     data = PEEK(CA1_TRIGGER);
@@ -269,6 +271,7 @@ int main (void)
         // jump if x != 0
         asm("bne %g", jumper4);
         
+        key = PEEK(CURR_KEY);
 
     }
 	return EXIT_SUCCESS;

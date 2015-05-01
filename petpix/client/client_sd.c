@@ -75,11 +75,39 @@ original basic program
 #define VMEM_START      0x8000
 #define RUN_STOP 3
 
+#define BLAH 1
+
 int main (void)
 {
     unsigned char data;
+    unsigned char spinner = 0;
+    unsigned char *cursorpos = (unsigned char *)VMEM_START;
     int x;
     
+    /*
+    for (x = 0; x < 1000; x++)
+    {
+        data = x % 256;
+        POKE(VMEM_START+x, data);
+    }
+    */
+    
+    /*
+    data = PEEK(CA1_TRIGGER);
+    data = data | 0x01;
+    POKE(CA1_TRIGGER, data);
+    
+    while (1)
+    {
+        data = PEEK(CA1_STATUS);
+        data = data & 0x02;
+        *cursorpos = '0'+data;
+        cursorpos[1] = spinner;
+        spinner++;
+    }
+    */
+    
+#ifdef BLAH
     while(1)
     {
     
@@ -92,7 +120,7 @@ int main (void)
     data = data & 227;
     POKE(CA1_DATA_LATCH, data);
     
-    // set CB2 line low poke 59468,peek(59468) or 224
+    // set CB2 line high poke 59468,peek(59468) or 224
     data = PEEK(CA1_TRIGGER);
     data = data | 224;
     POKE(CA1_TRIGGER, data);
@@ -108,10 +136,13 @@ int main (void)
         // wait for a byte to be ready
         data = PEEK(CA1_STATUS);
         data = data & 2;
+        
         while (data == 0)
         {
+            *cursorpos = spinner++;
             data = PEEK(CA1_STATUS);
             data = data & 2;
+            //*cursorpos = '0'+data;
         }
         
         /*
@@ -124,6 +155,12 @@ int main (void)
          130 poke 32767+x+1,b
          140 next x
         */
+        
+        for (x = 0; x < 1000; x++)
+        {
+            *cursorpos = spinner++;
+        }
+        
         
         for (x = 0; x < 1000; x += 2)
         {
@@ -145,6 +182,8 @@ int main (void)
         }
 
     }
+#endif
+    
 	return EXIT_SUCCESS;
 }
 
