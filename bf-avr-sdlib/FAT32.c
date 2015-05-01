@@ -546,10 +546,10 @@ void openFileForWriting(unsigned char *fileName, unsigned long dirCluster)
         cluster = _rootCluster;
     }
     
-    // set the start cluster with EOF
+    // set the start cluster with EOF_MARKER
     cluster = searchNextFreeCluster(cluster);
     
-    getSetNextCluster(cluster, SET, EOF);   //last cluster of the file, marked EOF
+    getSetNextCluster(cluster, SET, EOF_MARKER);   //last cluster of the file, marked EOF_MARKER
     
     _filePosition.startCluster = cluster;
     _filePosition.cluster = cluster;
@@ -576,8 +576,8 @@ void writeBufferToFile(unsigned int bytesToWrite)
         nextCluster = searchNextFreeCluster(_filePosition.cluster);
         // link the previous cluster
         getSetNextCluster(_filePosition.cluster, SET, nextCluster);
-        // set the last cluster with EOF
-        getSetNextCluster(nextCluster, SET, EOF);
+        // set the last cluster with EOF_MARKER
+        getSetNextCluster(nextCluster, SET, EOF_MARKER);
         _filePosition.cluster = nextCluster;
     }
 }
@@ -786,11 +786,11 @@ void closeFile()
         
         if(cluster > 0x0ffffff6)
         {
-            if(cluster == EOF)   //this situation will come when total files in root is multiple of (32*_sectorPerCluster)
+            if(cluster == EOF_MARKER)   //this situation will come when total files in root is multiple of (32*_sectorPerCluster)
             {  
                 cluster = searchNextFreeCluster(prevCluster); //find next cluster for root directory entries
                 getSetNextCluster(prevCluster, SET, cluster); //link the new cluster of root to the previous cluster
-                getSetNextCluster(cluster, SET, EOF);  //set the new cluster as end of the root directory
+                getSetNextCluster(cluster, SET, EOF_MARKER);  //set the new cluster as end of the root directory
             } 
             
             else

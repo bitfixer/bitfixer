@@ -29,10 +29,10 @@
 #include <string.h>
 #include <util/delay.h>
 #include "PETdisk.h"
-#include "bf-avr-sdlib/SPI_routines.h"
-#include "bf-avr-sdlib/SD_routines.h"
-#include "bf-avr-sdlib/UART_routines.h"
-#include "bf-avr-sdlib/FAT32.h"
+#include "SPI_routines.h"
+#include "SD_routines.h"
+#include "UART_routines.h"
+#include "FAT32.h"
 #include "IEEE488.h"
 
 #define SPI_PORT PORTB

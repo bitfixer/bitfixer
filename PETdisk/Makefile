@@ -20,10 +20,13 @@
 DEVICE     = atmega168
 CLOCK      = 8000000
 PROGRAMMER = -c stk500v2 -P /dev/tty.usbserial
-OBJECTS    = ../PETdisk.o ../bf-avr-sdlib/FAT32.o ../IEEE488.o ../bf-avr-sdlib/SD_routines.o \
-				../bf-avr-sdlib/SPI_routines.o ../bf-avr-sdlib/UART_routines.o
+OBJECTS    = PETdisk.o ../bf-avr-sdlib/FAT32.o IEEE488.o ../bf-avr-sdlib/SD_routines.o \
+				../bf-avr-sdlib/SPI_routines.o ../shared/UART_routines.o
 #FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0x24:m
 FUSES      = -U efuse:w:0x00:m -U hfuse:w:0xdf:m -U lfuse:w:0xe2:m
+
+INCLUDEDIR = -I../bf-avr-sdlib -I../shared
+BUILDDIR = build
 
 # ATMega8 fuse bits used above (fuse bits for other devices are different!):
 # Example for 8 MHz internal oscillator
@@ -51,13 +54,14 @@ FUSES      = -U efuse:w:0x00:m -U hfuse:w:0xdf:m -U lfuse:w:0xe2:m
 # Tune the lines below only if you know what you are doing:
 
 AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
-COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
+COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE) $(INCLUDEDIR)
 
 # symbolic targets:
 all:	PETdisk.hex
 
 .c.o:
 	$(COMPILE) -c $< -o $@
+	mv $@ $(BUILDDIR)/$(notdir $@)
 
 .S.o:
 	$(COMPILE) -x assembler-with-cpp -c $< -o $@
@@ -83,11 +87,12 @@ load: all
 	bootloadHID PETdisk.hex
 
 clean:
-	rm -f PETdisk.hex PETdisk.bin PETdisk.elf $(OBJECTS)
+	rm -f PETdisk.hex PETdisk.bin PETdisk.elf $(BUILDDIR)/*.o
 
 # file targets:
 PETdisk.elf: $(OBJECTS)
-	$(COMPILE) -o PETdisk.elf $(OBJECTS)
+	cd $(BUILDDIR); $(COMPILE) -o PETdisk.elf $(notdir $(OBJECTS))
+	mv $(BUILDDIR)/PETdisk.elf PETdisk.elf
 
 PETdisk.hex: PETdisk.elf
 	rm -f PETdisk.hex
@@ -106,5 +111,5 @@ disasm:	PETdisk.elf
 	avr-objdump -d PETdisk.elf
 
 cpp:
-	$(COMPILE) -E ../PETdisk.c ../bf-avr-sdlib/FAT32.c ../IEEE488.c \
-	../bf-avr-sdlib/SD_routines.c ../bf-avr-sdlib/SPI_routines.c ../bf-avr-sdlib/UART_routines.c
+	$(COMPILE) -E PETdisk.c ../bf-avr-sdlib/FAT32.c IEEE488.c \
+	../bf-avr-sdlib/SD_routines.c ../bf-avr-sdlib/SPI_routines.c ../shared/UART_routines.c

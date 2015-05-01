@@ -31,9 +31,9 @@
 #include <util/delay.h>
 #include <string.h>
 #include <stdio.h>
-#include "bf-avr-sdlib/UART_routines.h"
-#include "bf-avr-sdlib/FAT32.h"
-#include "bf-avr-sdlib/sd_routines.h"
+#include "UART_routines.h"
+#include "FAT32.h"
+#include "sd_routines.h"
 
 void wait_for_dav_high()
 {

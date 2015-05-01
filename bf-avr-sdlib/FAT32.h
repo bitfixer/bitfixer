@@ -169,7 +169,7 @@ typedef struct _file_position {
 #define GET_LIST     0
 #define GET_FILE     1
 #define DELETE		 2
-#define EOF		0x0fffffff
+#define EOF_MARKER	 0x0fffffff
 
 #define MAX_FILENAME 32
 
