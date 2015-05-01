@@ -15,6 +15,7 @@
 #define COLORMEM    55296
 
 #define VRAMBANK    32768
+#define BACKPAGE    16384
 
 int main(void)
 {
@@ -28,6 +29,7 @@ int main(void)
     unsigned char *vicReg;
     unsigned char *memptr;
     unsigned char *rasterReg;
+    unsigned char *backpage;
     unsigned char temp;
     unsigned char temp2;
     unsigned char diff;
@@ -97,6 +99,10 @@ int main(void)
     
     memptr = (unsigned char *)(SCREENMEM+VRAMBANK);
     memset(memptr, 247, 1000);
+    
+    memptr = (unsigned char *)(SCREENMEM+BACKPAGE);
+    memset(memptr, 247, 1000);
+    
     /*
     for (i = 0; i < 1000; i++)
     {
@@ -132,6 +138,48 @@ int main(void)
     }
     */
     
+    backpage = (unsigned char *)(BACKPAGE+8192);
+    temp = 0;
+    for (i = 0; i < 15; i++)
+    {
+        // write to back page
+        memset(backpage, temp, 8000);
+        
+        // swap page
+        temp = *cia2porta;
+        temp &= 252;
+        temp |= 2;
+        
+        // wait for blank
+        loop:
+            asm("lda $d012");
+            asm("cmp #$ff");
+            asm("bne %g", loop);
+        
+        *cia2porta = temp;
+        
+        // write to front page
+        temp = 0xff;
+        memset(memptr, temp, 8000);
+        
+        // swap page
+        temp = *cia2porta;
+        temp &= 252;
+        temp |= 1;
+        
+        // wait for blank
+        loop2:
+            asm("lda $d012");
+            asm("cmp #$ff");
+            asm("bne %g", loop2);
+        
+        *cia2porta = temp;
+        temp = 0;
+    }
+    
+    
+    
+    /*
     temp = 0;
     for (i = 0; i < 100; i++)
     {
@@ -150,6 +198,23 @@ int main(void)
                 asm("sta %w,x", 0xA000);
                 asm("inx");
                 asm("bne %g", update);
+            updateb:
+                asm("sta %w,x", 0xA100);
+                asm("inx");
+                asm("bne %g", updateb);
+            updatec:
+                asm("sta %w,x", 0xA200);
+                asm("inx");
+                asm("bne %g", updatec);
+            updated:
+                asm("sta %w,x", 0xA300);
+                asm("inx");
+                asm("bne %g", updated);
+            updatee:
+                asm("sta %w,x", 0xA400);
+                asm("inx");
+                asm("bne %g", updatee);
+            
         }
         else
         {
@@ -160,11 +225,29 @@ int main(void)
                 asm("sta %w,x", 0xA000);
                 asm("inx");
                 asm("bne %g", update2);
+            updateb2:
+                asm("sta %w,x", 0xA100);
+                asm("inx");
+                asm("bne %g", updateb2);
+            updatec2:
+                asm("sta %w,x", 0xA200);
+                asm("inx");
+                asm("bne %g", updatec2);
+            updated2:
+                asm("sta %w,x", 0xA300);
+                asm("inx");
+                asm("bne %g", updated2);
+            updatee2:
+                asm("sta %w,x", 0xA400);
+                asm("inx");
+                asm("bne %g", updatee2);
+            
         }
         
         //memset(memptr, temp, 640);
         temp = ~temp;
     }
+    */
      
     /*
     for (i = 0; i < 240; i++)
