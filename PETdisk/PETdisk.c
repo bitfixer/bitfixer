@@ -50,6 +50,7 @@ typedef enum _pdstate
     OPEN_FNAME_READ,
     OPEN_DATA_WRITE,
     OPEN_DATA_READ,
+    FILE_READ,
     OPEN_FNAME,
     CLOSING,
     FNAME_WRITE
@@ -321,6 +322,21 @@ int main(void)
                 closeFile();
                 */
             }
+            else if (rdchar == 0x60)
+            {
+                currentState = FILE_READ;
+                
+                // check for directory command
+                if (progname[0] == '$')
+                {
+                    // copy the directory header
+                    pgm_memcpy((unsigned char *)_buffer, (unsigned char *)_dirHeader, 7);
+                    
+                    // print directory title
+                    pgm_memcpy((unsigned char *)&_buffer[7], (unsigned char *)_versionString, 24);
+                    _buffer[31] = 0x00;
+                }
+            }
         }
         else if (currentState == OPEN_DATA_WRITE)
         {
@@ -382,19 +398,6 @@ int main(void)
                     
                     transmitString(progname);
                 }
-            }
-        }
-        else if (rdchar == 0x60 && (rdbus & ATN) == 0x00)
-        {
-            // check for directory command
-            if (progname[0] == '$')
-            {
-                // copy the directory header
-                pgm_memcpy((unsigned char *)_buffer, (unsigned char *)_dirHeader, 7);
-                
-                // print directory title
-                pgm_memcpy((unsigned char *)&_buffer[7], (unsigned char *)_versionString, 24);
-                _buffer[31] = 0x00;
             }
         }
         
@@ -464,7 +467,8 @@ int main(void)
         }
         
         // LOAD requested
-        if (rdchar == 0x60 && (rdbus & ATN) == 0x00)
+        //if (rdchar == 0x60 && (rdbus & ATN) == 0x00)
+        if (currentState == FILE_READ || currentState == OPEN_DATA_READ)
         {
             if (filenotfound == 0)
             {
@@ -482,54 +486,66 @@ int main(void)
                 DATA_CTL = 0xff;
                 DDRB = DDRB | (DATA0 | DATA1);
                 
-                // get packet
-                if (progname[0] == '$')
+                
+                if (currentState == FILE_READ)
                 {
-                    transmitString((unsigned char *)"directory..");
-                    sendIEEEBytes((unsigned char *)_buffer, 32, 0);
-                     
-                    // this is a change directory command
-                    if (progname[1] == ':')
+                    // get packet
+                    if (progname[0] == '$')
                     {
-                        // check if we should return to root
-                        if ((progname[2] == '\\' || progname[2] == '/') && progname[3] == 0)
+                        transmitString((unsigned char *)"directory..");
+                        sendIEEEBytes((unsigned char *)_buffer, 32, 0);
+                         
+                        // this is a change directory command
+                        if (progname[1] == ':')
                         {
-                            currentDirectoryCluster = _rootCluster;
-                        }
-                        else
-                        {
-                            // get the cluster for the new directory
-                            dir = findFile(&progname[2], currentDirectoryCluster);
-                            
-                            if (dir != 0)
+                            // check if we should return to root
+                            if ((progname[2] == '\\' || progname[2] == '/') && progname[3] == 0)
                             {
-                                // get new directory cluster
-                                currentDirectoryCluster = getFirstCluster(dir);
-                                if (currentDirectoryCluster == 0)
+                                currentDirectoryCluster = _rootCluster;
+                            }
+                            else
+                            {
+                                // get the cluster for the new directory
+                                dir = findFile(&progname[2], currentDirectoryCluster);
+                                
+                                if (dir != 0)
                                 {
-                                    currentDirectoryCluster = _rootCluster;
+                                    // get new directory cluster
+                                    currentDirectoryCluster = getFirstCluster(dir);
+                                    if (currentDirectoryCluster == 0)
+                                    {
+                                        currentDirectoryCluster = _rootCluster;
+                                    }
                                 }
                             }
                         }
-                    }
-                    
-                    // write directory entries
-                    ListFilesIEEE(currentDirectoryCluster);
-                }
-                else
-                {
-                    // send blocks of file
-                    doneSending = 0;
-                    while(doneSending == 0)
-                    {
-                        bytes_to_send = getNextFileBlock();
-                        if (_filePosition.byteCounter >= _filePosition.fileSize)
-                        {
-                            doneSending = 1;
-                        }
                         
-                        sendIEEEBytes((unsigned char *)_buffer, bytes_to_send, doneSending);
+                        // write directory entries
+                        ListFilesIEEE(currentDirectoryCluster);
                     }
+                    else
+                    {
+                        // send blocks of file
+                        doneSending = 0;
+                        while(doneSending == 0)
+                        {
+                            bytes_to_send = getNextFileBlock();
+                            if (_filePosition.byteCounter >= _filePosition.fileSize)
+                            {
+                                doneSending = 1;
+                            }
+                            
+                            sendIEEEBytes((unsigned char *)_buffer, bytes_to_send, doneSending);
+                        }
+                    }
+                }
+                else if (currentState == OPEN_DATA_READ)
+                {
+                    _buffer[0] = 'H';
+                    _buffer[1] = 'E';
+                    _buffer[2] = 'X';
+                    _buffer[3] = 0x0D;
+                    sendIEEEBytes((unsigned char *)_buffer, 4, 1);
                 }
             
                 // raise DAV and EOI
@@ -554,6 +570,8 @@ int main(void)
             unlisten();
             currentState = IDLE;
         }
+        
+        /*
         else if (currentState == OPEN_DATA_READ)
         {
             // this is a LOAD
@@ -589,6 +607,7 @@ int main(void)
             unlisten();
             currentState = IDLE;
         }
+        */
     }
     
 }
