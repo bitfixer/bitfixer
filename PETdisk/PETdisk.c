@@ -42,6 +42,19 @@
 #define CASSETTE_WRITE 0x80
 #define FNAMELEN    39
 
+typedef enum _pdstate
+{
+    IDLE,
+    BUS_LISTEN,
+    BUS_TALK,
+    OPEN_FNAME_READ,
+    OPEN_DATA_WRITE,
+    OPEN_DATA_READ,
+    OPEN_FNAME,
+    CLOSING,
+    FNAME_WRITE
+} pdstate;
+
 const unsigned char _dirHeader[] PROGMEM =
 {
     0x01,
@@ -61,6 +74,15 @@ const unsigned char _fileExtension[] PROGMEM =
     'P',
     'R',
     'G',
+    0x00,
+};
+
+const unsigned char _seqExtension[] PROGMEM =
+{
+    '.',
+    'S',
+    'E',
+    'Q',
     0x00,
 };
 
@@ -152,6 +174,8 @@ int main(void)
     unsigned char doneSending;
     unsigned long currentDirectoryCluster;
     
+    unsigned int fileWriteByte = 0;
+    
     address = get_device_address();
     
     init_devices();
@@ -171,6 +195,7 @@ int main(void)
     unsigned char filenotfound;
     unsigned char initcard;
     unsigned char buscmd;
+    pdstate currentState = IDLE;
     
     getting_filename = 0;
     filename_position = 0;
@@ -220,7 +245,14 @@ int main(void)
             filenotfound = 0;
             if (buscmd == LISTEN)
             {
+                transmitString("listen");
                 initcard = 0;
+                currentState = BUS_LISTEN;
+            }
+            else
+            {
+                transmitString("talk");
+                currentState = BUS_TALK;
             }
         }
     
@@ -239,6 +271,7 @@ int main(void)
         {
             filenotfound = 0;
             unlisten();
+            currentState = IDLE;
         }
         else if ((rdchar == 0xf0 || rdchar == 0xf1) && (rdbus & ATN) == 0x00)
         {
@@ -254,6 +287,52 @@ int main(void)
                 savefile = 0;
             }
 
+        }
+        // check for open command
+        else if ((rdbus & ATN) == 0x00)
+        {
+            //transmitString("*");
+            transmitHex(CHAR, rdchar);
+            if (rdchar == 0xf2)
+            {
+                currentState = OPEN_FNAME_READ;
+                savefile = 1;
+                fileWriteByte = 0;
+                getting_filename = 1;
+            }
+            else if (rdchar == 0x62)
+            {
+                if (currentState == BUS_LISTEN)
+                    currentState = OPEN_DATA_WRITE;
+                else
+                    currentState = OPEN_DATA_READ;
+            }
+            else if (rdchar == 0xE2)
+            {
+                currentState = CLOSING;
+                
+                /*
+                if (fileWriteByte > 0)
+                {
+                    writeBufferToFile(fileWriteByte);
+                    fileWriteByte = 0;
+                }
+                
+                closeFile();
+                */
+            }
+        }
+        else if (currentState == OPEN_DATA_WRITE)
+        {
+            transmitByte(rdchar);
+            transmitString("");
+            
+            _buffer[fileWriteByte++] = rdchar;
+            if (fileWriteByte >= 512)
+            {
+                writeBufferToFile(fileWriteByte);
+                fileWriteByte = 0;
+            }
         }
         else if (getting_filename == 1)
         {
@@ -284,14 +363,24 @@ int main(void)
                         filename_position -= 2;
                     }
                 
+                    unsigned char *ext;
+                    if (currentState == OPEN_FNAME_READ)
+                    {
+                        ext = _seqExtension;
+                    }
+                    else
+                    {
+                        ext = _fileExtension;
+                        gotname = 1;
+                    }
+                    
                     // copy the PRG file extension onto the end of the file name
-                    pgm_memcpy(&progname[filename_position], (unsigned char *)_fileExtension, 5);
+                    pgm_memcpy(&progname[filename_position], ext, 5);
                 
                     getting_filename = 0;
                     filename_position = 0;
                     
                     transmitString(progname);
-                    gotname = 1;
                 }
             }
         }
@@ -354,6 +443,7 @@ int main(void)
             else 
             {
                 // open file
+                transmitString("open file for writing");
                 openFileForWriting(progname, currentDirectoryCluster);
             }
         }
@@ -365,6 +455,7 @@ int main(void)
             // unlisten or untalk command
             PORTC = NOT_NDAC;
             unlisten();
+            currentState = IDLE;
         }
         else 
         {
@@ -453,6 +544,7 @@ int main(void)
             }
             
             unlisten();
+            currentState = IDLE;
             
         }
         else if (rdchar == 0x61 && (rdbus & ATN) == 0)
@@ -460,6 +552,42 @@ int main(void)
             // save command
             writeFileFromIEEE();
             unlisten();
+            currentState = IDLE;
+        }
+        else if (currentState == OPEN_DATA_READ)
+        {
+            // this is a LOAD
+            // release NRFD/NDAC
+            DDRC = NDAC;
+            
+            // wait for atn high
+            wait_for_atn_high();
+            
+            DDRC = DAV | EOI;
+            PORTC = 0xFF;
+            
+            // change data bus to output
+            DATA_CTL = 0xff;
+            DDRB = DDRB | (DATA0 | DATA1);
+            
+            _buffer[0] = 'H';
+            _buffer[1] = 'E';
+            _buffer[2] = 'Y';
+            _buffer[3] = 0x0D;
+            sendIEEEBytes((unsigned char *)_buffer, 4, 1);
+            
+            // raise DAV and EOI
+            PORTC = 0xFF;
+            
+            // switch back to input mode
+            DDRC = NRFD | NDAC;
+            
+            DATA_CTL = 0x00;
+            DDRB = (unsigned char)(~MISO & ~DATA0 & ~DATA1 & ~CASSETTE_READ & ~CASSETTE_WRITE);
+            PORTC = NOT_NDAC;
+            
+            unlisten();
+            currentState = IDLE;
         }
     }
     
