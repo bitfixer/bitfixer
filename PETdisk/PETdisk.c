@@ -51,13 +51,22 @@ typedef enum _pdstate
     SAVE_FNAME_READ,
     OPEN_FNAME_READ,
     OPEN_DATA_WRITE,
+    OPEN_DATA_WRITE_DONE,
     OPEN_DATA_READ,
+    DIR_READ,
+    FILE_READ_OPENING,
+    FILE_SAVE_OPENING,
     FILE_READ,
     FILE_SAVE,
     OPEN_FNAME,
     FILE_NOT_FOUND,
     CLOSING
 } pdstate;
+
+typedef struct _pdStateVars
+{
+    char openFileAddress;
+} pdStateVars;
 
 const unsigned char _dirHeader[] PROGMEM =
 {
@@ -170,7 +179,6 @@ int main(void)
     unsigned char progname[FNAMELEN];
     unsigned char rdchar,rdbus;
     unsigned char error;
-    //unsigned char getting_filename;
     unsigned char filename_position;
     unsigned char address;
     unsigned int bytes_to_send;
@@ -180,6 +188,11 @@ int main(void)
     
     unsigned int fileWriteByte = 0;
     
+    // initialize state variables
+    pdStateVars stateVars;
+    stateVars.openFileAddress = -1;
+    
+    
     address = get_device_address();
     
     init_devices();
@@ -188,8 +201,6 @@ int main(void)
 
     struct dir_Structure *dir;
     
-    unsigned char gotname;
-    unsigned char savefile;
     unsigned char initcard;
     unsigned char buscmd;
     pdstate currentState = IDLE;
@@ -203,10 +214,11 @@ int main(void)
     memset(progname, 0, FNAMELEN);
     
     // initialize SD card
-    for (i=0; i<10; i++)
+    for (i = 0; i < 10; i++)
     {
-      error = SD_init();
-      if(!error) break;
+        error = SD_init();
+        if (!error)
+            break;
     }
     
     if (!error)
@@ -262,6 +274,32 @@ int main(void)
         // read bus value
         rdbus = PINC;
         
+        //if (initcard == 0)
+        if (currentState == BUS_LISTEN)
+        {
+            // initialize card
+            for (i = 0; i < 10; i++)
+            {
+                error = SD_init();
+                if(!error)
+                    break;
+            }
+            
+            if (i == 10)
+            {
+                // reset current directory to root
+                currentDirectoryCluster = 0;
+            }
+            
+            error = getBootSectorData (); //read boot sector and keep necessary data in global variables
+            if (currentDirectoryCluster == 0)
+            {
+                currentDirectoryCluster = _rootCluster;
+            }
+            
+            initcard = 1;
+        }
+        
         if (currentState == FILE_NOT_FOUND)
         {
             unlisten();
@@ -272,34 +310,64 @@ int main(void)
             transmitHex(CHAR, rdchar);
             if (rdchar == 0xF0)
             {
-                //getting_filename = 1;
-                savefile = 0;
                 currentState = LOAD_FNAME_READ;
             }
             else if (rdchar == 0xF1)
             {
-                //getting_filename = 1;
-                savefile = 1;
                 currentState = SAVE_FNAME_READ;
             }
-            else if (rdchar == 0xF2) // open command
+            else if ((rdchar & 0xF0) == 0xF0) // open command to another address
             {
                 currentState = OPEN_FNAME_READ;
-                savefile = 1;
+                stateVars.openFileAddress = (rdchar & 0x0F);
+                
+                transmitString("open file addr:");
+                transmitHex(CHAR, stateVars.openFileAddress);
+                
                 fileWriteByte = 0;
-                //getting_filename = 1;
             }
-            else if (rdchar == 0x62) // print or input command
+            else if (rdchar == 0x60) // read command
             {
-                if (currentState == BUS_LISTEN)
-                    currentState = OPEN_DATA_WRITE;
-                else
-                    currentState = OPEN_DATA_READ;
-            }
-            else if (rdchar == 0xE2) // close command
-            {
-                if (currentState == OPEN_DATA_WRITE)
+                currentState = FILE_READ;
+                // open file for reading
+                if (progname[0] == '$')
                 {
+                    transmitString("getting directory");
+                    // copy the directory header
+                    pgm_memcpy((unsigned char *)_buffer, (unsigned char *)_dirHeader, 7);
+                    
+                    // print directory title
+                    pgm_memcpy((unsigned char *)&_buffer[7], (unsigned char *)_versionString, 24);
+                    _buffer[31] = 0x00;
+                }
+            }
+            else if (rdchar == 0x61) // save command
+            {
+                currentState = FILE_SAVE;
+            }
+            else if ((rdchar & 0xF0) == 0x60) // print or input command
+            {
+                unsigned char temp = rdchar & 0x0F;
+                if (temp == stateVars.openFileAddress)
+                {
+                    if (currentState == BUS_LISTEN)
+                    {
+                        transmitString(progname);
+                        transmitString("writing file");
+                        openFileForWriting(progname, currentDirectoryCluster);
+                        currentState = OPEN_DATA_WRITE;
+                    }
+                    else
+                        currentState = OPEN_DATA_READ;
+                }
+            }
+            //else if (rdchar == 0xE2) // close command
+            else if ((rdchar & 0xF0) == 0xE0)
+            {
+                unsigned char temp = rdchar & 0x0F;
+                if (temp == stateVars.openFileAddress)
+                {
+                    transmitString("write file closing");
                     if (fileWriteByte > 0)
                     {
                         writeBufferToFile(fileWriteByte);
@@ -309,22 +377,22 @@ int main(void)
                     closeFile();
                 }
                 
-                currentState = CLOSING;
-            }
-            else if (rdchar == 0x60)
-            {
-                currentState = FILE_READ;
-                
-                // check for directory command
-                if (progname[0] == '$')
+                /*
+                if (currentState == OPEN_DATA_WRITE)
                 {
-                    // copy the directory header
-                    pgm_memcpy((unsigned char *)_buffer, (unsigned char *)_dirHeader, 7);
+                    transmitString("write file closing");
+                    if (fileWriteByte > 0)
+                    {
+                        writeBufferToFile(fileWriteByte);
+                        fileWriteByte = 0;
+                    }
                     
-                    // print directory title
-                    pgm_memcpy((unsigned char *)&_buffer[7], (unsigned char *)_versionString, 24);
-                    _buffer[31] = 0x00;
+                    closeFile();
                 }
+                */
+                
+                stateVars.openFileAddress = -1;
+                currentState = CLOSING;
             }
         }
         else if (currentState == OPEN_DATA_WRITE) // received byte to write to open file
@@ -339,7 +407,9 @@ int main(void)
                 fileWriteByte = 0;
             }
         }
-        else if (LOAD_FNAME_READ || SAVE_FNAME_READ || OPEN_FNAME_READ)
+        else if (currentState == LOAD_FNAME_READ ||
+                 currentState == SAVE_FNAME_READ ||
+                 currentState == OPEN_FNAME_READ)
         {
             // add character to filename
             progname[filename_position] = rdchar;
@@ -351,8 +421,8 @@ int main(void)
                 // this is a directory request
                 if (progname[0] == '$')
                 {
-                    //getting_filename = 0;
                     filename_position = 0;
+                    currentState = DIR_READ;
                 }
                 else 
                 {
@@ -371,19 +441,25 @@ int main(void)
                     if (currentState == OPEN_FNAME_READ)
                     {
                         ext = _seqExtension;
+                        currentState = IDLE;
                     }
                     else
                     {
                         ext = _fileExtension;
-                        gotname = 1;
+                        
+                        if (currentState == LOAD_FNAME_READ)
+                        {
+                            currentState = FILE_READ_OPENING;
+                        }
+                        else if (currentState == SAVE_FNAME_READ)
+                        {
+                            currentState = FILE_SAVE_OPENING;
+                        }
                     }
                     
                     // copy the PRG file extension onto the end of the file name
                     pgm_memcpy(&progname[filename_position], ext, 5);
-                
-                    //getting_filename = 0;
                     filename_position = 0;
-                    
                     transmitString(progname);
                 }
             }
@@ -393,53 +469,31 @@ int main(void)
         PORTC = NOT_NRFD;
         wait_for_dav_high();
         // open file if needed
-        if (initcard == 0)
-        {
-            // initialize card
-            for (i = 0; i < 10; i++)
-            {
-              error = SD_init();
-              if(!error)
-                  break;
-            }
-            
-            if (i == 10)
-            {
-                // reset current directory to root
-                currentDirectoryCluster = 0;
-            }
-            
-            error = getBootSectorData (); //read boot sector and keep necessary data in global variables
-            if (currentDirectoryCluster == 0)
-            {
-                currentDirectoryCluster = _rootCluster;
-            }
-            
-            initcard = 1;
-        }
         
-        if (gotname == 1)
+        if (currentState == FILE_READ_OPENING)
         {
-            if (savefile == 0)
+            transmitString("dir cluster:");
+            transmitHex(LONG, currentDirectoryCluster);
+            if (!openFileForReading(progname, currentDirectoryCluster))
             {
-                if (!openFileForReading(progname, currentDirectoryCluster))
-                {
-                    // file not found
-                    currentState = FILE_NOT_FOUND;
-                }
-                
-                // clear string
-                memset(progname, 0, FNAMELEN);
+                // file not found
+                currentState = FILE_NOT_FOUND;
             }
-            else 
+            else
             {
-                // open file
-                transmitString("open file for writing");
-                openFileForWriting(progname, currentDirectoryCluster);
+                currentState = IDLE;
             }
+            
+            // clear string
+            memset(progname, 0, FNAMELEN);
         }
-        
-        gotname = 0;
+        else if (currentState == FILE_SAVE_OPENING)
+        {
+            // open file
+            transmitString("open file for writing");
+            openFileForWriting(progname, currentDirectoryCluster);
+            currentState = IDLE;
+        }
         
         if ((rdchar == UNLISTEN) || (rdchar == UNTALK && (rdbus & ATN) == 0x00))
         {
@@ -512,6 +566,7 @@ int main(void)
                 }
                 else // read from file
                 {
+                    transmitString("reading file");
                     // send blocks of file
                     doneSending = 0;
                     while(doneSending == 0)
@@ -553,7 +608,7 @@ int main(void)
             currentState = IDLE;
             
         }
-        else if (rdchar == 0x61 && (rdbus & ATN) == 0)
+        else if (currentState == FILE_SAVE)
         {
             // save command
             writeFileFromIEEE();
