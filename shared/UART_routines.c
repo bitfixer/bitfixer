@@ -123,6 +123,9 @@ void transmitString_F(char* string)
 //***************************************************
 void transmitString(unsigned char* string)
 {
-  while (*string)
-   transmitByte(*string++);
+    while (*string)
+        transmitByte(*string++);
+
+    transmitByte('\r');
+    transmitByte('\n');
 }

@@ -66,6 +66,7 @@ typedef enum _pdstate
 typedef struct _pdStateVars
 {
     char openFileAddress;
+    unsigned int fileWriteByte;
 } pdStateVars;
 
 const unsigned char _dirHeader[] PROGMEM =
@@ -186,11 +187,10 @@ int main(void)
     unsigned char doneSending;
     unsigned long currentDirectoryCluster;
     
-    unsigned int fileWriteByte = 0;
-    
     // initialize state variables
     pdStateVars stateVars;
     stateVars.openFileAddress = -1;
+    stateVars.fileWriteByte = 0;
     
     
     address = get_device_address();
@@ -274,7 +274,7 @@ int main(void)
         // read bus value
         rdbus = PINC;
         
-        //if (initcard == 0)
+        /*
         if (currentState == BUS_LISTEN)
         {
             // initialize card
@@ -299,7 +299,8 @@ int main(void)
             
             initcard = 1;
         }
-        
+        */
+         
         if (currentState == FILE_NOT_FOUND)
         {
             unlisten();
@@ -320,11 +321,10 @@ int main(void)
             {
                 currentState = OPEN_FNAME_READ;
                 stateVars.openFileAddress = (rdchar & 0x0F);
+                stateVars.fileWriteByte = 0;
                 
                 transmitString("open file addr:");
                 transmitHex(CHAR, stateVars.openFileAddress);
-                
-                fileWriteByte = 0;
             }
             else if (rdchar == 0x60) // read command
             {
@@ -352,9 +352,12 @@ int main(void)
                 {
                     if (currentState == BUS_LISTEN)
                     {
-                        transmitString(progname);
-                        transmitString("writing file");
-                        openFileForWriting(progname, currentDirectoryCluster);
+                        if (stateVars.fileWriteByte == 0)
+                        {
+                            transmitString(progname);
+                            transmitString("writing file");
+                            openFileForWriting(progname, currentDirectoryCluster);
+                        }
                         currentState = OPEN_DATA_WRITE;
                     }
                     else
@@ -368,43 +371,32 @@ int main(void)
                 if (temp == stateVars.openFileAddress)
                 {
                     transmitString("write file closing");
-                    if (fileWriteByte > 0)
+                    transmitHex(INT, stateVars.fileWriteByte);
+                    if (stateVars.fileWriteByte > 0)
                     {
-                        writeBufferToFile(fileWriteByte);
-                        fileWriteByte = 0;
+                        writeBufferToFile(stateVars.fileWriteByte);
+                        stateVars.fileWriteByte = 0;
                     }
                     
                     closeFile();
                 }
-                
-                /*
-                if (currentState == OPEN_DATA_WRITE)
-                {
-                    transmitString("write file closing");
-                    if (fileWriteByte > 0)
-                    {
-                        writeBufferToFile(fileWriteByte);
-                        fileWriteByte = 0;
-                    }
-                    
-                    closeFile();
-                }
-                */
                 
                 stateVars.openFileAddress = -1;
+                stateVars.fileWriteByte = 0;
                 currentState = CLOSING;
             }
         }
         else if (currentState == OPEN_DATA_WRITE) // received byte to write to open file
         {
             transmitByte(rdchar);
-            transmitString("");
+            transmitByte(' ');
+            transmitHex(INT, stateVars.fileWriteByte);
             
-            _buffer[fileWriteByte++] = rdchar;
-            if (fileWriteByte >= 512)
+            _buffer[stateVars.fileWriteByte++] = rdchar;
+            if (stateVars.fileWriteByte >= 512)
             {
-                writeBufferToFile(fileWriteByte);
-                fileWriteByte = 0;
+                writeBufferToFile(stateVars.fileWriteByte);
+                stateVars.fileWriteByte = 0;
             }
         }
         else if (currentState == LOAD_FNAME_READ ||
