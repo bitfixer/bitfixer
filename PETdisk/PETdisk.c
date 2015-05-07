@@ -42,18 +42,24 @@
 #define CASSETTE_WRITE 0x80
 #define FNAMELEN    39
 
+// PET IEEE signals
+#define UNLISTEN
+
 typedef enum _pdstate
 {
     IDLE,
     BUS_LISTEN,
     BUS_TALK,
+    LOAD_FNAME_READ,
+    SAVE_FNAME_READ,
     OPEN_FNAME_READ,
     OPEN_DATA_WRITE,
     OPEN_DATA_READ,
     FILE_READ,
+    FILE_SAVE,
     OPEN_FNAME,
-    CLOSING,
-    FNAME_WRITE
+    FILE_NOT_FOUND,
+    CLOSING
 } pdstate;
 
 const unsigned char _dirHeader[] PROGMEM =
@@ -67,7 +73,7 @@ const unsigned char _dirHeader[] PROGMEM =
     0x12,
 };
 
-const unsigned char _versionString[] PROGMEM = "\"PETDISK V2.0    \"      ";
+const unsigned char _versionString[] PROGMEM = "\"PETDISK V2.1    \"      ";
 
 const unsigned char _fileExtension[] PROGMEM =
 {
@@ -180,20 +186,14 @@ int main(void)
     address = get_device_address();
     
     init_devices();
-    //transmitString("Device ID: ");
-    //transmitHex(CHAR, address);
-    //TX_NEWLINE;
     
     _cardType = 0;
 
     struct dir_Structure *dir;
-    //unsigned long byteCounter = 0, firstSector;
-    //unsigned long firstSector;
-    //unsigned int k;
-    //unsigned char j;
+    
     unsigned char gotname;
     unsigned char savefile;
-    unsigned char filenotfound;
+    //unsigned char filenotfound;
     unsigned char initcard;
     unsigned char buscmd;
     pdstate currentState = IDLE;
@@ -201,7 +201,7 @@ int main(void)
     getting_filename = 0;
     filename_position = 0;
     initcard = 0;
-    filenotfound = 0;
+    //filenotfound = 0;
     currentDirectoryCluster = 0;
     
     // clear string
@@ -243,7 +243,7 @@ int main(void)
             // if we are in an unlisten state,
             // wait for my address
             buscmd = wait_for_device_address(address);
-            filenotfound = 0;
+            //filenotfound = 0;
             if (buscmd == LISTEN)
             {
                 transmitString("listen");
@@ -268,7 +268,8 @@ int main(void)
         // read bus value
         rdbus = PINC;
         
-        if (filenotfound == 1)
+        //if (filenotfound == 1)
+        if (currentState == FILE_NOT_FOUND)
         {
             filenotfound = 0;
             unlisten();
@@ -289,38 +290,38 @@ int main(void)
             }
 
         }
-        // check for open command
-        else if ((rdbus & ATN) == 0x00)
+        else if ((rdbus & ATN) == 0x00) // check for open command
         {
             //transmitString("*");
             transmitHex(CHAR, rdchar);
-            if (rdchar == 0xf2)
+            if (rdchar == 0xF2) // open command
             {
                 currentState = OPEN_FNAME_READ;
                 savefile = 1;
                 fileWriteByte = 0;
                 getting_filename = 1;
             }
-            else if (rdchar == 0x62)
+            else if (rdchar == 0x62) // print or input command
             {
                 if (currentState == BUS_LISTEN)
                     currentState = OPEN_DATA_WRITE;
                 else
                     currentState = OPEN_DATA_READ;
             }
-            else if (rdchar == 0xE2)
+            else if (rdchar == 0xE2) // close command
             {
-                currentState = CLOSING;
-                
-                /*
-                if (fileWriteByte > 0)
+                if (currentState == OPEN_DATA_WRITE)
                 {
-                    writeBufferToFile(fileWriteByte);
-                    fileWriteByte = 0;
+                    if (fileWriteByte > 0)
+                    {
+                        writeBufferToFile(fileWriteByte);
+                        fileWriteByte = 0;
+                    }
+                    
+                    closeFile();
                 }
                 
-                closeFile();
-                */
+                currentState = CLOSING;
             }
             else if (rdchar == 0x60)
             {
@@ -338,7 +339,7 @@ int main(void)
                 }
             }
         }
-        else if (currentState == OPEN_DATA_WRITE)
+        else if (currentState == OPEN_DATA_WRITE) // received byte to write to open file
         {
             transmitByte(rdchar);
             transmitString("");
@@ -436,8 +437,8 @@ int main(void)
                 if (!openFileForReading(progname, currentDirectoryCluster))
                 {
                     // file not found
-                    //transmitString("file not found");
-                    filenotfound = 1;
+                    //filenotfound = 1;
+                    currentState = FILE_NOT_FOUND;
                 }
                 
                 // clear string
@@ -453,7 +454,7 @@ int main(void)
         
         gotname = 0;
         
-        if ((rdchar == 0x3f) || (rdchar == 0x5f && (rdbus & ATN) == 0x00))
+        if ((rdchar == UNLISTEN) || (rdchar == UNTALK && (rdbus & ATN) == 0x00))
         {
             // unlisten or untalk command
             PORTC = NOT_NDAC;
@@ -467,97 +468,99 @@ int main(void)
         }
         
         // LOAD requested
-        //if (rdchar == 0x60 && (rdbus & ATN) == 0x00)
         if (currentState == FILE_READ || currentState == OPEN_DATA_READ)
         {
-            if (filenotfound == 0)
-            {
-                // this is a LOAD
-                // release NRFD/NDAC
-                DDRC = NDAC;
-                
-                // wait for atn high
-                wait_for_atn_high();
+            // ==== STARTING LOAD SEQUENCE
             
-                DDRC = DAV | EOI;
-                PORTC = 0xFF;
-                
-                // change data bus to output
-                DATA_CTL = 0xff;
-                DDRB = DDRB | (DATA0 | DATA1);
-                
-                
-                if (currentState == FILE_READ)
+            // release NRFD/NDAC
+            DDRC = NDAC;
+            
+            // wait for atn high
+            wait_for_atn_high();
+        
+            DDRC = DAV | EOI;
+            PORTC = 0xFF;
+            
+            // change data bus to output
+            DATA_CTL = 0xff;
+            DDRB = DDRB | (DATA0 | DATA1);
+            
+            // ====
+            
+            if (currentState == FILE_READ)
+            {
+                // get packet
+                if (progname[0] == '$')
                 {
-                    // get packet
-                    if (progname[0] == '$')
+                    transmitString((unsigned char *)"directory..");
+                    sendIEEEBytes((unsigned char *)_buffer, 32, 0);
+                     
+                    // this is a change directory command
+                    if (progname[1] == ':')
                     {
-                        transmitString((unsigned char *)"directory..");
-                        sendIEEEBytes((unsigned char *)_buffer, 32, 0);
-                         
-                        // this is a change directory command
-                        if (progname[1] == ':')
+                        // check if we should return to root
+                        if ((progname[2] == '\\' || progname[2] == '/') && progname[3] == 0)
                         {
-                            // check if we should return to root
-                            if ((progname[2] == '\\' || progname[2] == '/') && progname[3] == 0)
+                            currentDirectoryCluster = _rootCluster;
+                        }
+                        else
+                        {
+                            // get the cluster for the new directory
+                            dir = findFile(&progname[2], currentDirectoryCluster);
+                            
+                            if (dir != 0)
                             {
-                                currentDirectoryCluster = _rootCluster;
-                            }
-                            else
-                            {
-                                // get the cluster for the new directory
-                                dir = findFile(&progname[2], currentDirectoryCluster);
-                                
-                                if (dir != 0)
+                                // get new directory cluster
+                                currentDirectoryCluster = getFirstCluster(dir);
+                                if (currentDirectoryCluster == 0)
                                 {
-                                    // get new directory cluster
-                                    currentDirectoryCluster = getFirstCluster(dir);
-                                    if (currentDirectoryCluster == 0)
-                                    {
-                                        currentDirectoryCluster = _rootCluster;
-                                    }
+                                    currentDirectoryCluster = _rootCluster;
                                 }
                             }
                         }
-                        
-                        // write directory entries
-                        ListFilesIEEE(currentDirectoryCluster);
                     }
-                    else
-                    {
-                        // send blocks of file
-                        doneSending = 0;
-                        while(doneSending == 0)
-                        {
-                            bytes_to_send = getNextFileBlock();
-                            if (_filePosition.byteCounter >= _filePosition.fileSize)
-                            {
-                                doneSending = 1;
-                            }
-                            
-                            sendIEEEBytes((unsigned char *)_buffer, bytes_to_send, doneSending);
-                        }
-                    }
+                    
+                    // write directory entries
+                    ListFilesIEEE(currentDirectoryCluster);
                 }
-                else if (currentState == OPEN_DATA_READ)
+                else // read from file
                 {
-                    _buffer[0] = 'H';
-                    _buffer[1] = 'E';
-                    _buffer[2] = 'X';
-                    _buffer[3] = 0x0D;
-                    sendIEEEBytes((unsigned char *)_buffer, 4, 1);
+                    // send blocks of file
+                    doneSending = 0;
+                    while(doneSending == 0)
+                    {
+                        bytes_to_send = getNextFileBlock();
+                        if (_filePosition.byteCounter >= _filePosition.fileSize)
+                        {
+                            doneSending = 1;
+                        }
+                        
+                        sendIEEEBytes((unsigned char *)_buffer, bytes_to_send, doneSending);
+                    }
                 }
-            
-                // raise DAV and EOI
-                PORTC = 0xFF;
-                
-                // switch back to input mode
-                DDRC = NRFD | NDAC;
-                
-                DATA_CTL = 0x00;
-                DDRB = (unsigned char)(~MISO & ~DATA0 & ~DATA1 & ~CASSETTE_READ & ~CASSETTE_WRITE);
-                PORTC = NOT_NDAC;
             }
+            else if (currentState == OPEN_DATA_READ)
+            {
+                _buffer[0] = 'H';
+                _buffer[1] = 'E';
+                _buffer[2] = 'X';
+                _buffer[3] = 0x0D;
+                sendIEEEBytes((unsigned char *)_buffer, 4, 1);
+            }
+        
+            // ==== ENDING LOAD SEQUENCE
+            
+            // raise DAV and EOI
+            PORTC = 0xFF;
+            
+            // switch back to input mode
+            DDRC = NRFD | NDAC;
+            
+            DATA_CTL = 0x00;
+            DDRB = (unsigned char)(~MISO & ~DATA0 & ~DATA1 & ~CASSETTE_READ & ~CASSETTE_WRITE);
+            PORTC = NOT_NDAC;
+            
+            // ====
             
             unlisten();
             currentState = IDLE;
@@ -570,44 +573,6 @@ int main(void)
             unlisten();
             currentState = IDLE;
         }
-        
-        /*
-        else if (currentState == OPEN_DATA_READ)
-        {
-            // this is a LOAD
-            // release NRFD/NDAC
-            DDRC = NDAC;
-            
-            // wait for atn high
-            wait_for_atn_high();
-            
-            DDRC = DAV | EOI;
-            PORTC = 0xFF;
-            
-            // change data bus to output
-            DATA_CTL = 0xff;
-            DDRB = DDRB | (DATA0 | DATA1);
-            
-            _buffer[0] = 'H';
-            _buffer[1] = 'E';
-            _buffer[2] = 'Y';
-            _buffer[3] = 0x0D;
-            sendIEEEBytes((unsigned char *)_buffer, 4, 1);
-            
-            // raise DAV and EOI
-            PORTC = 0xFF;
-            
-            // switch back to input mode
-            DDRC = NRFD | NDAC;
-            
-            DATA_CTL = 0x00;
-            DDRB = (unsigned char)(~MISO & ~DATA0 & ~DATA1 & ~CASSETTE_READ & ~CASSETTE_WRITE);
-            PORTC = NOT_NDAC;
-            
-            unlisten();
-            currentState = IDLE;
-        }
-        */
     }
     
 }
