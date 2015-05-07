@@ -42,9 +42,6 @@
 #define CASSETTE_WRITE 0x80
 #define FNAMELEN    39
 
-// PET IEEE signals
-#define UNLISTEN
-
 typedef enum _pdstate
 {
     IDLE,
@@ -173,7 +170,7 @@ int main(void)
     unsigned char progname[FNAMELEN];
     unsigned char rdchar,rdbus;
     unsigned char error;
-    unsigned char getting_filename;
+    //unsigned char getting_filename;
     unsigned char filename_position;
     unsigned char address;
     unsigned int bytes_to_send;
@@ -193,15 +190,13 @@ int main(void)
     
     unsigned char gotname;
     unsigned char savefile;
-    //unsigned char filenotfound;
     unsigned char initcard;
     unsigned char buscmd;
     pdstate currentState = IDLE;
     
-    getting_filename = 0;
+    //getting_filename = 0;
     filename_position = 0;
     initcard = 0;
-    //filenotfound = 0;
     currentDirectoryCluster = 0;
     
     // clear string
@@ -243,7 +238,6 @@ int main(void)
             // if we are in an unlisten state,
             // wait for my address
             buscmd = wait_for_device_address(address);
-            //filenotfound = 0;
             if (buscmd == LISTEN)
             {
                 transmitString("listen");
@@ -268,38 +262,32 @@ int main(void)
         // read bus value
         rdbus = PINC;
         
-        //if (filenotfound == 1)
         if (currentState == FILE_NOT_FOUND)
         {
-            filenotfound = 0;
             unlisten();
             currentState = IDLE;
         }
-        else if ((rdchar == 0xf0 || rdchar == 0xf1) && (rdbus & ATN) == 0x00)
+        else if ((rdbus & ATN) == 0x00) // check for bus command
         {
-            // we are retrieving a filename for a load or save
-            getting_filename = 1;
-            if (rdchar == 0xf1)
-            {
-                // this is a save
-                savefile = 1;
-            }
-            else 
-            {
-                savefile = 0;
-            }
-
-        }
-        else if ((rdbus & ATN) == 0x00) // check for open command
-        {
-            //transmitString("*");
             transmitHex(CHAR, rdchar);
-            if (rdchar == 0xF2) // open command
+            if (rdchar == 0xF0)
+            {
+                //getting_filename = 1;
+                savefile = 0;
+                currentState = LOAD_FNAME_READ;
+            }
+            else if (rdchar == 0xF1)
+            {
+                //getting_filename = 1;
+                savefile = 1;
+                currentState = SAVE_FNAME_READ;
+            }
+            else if (rdchar == 0xF2) // open command
             {
                 currentState = OPEN_FNAME_READ;
                 savefile = 1;
                 fileWriteByte = 0;
-                getting_filename = 1;
+                //getting_filename = 1;
             }
             else if (rdchar == 0x62) // print or input command
             {
@@ -351,7 +339,7 @@ int main(void)
                 fileWriteByte = 0;
             }
         }
-        else if (getting_filename == 1)
+        else if (LOAD_FNAME_READ || SAVE_FNAME_READ || OPEN_FNAME_READ)
         {
             // add character to filename
             progname[filename_position] = rdchar;
@@ -360,11 +348,10 @@ int main(void)
             
             if ((rdbus & EOI) == 0)
             {
-            
                 // this is a directory request
                 if (progname[0] == '$')
                 {
-                    getting_filename = 0;
+                    //getting_filename = 0;
                     filename_position = 0;
                 }
                 else 
@@ -394,7 +381,7 @@ int main(void)
                     // copy the PRG file extension onto the end of the file name
                     pgm_memcpy(&progname[filename_position], ext, 5);
                 
-                    getting_filename = 0;
+                    //getting_filename = 0;
                     filename_position = 0;
                     
                     transmitString(progname);
@@ -409,7 +396,7 @@ int main(void)
         if (initcard == 0)
         {
             // initialize card
-            for (i=0; i<10; i++)
+            for (i = 0; i < 10; i++)
             {
               error = SD_init();
               if(!error)
@@ -430,6 +417,7 @@ int main(void)
             
             initcard = 1;
         }
+        
         if (gotname == 1)
         {
             if (savefile == 0)
@@ -437,7 +425,6 @@ int main(void)
                 if (!openFileForReading(progname, currentDirectoryCluster))
                 {
                     // file not found
-                    //filenotfound = 1;
                     currentState = FILE_NOT_FOUND;
                 }
                 
