@@ -48,6 +48,10 @@
 #define TALK    0x40
 #define LISTEN  0x20
 
+#define UNLISTEN    0x3F
+#define UNTALK      0x5F
+
+
 void sendIEEEBytes(unsigned char *entry, int size, unsigned char isLast);
 unsigned char wait_for_device_address(unsigned char my_address);
 void wait_for_dav_high();

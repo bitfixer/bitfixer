@@ -469,8 +469,8 @@ void writeFileFromIEEE ()
         
         _buffer[numBytes++] = rdchar;
         
-        if(numBytes >= 512)   //though 'i' will never become greater than 512, it's kept here to avoid
-        {				//infinite loop in case it happens to be greater than 512 due to some data corruption
+        if (numBytes >= 512)
+        {
             transmitString((unsigned char *)"writing block..\r\n");
             writeBufferToFile(numBytes);
             numBytes = 0;

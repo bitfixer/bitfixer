@@ -71,12 +71,15 @@ typedef enum _filedir
     FWRITE
 } filedir;
 
+typedef enum { false, true } bool;
+
 typedef struct _pdStateVars
 {
     char openFileAddress;
-    unsigned int fileWriteByte;
+    int fileWriteByte;
     unsigned int fileReadByte;
     filedir fileDirection;
+    unsigned char fileNotFound;
 } pdStateVars;
 
 const unsigned char _dirHeader[] PROGMEM =
@@ -131,8 +134,8 @@ void pgm_memcpy(unsigned char *dest, unsigned char *src, int len)
 
 void port_init(void)
 {
-    SPI_CTL = (unsigned char)(~MISO & ~DATA0 & ~DATA1 & ~CASSETTE_READ & ~CASSETTE_WRITE);
-    SPI_PORT = 0xff;
+    SPI_CTL = (unsigned char)(~MISO & ~DATA0 & ~DATA1 & ~CASSETTE_READ & ~CASSETTE_WRITE | 0x80 | 0x40);
+    SPI_PORT = 0x7f;
 
     // all IEEE lines input
     IEEE_CTL = 0x00;
@@ -200,7 +203,7 @@ int main(void)
     // initialize state variables
     pdStateVars stateVars;
     stateVars.openFileAddress = -1;
-    stateVars.fileWriteByte = 0;
+    stateVars.fileWriteByte = -1;
     stateVars.fileDirection = FNONE;
     
     
@@ -258,18 +261,19 @@ int main(void)
     {
         if (IEEE_CTL == 0x00)
         {
+            //SPI_PORT = 0xFF;
             // if we are in an unlisten state,
             // wait for my address
             buscmd = wait_for_device_address(address);
             if (buscmd == LISTEN)
             {
-                transmitString("listen");
+                //transmitString("listen");
                 initcard = 0;
                 currentState = BUS_LISTEN;
             }
             else
             {
-                transmitString("talk");
+                //transmitString("talk");
                 currentState = BUS_TALK;
             }
         }
@@ -319,7 +323,7 @@ int main(void)
         }
         else if ((rdbus & ATN) == 0x00) // check for bus command
         {
-            transmitHex(CHAR, rdchar);
+            //transmitHex(CHAR, rdchar);
             if (rdchar == 0xF0)
             {
                 currentState = LOAD_FNAME_READ;
@@ -332,10 +336,7 @@ int main(void)
             {
                 currentState = OPEN_FNAME_READ;
                 stateVars.openFileAddress = (rdchar & 0x0F);
-                stateVars.fileWriteByte = 0;
-                
-                //transmitString("open file addr:");
-                //transmitHex(CHAR, stateVars.openFileAddress);
+                stateVars.fileWriteByte = -1;
             }
             else if (rdchar == 0x60) // read command
             {
@@ -363,36 +364,29 @@ int main(void)
                 {
                     if (currentState == BUS_LISTEN)
                     {
-                        if (stateVars.fileWriteByte == 0)
+                        if (stateVars.fileWriteByte == -1)
                         {
                             transmitString(progname);
                             transmitString("writing file");
                             openFileForWriting(progname, currentDirectoryCluster);
+                            stateVars.fileWriteByte = 0;
                         }
                         stateVars.fileDirection = FWRITE;
                         currentState = OPEN_DATA_WRITE;
                     }
                     else
                     {
-                        /*
-                        transmitString("dir cluster:");
-                        transmitHex(LONG, currentDirectoryCluster);
-                        if (!openFileForReading(progname, currentDirectoryCluster))
+                        if (stateVars.fileNotFound == 1)
                         {
-                            // file not found
+                            stateVars.fileDirection = FNONE;
                             currentState = FILE_NOT_FOUND;
                         }
                         else
                         {
+                            //transmitString("reading");
+                            stateVars.fileDirection = FREAD;
                             currentState = OPEN_DATA_READ;
                         }
-                        
-                        // clear string
-                        memset(progname, 0, FNAMELEN);
-                        */
-                        
-                        stateVars.fileDirection = FREAD;
-                        currentState = OPEN_DATA_READ;
                     }
                 }
             }
@@ -414,17 +408,13 @@ int main(void)
                 }
                 
                 stateVars.openFileAddress = -1;
-                stateVars.fileWriteByte = 0;
+                stateVars.fileWriteByte = -1;
                 stateVars.fileDirection = FNONE;
                 currentState = CLOSING;
             }
         }
         else if (currentState == OPEN_DATA_WRITE) // received byte to write to open file
         {
-            transmitByte(rdchar);
-            transmitByte(' ');
-            transmitHex(INT, stateVars.fileWriteByte);
-            
             _buffer[stateVars.fileWriteByte++] = rdchar;
             if (stateVars.fileWriteByte >= 512)
             {
@@ -526,14 +516,16 @@ int main(void)
             if (!openFileForReading(progname, currentDirectoryCluster))
             {
                 // file not found
-                currentState = FILE_NOT_FOUND;
+                stateVars.fileNotFound = 1;
             }
             else
             {
                 bytes_to_send = getNextFileBlock();
                 stateVars.fileReadByte = 0;
-                currentState = IDLE;
+                stateVars.fileNotFound = 0;
             }
+            
+            currentState = IDLE;
         }
         
         if ((rdchar == UNLISTEN) || (rdchar == UNTALK && (rdbus & ATN) == 0x00))
@@ -625,43 +617,227 @@ int main(void)
             else if (currentState == OPEN_DATA_READ)
             {
                 /*
-                transmitString("dir cluster:");
-                transmitHex(LONG, currentDirectoryCluster);
-                if (!openFileForReading(progname, currentDirectoryCluster))
+                _buffer[0] = 'A';
+                _buffer[1] = 'B';
+                _buffer[2] = 'C';
+                _buffer[3] = 'D';
+                _buffer[4] = 0x0D;
+                _buffer[5] = 'E';
+                _buffer[6] = 'F';
+                _buffer[7] = 'G';
+                _buffer[8] = 'H';
+                _buffer[9] = 0x0D;
+                _buffer[10] = 'I';
+                _buffer[11] = 'J';
+                _buffer[12] = 'K';
+                _buffer[13] = 'L';
+                _buffer[14] = 0x0D;
+                _buffer[15] = 'M';
+                _buffer[16] = 'N';
+                _buffer[17] = 'O';
+                _buffer[18] = 'P';
+                _buffer[19] = 0x0D;
+                */
+                
+                bool done = false;
+                bool found = false;
+                unsigned char temp = 0;
+                unsigned char result = 0;
+                
+                SPI_PORT = 0xFF;
+                while (!done)
                 {
-                    // file not found
-                    currentState = FILE_NOT_FOUND;
+                    
+                    result = sendIEEEByteCheckForATN(_buffer[stateVars.fileReadByte]);
+                    result = wait_for_ndac_high_or_atn_low();
+                    
+                    if (result == ATN)
+                    {
+                        done = true;
+                    }
+                    else
+                    {
+                        stateVars.fileReadByte++;
+                        if (stateVars.fileReadByte >= 512)
+                        {
+                            // get next buffer block
+                            SPI_PORT = 0xBF;
+                            bytes_to_send = getNextFileBlock();
+                            stateVars.fileReadByte = 0;
+                            SPI_PORT = 0xFF;
+                        }
+                        
+                        // raise DAV
+                        temp = DAV | EOI;
+                        // output to bus
+                        PORTC = temp;
+                     
+                        result = wait_for_ndac_low_or_atn_low();
+                        if (result == ATN)
+                        {
+                            done = true;
+                        }
+                    }
+                    
+                    
+                    /*
+                    if (stateVars.fileReadByte >= 512)
+                    {
+                        // get next buffer block
+                        SPI_PORT = 0xBF;
+                        bytes_to_send = getNextFileBlock();
+                        stateVars.fileReadByte = 0;
+                        SPI_PORT = 0xFF;
+                    }
+                    
+                    tmp = PINC;
+                    if ((tmp & ATN) == 0x00)
+                    {
+                        done = true;
+                    }
+                    else
+                    {
+                        result = sendIEEEByteCheckForATN(_buffer[stateVars.fileReadByte]);
+                        if (result == ATN)
+                        {
+                            //transmitHex(CHAR, _buffer[stateVars.fileReadByte]);
+                            //SPI_PORT = 0xFF;
+                            done = true;
+                        }
+                        else
+                        {
+                            stateVars.fileReadByte++;
+                        }
+                    }
+                    */
+                    
+                    /*
+                    tmp = _buffer[stateVars.fileReadByte++];
+                    
+                    // send current byte
+                    sendIEEEBytes(&tmp, 1, 0);
+                    if (stateVars.fileReadByte >= 512)
+                    {
+                        transmitByte('*');
+                        // get next buffer block
+                        bytes_to_send = getNextFileBlock();
+                        stateVars.fileReadByte = 0;
+                    }
+                    
+                    if (tmp == 0x0D)
+                    {
+                        found = false;
+                        while (!found)
+                        {
+                            tmp = PINC;
+                            if ((tmp & ATN) == 0x00)
+                            {
+                                tmp = ATN;
+                                found = true;
+                            }
+                            else if ((tmp & NRFD) != 0x00)
+                            {
+                                tmp = NRFD;
+                                found = true;
+                            }
+                        }
+                        
+                        if (tmp == ATN)
+                        {
+                            done = true;
+                        }
+                        
+                        if (x++ == 1)
+                            done = true;
+                    }
+                    */
+                    
+                    //stateVars.fileReadByte++;
+                }
+                SPI_PORT = 0x7F;
+                
+                /*
+                unsigned char tmp;
+                
+                bool done = false;
+                
+                while (!done)
+                {
+                
+                bool foundMarker = false;
+                while (!foundMarker)
+                {
+                    if (stateVars.fileReadByte >= 512)
+                    {
+                        // get next buffer block
+                        bytes_to_send = getNextFileBlock();
+                        stateVars.fileReadByte = 0;
+                    }
+                    
+                    if (_buffer[stateVars.fileReadByte] == 0x0D)
+                    {
+                        foundMarker = true;
+                        sendIEEEBytes(&_buffer[stateVars.fileReadByte++], 1, 0);
+                    }
+                    else
+                    {
+                        sendIEEEBytes(&_buffer[stateVars.fileReadByte++], 1, 0);
+                    }
+                }
+                
+                // check for end of input
+                bool found = false;
+                while (!found)
+                {
+                    tmp = PINC;
+                    if ((tmp & ATN) == 0x00)
+                    {
+                        tmp = ATN;
+                        found = true;
+                    }
+                    else if ((tmp & NRFD) != 0x00)
+                    {
+                        tmp = NRFD;
+                        found = true;
+                    }
+                }
+                    
+                if (tmp == ATN)
+                    done = true;
+                    
+                }
+                */
+                
+                
+                
+                /*
+                sendIEEEBytes(_buffer, 5, 0);
+                
+                bool found = false;
+                while (!found)
+                {
+                    tmp = PINC;
+                    if ((tmp & ATN) == 0x00)
+                    {
+                        tmp = ATN;
+                        found = true;
+                    }
+                    else if ((tmp & NRFD) != 0x00)
+                    {
+                        tmp = NRFD;
+                        found = true;
+                    }
+                }
+                
+                if (tmp == ATN)
+                {
+                    transmitString("hey");
                 }
                 else
                 {
-                    currentState = OPEN_DATA_READ;
+                    sendIEEEBytes(&_buffer[5], 5, 1);
                 }
-                
-                // clear string
-                memset(progname, 0, FNAMELEN);
                 */
-                
-                /*
-                _buffer[0] = 'H';
-                _buffer[1] = 'E';
-                _buffer[2] = 'X';
-                _buffer[3] = 0x0D;
-                sendIEEEBytes((unsigned char *)_buffer, 4, 1);
-                */
-                
-                //bytes_to_send = getNextFileBlock();
-                //transmitString(_buffer);
-                //sendIEEEBytes((unsigned char *)_buffer, 11, 1);
-                
-                //transmitString("rd");
-                while (_buffer[stateVars.fileReadByte] != 0x0D)
-                {
-                    sendIEEEBytes(&_buffer[stateVars.fileReadByte], 1, 0);
-                    stateVars.fileReadByte++;
-                }
-                
-                sendIEEEBytes(&_buffer[stateVars.fileReadByte++], 1, 1);
-                //transmitHex(INT, stateVars.fileReadByte);
             }
         
             // ==== ENDING LOAD SEQUENCE
@@ -673,7 +849,7 @@ int main(void)
             DDRC = NRFD | NDAC;
             
             DATA_CTL = 0x00;
-            DDRB = (unsigned char)(~MISO & ~DATA0 & ~DATA1 & ~CASSETTE_READ & ~CASSETTE_WRITE);
+            DDRB = (unsigned char)(~MISO & ~DATA0 & ~DATA1 & ~CASSETTE_READ & ~CASSETTE_WRITE | 0x80 | 0x40);
             PORTC = NOT_NDAC;
             
             // ====
