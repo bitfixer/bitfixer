@@ -83,7 +83,22 @@ void wait_for_atn_low()
     }
 }
 
-
+unsigned char wait_for_nrfd_high_or_atn_low()
+{
+    unsigned char rdchar;
+    while (1)
+    {
+        rdchar = PINC;
+        if ((rdchar & ATN) == 0x00)
+        {
+            return ATN;
+        }
+        else if ((rdchar & NRFD) != 0x00)
+        {
+            return NRFD;
+        }
+    }
+}
 
 void wait_for_nrfd_high()
 {
@@ -94,6 +109,52 @@ void wait_for_nrfd_high()
     {
         rdchar = PINC;
         rdchar = rdchar & NRFD;
+    }
+}
+
+void wait_for_ndac_low()
+{
+    unsigned char rdchar;
+    rdchar = PINC;
+    rdchar = rdchar & NDAC;
+    while (rdchar != 0x00)
+    {
+        rdchar = PINC;
+        rdchar = rdchar & NDAC;
+    }
+}
+
+unsigned char wait_for_ndac_low_or_atn_low()
+{
+    unsigned char rdchar;
+    while (1)
+    {
+        rdchar = PINC;
+        if ((rdchar & ATN) == 0x00)
+        {
+            return ATN;
+        }
+        else if ((rdchar & NDAC) == 0x00)
+        {
+            return NDAC;
+        }
+    }
+}
+
+unsigned char wait_for_ndac_high_or_atn_low()
+{
+    unsigned char rdchar;
+    while (1)
+    {
+        rdchar = PINC;
+        if ((rdchar & ATN) == 0x00)
+        {
+            return ATN;
+        }
+        else if ((rdchar & NDAC) != 0x00)
+        {
+            return NDAC;
+        }
     }
 }
 
@@ -201,7 +262,7 @@ unsigned char wait_for_device_address(unsigned char my_address)
         recv_byte_IEEE(&primary_address);
         dir = primary_address & 0xf0;
         primary_address = primary_address & 0x0f;
-        transmitHex(CHAR, primary_address);
+        //transmitHex(CHAR, primary_address);
         
         if (primary_address == my_address && (dir == TALK || dir == LISTEN))
         {
@@ -222,6 +283,54 @@ unsigned char wait_for_device_address(unsigned char my_address)
         }
     }
     return dir;
+}
+
+unsigned char sendIEEEByteCheckForATN(unsigned char byte)
+{
+    unsigned char temp,temp2;
+    unsigned char lo,hi;
+    unsigned char result = 0;
+    // invert the byte
+    temp = ~byte;
+    lo = temp & DATALO;
+    hi = temp & ~DATALO;
+    
+    // output the byte
+    DATA_PORT = hi;
+    temp = PORTB;
+    temp = temp & ~DATALO;
+    temp = temp | lo;
+    PORTB = temp;
+    
+    result = wait_for_ndac_low_or_atn_low();
+    if (result == ATN)
+    {
+        return result;
+    }
+    
+    // wait for NRFD high
+    //wait_for_nrfd_high();
+    result = wait_for_nrfd_high_or_atn_low();
+    if (result == ATN)
+    {
+        return result;
+    }
+    
+    // lower DAV
+    temp = DAV;
+    PORTC = ~temp;
+    
+    /*
+    // wait for NDAC high
+    result = wait_for_ndac_high_or_atn_low();
+    
+    // raise DAV
+    temp = DAV | EOI;
+    // output to bus
+    PORTC = temp;
+    
+    return result;
+    */
 }
 
 void sendIEEEBytes(unsigned char *entry, int size, unsigned char isLast)

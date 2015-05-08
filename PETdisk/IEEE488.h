@@ -60,9 +60,12 @@ void wait_for_atn_high();
 void wait_for_atn_low();
 void wait_for_nrfd_high();
 void wait_for_ndac_high();
+unsigned char wait_for_ndac_high_or_atn_low();
+unsigned char wait_for_ndac_low_or_atn_low();
 void unlisten();
 void recv_byte_IEEE(unsigned char *byte);
 void ListFilesIEEE(unsigned long firstCluster);
 void writeFileFromIEEE ();
+unsigned char sendIEEEByteCheckForATN(unsigned char byte);
 
 #endif
