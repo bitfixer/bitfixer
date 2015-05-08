@@ -50,6 +50,7 @@ typedef enum _pdstate
     LOAD_FNAME_READ,
     SAVE_FNAME_READ,
     OPEN_FNAME_READ,
+    OPEN_FNAME_READ_DONE,
     OPEN_DATA_WRITE,
     OPEN_DATA_WRITE_DONE,
     OPEN_DATA_READ,
@@ -63,10 +64,19 @@ typedef enum _pdstate
     CLOSING
 } pdstate;
 
+typedef enum _filedir
+{
+    FNONE,
+    FREAD,
+    FWRITE
+} filedir;
+
 typedef struct _pdStateVars
 {
     char openFileAddress;
     unsigned int fileWriteByte;
+    unsigned int fileReadByte;
+    filedir fileDirection;
 } pdStateVars;
 
 const unsigned char _dirHeader[] PROGMEM =
@@ -191,6 +201,7 @@ int main(void)
     pdStateVars stateVars;
     stateVars.openFileAddress = -1;
     stateVars.fileWriteByte = 0;
+    stateVars.fileDirection = FNONE;
     
     
     address = get_device_address();
@@ -323,8 +334,8 @@ int main(void)
                 stateVars.openFileAddress = (rdchar & 0x0F);
                 stateVars.fileWriteByte = 0;
                 
-                transmitString("open file addr:");
-                transmitHex(CHAR, stateVars.openFileAddress);
+                //transmitString("open file addr:");
+                //transmitHex(CHAR, stateVars.openFileAddress);
             }
             else if (rdchar == 0x60) // read command
             {
@@ -358,17 +369,38 @@ int main(void)
                             transmitString("writing file");
                             openFileForWriting(progname, currentDirectoryCluster);
                         }
+                        stateVars.fileDirection = FWRITE;
                         currentState = OPEN_DATA_WRITE;
                     }
                     else
+                    {
+                        /*
+                        transmitString("dir cluster:");
+                        transmitHex(LONG, currentDirectoryCluster);
+                        if (!openFileForReading(progname, currentDirectoryCluster))
+                        {
+                            // file not found
+                            currentState = FILE_NOT_FOUND;
+                        }
+                        else
+                        {
+                            currentState = OPEN_DATA_READ;
+                        }
+                        
+                        // clear string
+                        memset(progname, 0, FNAMELEN);
+                        */
+                        
+                        stateVars.fileDirection = FREAD;
                         currentState = OPEN_DATA_READ;
+                    }
                 }
             }
             //else if (rdchar == 0xE2) // close command
             else if ((rdchar & 0xF0) == 0xE0)
             {
                 unsigned char temp = rdchar & 0x0F;
-                if (temp == stateVars.openFileAddress)
+                if (temp == stateVars.openFileAddress && stateVars.fileDirection == FWRITE)
                 {
                     transmitString("write file closing");
                     transmitHex(INT, stateVars.fileWriteByte);
@@ -383,6 +415,7 @@ int main(void)
                 
                 stateVars.openFileAddress = -1;
                 stateVars.fileWriteByte = 0;
+                stateVars.fileDirection = FNONE;
                 currentState = CLOSING;
             }
         }
@@ -418,6 +451,7 @@ int main(void)
                 }
                 else 
                 {
+                    transmitString("got fname");
                     // check for DLOAD command, remove 0: from start of filename
                     if (progname[0] == '0' && progname[1] == ':')
                     {
@@ -433,7 +467,8 @@ int main(void)
                     if (currentState == OPEN_FNAME_READ)
                     {
                         ext = _seqExtension;
-                        currentState = IDLE;
+                        //currentState = IDLE;
+                        currentState = OPEN_FNAME_READ_DONE;
                     }
                     else
                     {
@@ -485,6 +520,20 @@ int main(void)
             transmitString("open file for writing");
             openFileForWriting(progname, currentDirectoryCluster);
             currentState = IDLE;
+        }
+        else if (currentState == OPEN_FNAME_READ_DONE)
+        {
+            if (!openFileForReading(progname, currentDirectoryCluster))
+            {
+                // file not found
+                currentState = FILE_NOT_FOUND;
+            }
+            else
+            {
+                bytes_to_send = getNextFileBlock();
+                stateVars.fileReadByte = 0;
+                currentState = IDLE;
+            }
         }
         
         if ((rdchar == UNLISTEN) || (rdchar == UNTALK && (rdbus & ATN) == 0x00))
@@ -575,11 +624,44 @@ int main(void)
             }
             else if (currentState == OPEN_DATA_READ)
             {
+                /*
+                transmitString("dir cluster:");
+                transmitHex(LONG, currentDirectoryCluster);
+                if (!openFileForReading(progname, currentDirectoryCluster))
+                {
+                    // file not found
+                    currentState = FILE_NOT_FOUND;
+                }
+                else
+                {
+                    currentState = OPEN_DATA_READ;
+                }
+                
+                // clear string
+                memset(progname, 0, FNAMELEN);
+                */
+                
+                /*
                 _buffer[0] = 'H';
                 _buffer[1] = 'E';
                 _buffer[2] = 'X';
                 _buffer[3] = 0x0D;
                 sendIEEEBytes((unsigned char *)_buffer, 4, 1);
+                */
+                
+                //bytes_to_send = getNextFileBlock();
+                //transmitString(_buffer);
+                //sendIEEEBytes((unsigned char *)_buffer, 11, 1);
+                
+                //transmitString("rd");
+                while (_buffer[stateVars.fileReadByte] != 0x0D)
+                {
+                    sendIEEEBytes(&_buffer[stateVars.fileReadByte], 1, 0);
+                    stateVars.fileReadByte++;
+                }
+                
+                sendIEEEBytes(&_buffer[stateVars.fileReadByte++], 1, 1);
+                //transmitHex(INT, stateVars.fileReadByte);
             }
         
             // ==== ENDING LOAD SEQUENCE
