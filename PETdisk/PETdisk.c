@@ -600,11 +600,7 @@ int main(void)
             DATA_CTL = 0xff;
             DDRB = DDRB | (DATA0 | DATA1);
             
-            unsigned char nrfd = NDAC;
-            while (nrfd != 0x00)
-            {
-                nrfd = PINC & NDAC;
-            }
+            wait_for_ndac_low();
              
             if (currentState == FILE_READ)
             {
