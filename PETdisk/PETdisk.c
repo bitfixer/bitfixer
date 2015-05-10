@@ -78,6 +78,8 @@ typedef struct _pdStateVars
     char openFileAddress;
     int fileWriteByte;
     unsigned int fileReadByte;
+    unsigned char useRemainderByte;
+    unsigned char remainderByte;
     filedir fileDirection;
     unsigned char fileNotFound;
     unsigned long currentDirectoryCluster;
@@ -97,8 +99,8 @@ const unsigned char _dirHeader[] PROGMEM =
 
 const unsigned char _versionString[] PROGMEM = "\"PETDISK V3.0    \"      ";
 
-const unsigned char _saving[] PROGMEM = "Saving: ";
-const unsigned char _reading[] PROGMEM = "Reading: ";
+const unsigned char _saving[] PROGMEM = "Saving";
+const unsigned char _reading[] PROGMEM = "Reading";
 const unsigned char _nofirmware[] PROGMEM = "No Firmware.";
 
 const unsigned char _fileExtension[] PROGMEM =
@@ -140,7 +142,7 @@ void pgm_memcpy(unsigned char *dest, unsigned char *src, int len)
 
 void port_init(void)
 {
-    SPI_CTL = (unsigned char)(~MISO & ~DATA0 & ~DATA1 & ~CASSETTE_READ & ~CASSETTE_WRITE | 0x80 | 0x40);
+    SPI_CTL = (unsigned char)(~MISO & ~DATA0 & ~DATA1 & ~CASSETTE_READ & ~CASSETTE_WRITE);
     SPI_PORT = 0x7f;
 
     // all IEEE lines input
@@ -292,6 +294,8 @@ int main(void)
     stateVars.fileDirection = FNONE;
     stateVars.currentDirectoryCluster = 0;
     stateVars.sd_boot_checksum = 0;
+    stateVars.remainderByte = 0;
+    stateVars.useRemainderByte = 0;
     
     address = get_device_address();
     
@@ -391,6 +395,7 @@ int main(void)
                 }
                 else
                 {
+                    //transmitString("$");
                     currentState = FILE_READ;
                     // open file for reading
                     if (progname[0] == '$')
@@ -418,7 +423,6 @@ int main(void)
                         if (stateVars.fileWriteByte == -1)
                         {
                             transmitString_F(_saving);
-                            transmitString(progname);
                             openFileForWriting(progname, stateVars.currentDirectoryCluster);
                             stateVars.fileWriteByte = 0;
                         }
@@ -557,6 +561,8 @@ int main(void)
                         bytes_to_send = getNextFileBlock();
                     stateVars.fileReadByte = 0;
                     stateVars.fileNotFound = 0;
+                    stateVars.useRemainderByte = 0;
+                    stateVars.remainderByte = 0;
                 }
                 
                 currentState = IDLE;
@@ -586,7 +592,7 @@ int main(void)
             
             // wait for atn high
             wait_for_atn_high();
-        
+            
             DDRC = DAV | EOI;
             PORTC = 0xFF;
             
@@ -594,13 +600,18 @@ int main(void)
             DATA_CTL = 0xff;
             DDRB = DDRB | (DATA0 | DATA1);
             
-            // ====
-            
+            unsigned char nrfd = NDAC;
+            while (nrfd != 0x00)
+            {
+                nrfd = PINC & NDAC;
+            }
+             
             if (currentState == FILE_READ)
             {
                 // get packet
                 if (progname[0] == '$')
                 {
+                    //transmitString("@");
                     sendIEEEBytes((unsigned char *)_buffer, 32, 0);
                     
                     // this is a change directory command
@@ -655,10 +666,13 @@ int main(void)
                 unsigned char temp = 0;
                 unsigned char result = 0;
                 
-                SPI_PORT = 0xFF;
                 while (!done)
                 {
-                    result = sendIEEEByteCheckForATN(_buffer[stateVars.fileReadByte]);
+                    if (stateVars.useRemainderByte == 1)
+                        result = sendIEEEByteCheckForATN(stateVars.remainderByte);
+                    else
+                        result = sendIEEEByteCheckForATN(_buffer[stateVars.fileReadByte]);
+
                     result = wait_for_ndac_high_or_atn_low();
                     
                     if (result == ATN)
@@ -667,14 +681,21 @@ int main(void)
                     }
                     else
                     {
-                        stateVars.fileReadByte++;
+                        if (stateVars.useRemainderByte == 1)
+                        {
+                            stateVars.useRemainderByte = 0;
+                        }
+                        else
+                        {
+                            stateVars.remainderByte = _buffer[stateVars.fileReadByte];
+                            stateVars.fileReadByte++;
+                        }
+                        
                         if (stateVars.fileReadByte >= 512)
                         {
                             // get next buffer block
-                            SPI_PORT = 0xBF;
                             bytes_to_send = getNextFileBlock();
                             stateVars.fileReadByte = 0;
-                            SPI_PORT = 0xFF;
                         }
                         
                         // raise DAV
@@ -683,13 +704,22 @@ int main(void)
                         PORTC = temp;
                      
                         result = wait_for_ndac_low_or_atn_low();
+                        
                         if (result == ATN)
                         {
+                            if (stateVars.fileReadByte == 0)
+                            {
+                                stateVars.useRemainderByte = 1;
+                            }
+                            else
+                            {
+                                stateVars.fileReadByte--;
+                            }
+                            
                             done = true;
                         }
                     }
                 }
-                SPI_PORT = 0x7F;
             }
         
             // ==== ENDING LOAD SEQUENCE
@@ -701,7 +731,7 @@ int main(void)
             DDRC = NRFD | NDAC;
             
             DATA_CTL = 0x00;
-            DDRB = (unsigned char)(~MISO & ~DATA0 & ~DATA1 & ~CASSETTE_READ & ~CASSETTE_WRITE | 0x80 | 0x40);
+            DDRB = (unsigned char)(~MISO & ~DATA0 & ~DATA1 & ~CASSETTE_READ & ~CASSETTE_WRITE);
             PORTC = NOT_NDAC;
             
             // ====
