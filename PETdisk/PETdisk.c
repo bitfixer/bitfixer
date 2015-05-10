@@ -95,7 +95,7 @@ const unsigned char _dirHeader[] PROGMEM =
     0x12,
 };
 
-const unsigned char _versionString[] PROGMEM = "\"PETDISK V2.1    \"      ";
+const unsigned char _versionString[] PROGMEM = "\"PETDISK V3.0    \"      ";
 
 const unsigned char _saving[] PROGMEM = "Saving: ";
 const unsigned char _reading[] PROGMEM = "Reading: ";
@@ -211,8 +211,6 @@ unsigned char processFilename(unsigned char *filename, unsigned char length)
         i++;
         // move string down
         pLength -= i;
-        
-        transmitHex(CHAR, pLength);
         
         for (j = 0; j < pLength; j++)
         {
@@ -370,7 +368,7 @@ int main(void)
         
         if ((rdbus & ATN) == 0x00) // check for bus command
         {
-            transmitHex(CHAR, rdchar);
+            //transmitHex(CHAR, rdchar);
             if (rdchar == 0xF0)
             {
                 currentState = LOAD_FNAME_READ;
