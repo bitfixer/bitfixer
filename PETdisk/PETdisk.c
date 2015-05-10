@@ -42,6 +42,14 @@
 #define CASSETTE_WRITE 0x80
 #define FNAMELEN    39
 
+// addresses for PET IEEE commands
+#define PET_LOAD_FNAME_ADDR     0xF0
+#define PET_SAVE_FNAME_ADDR     0xF1
+#define PET_OPEN_FNAME_MASK     0xF0
+
+// macro for checking if line is low
+#define SIGNAL_IS_LOW(A, B)     (A & B) == 0x00
+
 typedef enum _pdstate
 {
     IDLE,
@@ -97,7 +105,7 @@ const unsigned char _dirHeader[] PROGMEM =
     0x12,
 };
 
-const unsigned char _versionString[] PROGMEM = "\"PETDISK V3.0    \"      ";
+const unsigned char _versionString[] PROGMEM = "\"PETDISK V3.0b   \"      ";
 
 const unsigned char _saving[] PROGMEM = "Saving";
 const unsigned char _reading[] PROGMEM = "Reading";
