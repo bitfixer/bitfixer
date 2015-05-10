@@ -80,6 +80,8 @@ typedef struct _pdStateVars
     unsigned int fileReadByte;
     filedir fileDirection;
     unsigned char fileNotFound;
+    unsigned long currentDirectoryCluster;
+    unsigned char sd_boot_checksum;
 } pdStateVars;
 
 const unsigned char _dirHeader[] PROGMEM =
@@ -94,6 +96,10 @@ const unsigned char _dirHeader[] PROGMEM =
 };
 
 const unsigned char _versionString[] PROGMEM = "\"PETDISK V2.1    \"      ";
+
+const unsigned char _saving[] PROGMEM = "Saving: ";
+const unsigned char _reading[] PROGMEM = "Reading: ";
+const unsigned char _nofirmware[] PROGMEM = "No Firmware.";
 
 const unsigned char _fileExtension[] PROGMEM =
 {
@@ -226,6 +232,50 @@ unsigned char processFilename(unsigned char *filename, unsigned char length)
     return pLength;
 }
 
+// initialize SD card
+// note: this reads into global _buffer. Will trash any data there
+unsigned char initializeSDCard(pdStateVars *stateVars)
+{
+    int i;
+    unsigned char error;
+    unsigned char chksum = 0;
+    // initialize card
+    for (i = 0; i < 10; i++)
+    {
+        error = SD_init();
+        if (!error)
+            break;
+    }
+    
+    if (i == 10)
+    {
+        // reset current directory to root
+        stateVars->currentDirectoryCluster = 0;
+    }
+    
+    error = getBootSectorData (); //read boot sector and keep necessary data in global variables
+    
+    // check for card change
+    // calculate checksum
+    for (i = 0; i < 512; i++)
+    {
+        chksum += _buffer[i];
+    }
+    
+    if (chksum != stateVars->sd_boot_checksum)
+    {
+        stateVars->sd_boot_checksum = chksum;
+        stateVars->currentDirectoryCluster = 0;
+    }
+    
+    if (stateVars->currentDirectoryCluster == 0)
+    {
+        stateVars->currentDirectoryCluster = _rootCluster;
+    }
+    
+    return error;
+}
+
 int main(void)
 {
     unsigned char progname[FNAMELEN];
@@ -236,14 +286,14 @@ int main(void)
     unsigned int bytes_to_send;
     unsigned char i;
     unsigned char doneSending;
-    unsigned long currentDirectoryCluster;
     
     // initialize state variables
     pdStateVars stateVars;
     stateVars.openFileAddress = -1;
     stateVars.fileWriteByte = -1;
     stateVars.fileDirection = FNONE;
-    
+    stateVars.currentDirectoryCluster = 0;
+    stateVars.sd_boot_checksum = 0;
     
     address = get_device_address();
     
@@ -253,31 +303,17 @@ int main(void)
 
     struct dir_Structure *dir;
     
-    unsigned char initcard;
     unsigned char buscmd;
     pdstate currentState = IDLE;
     
-    //getting_filename = 0;
     filename_position = 0;
-    initcard = 0;
-    currentDirectoryCluster = 0;
     
     // clear string
     memset(progname, 0, FNAMELEN);
     
-    // initialize SD card
-    for (i = 0; i < 10; i++)
-    {
-        error = SD_init();
-        if (!error)
-            break;
-    }
-    
+    error = initializeSDCard(&stateVars);
     if (!error)
     {
-        error = getBootSectorData(); //read boot sector and keep necessary data in global variables
-        currentDirectoryCluster = _rootCluster;
-    
         // copy firmware filename
         pgm_memcpy((unsigned char *)progname, (unsigned char *)_firmwareFileName, 5);
         dir = findFile(progname, _rootCluster);
@@ -285,18 +321,26 @@ int main(void)
         if (dir != 0)
         {
             // found firmware file
-            //transmitString("found firmware..");
             deleteFile();
-        } 
-        else 
+        }
+        else
         {
-            transmitString((unsigned char *)"no firmware.");
+            transmitString_F(_nofirmware);
         }
     }
      
     // start main loop
     while(1)
     {
+        if (currentState == FILE_NOT_FOUND)
+        {
+            unlisten();
+            currentState = IDLE;
+            stateVars.fileNotFound = 0;
+            filename_position = 0;
+            memset(progname, 0, FNAMELEN);
+        }
+        
         if (IEEE_CTL == 0x00)
         {
             //SPI_PORT = 0xFF;
@@ -305,13 +349,10 @@ int main(void)
             buscmd = wait_for_device_address(address);
             if (buscmd == LISTEN)
             {
-                //transmitString("listen");
-                initcard = 0;
                 currentState = BUS_LISTEN;
             }
             else
             {
-                //transmitString("talk");
                 currentState = BUS_TALK;
             }
         }
@@ -327,41 +368,9 @@ int main(void)
         // read bus value
         rdbus = PINC;
         
-        /*
-        if (currentState == BUS_LISTEN)
+        if ((rdbus & ATN) == 0x00) // check for bus command
         {
-            // initialize card
-            for (i = 0; i < 10; i++)
-            {
-                error = SD_init();
-                if(!error)
-                    break;
-            }
-            
-            if (i == 10)
-            {
-                // reset current directory to root
-                currentDirectoryCluster = 0;
-            }
-            
-            error = getBootSectorData (); //read boot sector and keep necessary data in global variables
-            if (currentDirectoryCluster == 0)
-            {
-                currentDirectoryCluster = _rootCluster;
-            }
-            
-            initcard = 1;
-        }
-        */
-         
-        if (currentState == FILE_NOT_FOUND)
-        {
-            unlisten();
-            currentState = IDLE;
-        }
-        else if ((rdbus & ATN) == 0x00) // check for bus command
-        {
-            //transmitHex(CHAR, rdchar);
+            transmitHex(CHAR, rdchar);
             if (rdchar == 0xF0)
             {
                 currentState = LOAD_FNAME_READ;
@@ -378,17 +387,23 @@ int main(void)
             }
             else if (rdchar == 0x60) // read command
             {
-                currentState = FILE_READ;
-                // open file for reading
-                if (progname[0] == '$')
+                if (stateVars.fileNotFound == 1)
                 {
-                    transmitString("getting directory");
-                    // copy the directory header
-                    pgm_memcpy((unsigned char *)_buffer, (unsigned char *)_dirHeader, 7);
-                    
-                    // print directory title
-                    pgm_memcpy((unsigned char *)&_buffer[7], (unsigned char *)_versionString, 24);
-                    _buffer[31] = 0x00;
+                    currentState = FILE_NOT_FOUND;
+                }
+                else
+                {
+                    currentState = FILE_READ;
+                    // open file for reading
+                    if (progname[0] == '$')
+                    {
+                        // copy the directory header
+                        pgm_memcpy((unsigned char *)_buffer, (unsigned char *)_dirHeader, 7);
+                        
+                        // print directory title
+                        pgm_memcpy((unsigned char *)&_buffer[7], (unsigned char *)_versionString, 24);
+                        _buffer[31] = 0x00;
+                    }
                 }
             }
             else if (rdchar == 0x61) // save command
@@ -404,9 +419,9 @@ int main(void)
                     {
                         if (stateVars.fileWriteByte == -1)
                         {
+                            transmitString_F(_saving);
                             transmitString(progname);
-                            transmitString("writing file");
-                            openFileForWriting(progname, currentDirectoryCluster);
+                            openFileForWriting(progname, stateVars.currentDirectoryCluster);
                             stateVars.fileWriteByte = 0;
                         }
                         stateVars.fileDirection = FWRITE;
@@ -421,7 +436,6 @@ int main(void)
                         }
                         else
                         {
-                            //transmitString("reading");
                             stateVars.fileDirection = FREAD;
                             currentState = OPEN_DATA_READ;
                         }
@@ -434,8 +448,6 @@ int main(void)
                 unsigned char temp = rdchar & 0x0F;
                 if (temp == stateVars.openFileAddress && stateVars.fileDirection == FWRITE)
                 {
-                    transmitString("write file closing");
-                    transmitHex(INT, stateVars.fileWriteByte);
                     if (stateVars.fileWriteByte > 0)
                     {
                         writeBufferToFile(stateVars.fileWriteByte);
@@ -479,21 +491,6 @@ int main(void)
                 }
                 else 
                 {
-                    transmitString("got fname");
-                    
-                    /*
-                    // check for DLOAD command, remove 0: from start of filename
-                    if (progname[0] == '0' && progname[1] == ':')
-                    {
-                        for (i = 0; i < filename_position-2; i++)
-                        {
-                            progname[i] = progname[i+2];
-                        }
-                        
-                        filename_position -= 2;
-                    }
-                    */
-                    
                     // process filename, remove drive indicators and file type
                     filename_position = processFilename(progname, filename_position);
                 
@@ -531,45 +528,41 @@ int main(void)
         wait_for_dav_high();
         // open file if needed
         
-        if (currentState == FILE_READ_OPENING)
+        // === PREPARE FOR READ/WRITE
+        // === re-init sd card and open file
+        
+        if (currentState == FILE_READ_OPENING ||
+            currentState == FILE_SAVE_OPENING ||
+            currentState == OPEN_FNAME_READ_DONE ||
+            currentState == DIR_READ)
         {
-            transmitString("dir cluster:");
-            transmitHex(LONG, currentDirectoryCluster);
-            if (!openFileForReading(progname, currentDirectoryCluster))
+            // initialize sd card
+            error = initializeSDCard(&stateVars);
+            
+            if (currentState == FILE_SAVE_OPENING)
             {
-                // file not found
-                currentState = FILE_NOT_FOUND;
-            }
-            else
-            {
+                // open file
+                openFileForWriting(progname, stateVars.currentDirectoryCluster);
                 currentState = IDLE;
             }
-            
-            // clear string
-            memset(progname, 0, FNAMELEN);
-        }
-        else if (currentState == FILE_SAVE_OPENING)
-        {
-            // open file
-            transmitString("open file for writing");
-            openFileForWriting(progname, currentDirectoryCluster);
-            currentState = IDLE;
-        }
-        else if (currentState == OPEN_FNAME_READ_DONE)
-        {
-            if (!openFileForReading(progname, currentDirectoryCluster))
+            else if (currentState == FILE_READ_OPENING ||
+                     currentState == OPEN_FNAME_READ_DONE) // file read, either LOAD or OPEN command
             {
-                // file not found
-                stateVars.fileNotFound = 1;
+                if (!openFileForReading(progname, stateVars.currentDirectoryCluster))
+                {
+                    // file not found
+                    stateVars.fileNotFound = 1;
+                }
+                else
+                {
+                    if (currentState == OPEN_FNAME_READ_DONE)
+                        bytes_to_send = getNextFileBlock();
+                    stateVars.fileReadByte = 0;
+                    stateVars.fileNotFound = 0;
+                }
+                
+                currentState = IDLE;
             }
-            else
-            {
-                bytes_to_send = getNextFileBlock();
-                stateVars.fileReadByte = 0;
-                stateVars.fileNotFound = 0;
-            }
-            
-            currentState = IDLE;
         }
         
         if ((rdchar == UNLISTEN) || (rdchar == UNTALK && (rdbus & ATN) == 0x00))
@@ -610,40 +603,39 @@ int main(void)
                 // get packet
                 if (progname[0] == '$')
                 {
-                    transmitString((unsigned char *)"directory..");
                     sendIEEEBytes((unsigned char *)_buffer, 32, 0);
-                     
+                    
                     // this is a change directory command
                     if (progname[1] == ':')
                     {
                         // check if we should return to root
                         if ((progname[2] == '\\' || progname[2] == '/') && progname[3] == 0)
                         {
-                            currentDirectoryCluster = _rootCluster;
+                            stateVars.currentDirectoryCluster = _rootCluster;
                         }
                         else
                         {
                             // get the cluster for the new directory
-                            dir = findFile(&progname[2], currentDirectoryCluster);
+                            dir = findFile(&progname[2], stateVars.currentDirectoryCluster);
                             
                             if (dir != 0)
                             {
                                 // get new directory cluster
-                                currentDirectoryCluster = getFirstCluster(dir);
-                                if (currentDirectoryCluster == 0)
+                                stateVars.currentDirectoryCluster = getFirstCluster(dir);
+                                if (stateVars.currentDirectoryCluster == 0)
                                 {
-                                    currentDirectoryCluster = _rootCluster;
+                                    stateVars.currentDirectoryCluster = _rootCluster;
                                 }
                             }
                         }
                     }
                     
                     // write directory entries
-                    ListFilesIEEE(currentDirectoryCluster);
+                    ListFilesIEEE(stateVars.currentDirectoryCluster);
                 }
                 else // read from file
                 {
-                    transmitString("reading file");
+                    transmitString_F(_reading);
                     // send blocks of file
                     doneSending = 0;
                     while(doneSending == 0)
