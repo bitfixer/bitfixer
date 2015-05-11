@@ -128,3 +128,7 @@ ports:
 debug:
 	minicom -D $(SPAREPORT)
 
+firmware: PETdisk.bin
+	dd if=PETdisk.bin ibs=14336 count=1 of=FIRM30B.BIN conv=sync
+
+
