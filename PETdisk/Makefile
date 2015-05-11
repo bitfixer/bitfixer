@@ -17,9 +17,12 @@
 #                   default_serial = "avrdoper"
 # FUSES ........ Parameters for avrdude to flash the fuses appropriately.
 
+MASTERPORT = $(shell cat master.port)
+SPAREPORT = $(shell cat spare.port)
+
 DEVICE     = atmega168
 CLOCK      = 8000000
-PROGRAMMER = -c stk500v2 -P /dev/tty.usbserial
+PROGRAMMER = -c stk500v2 -P $(MASTERPORT)
 OBJECTS    = PETdisk.o ../bf-avr-sdlib/FAT32.o IEEE488.o ../bf-avr-sdlib/SD_routines.o \
 				../bf-avr-sdlib/SPI_routines.o ../shared/UART_routines.o
 #FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0x24:m
@@ -27,6 +30,8 @@ FUSES      = -U efuse:w:0x00:m -U hfuse:w:0xdf:m -U lfuse:w:0xe2:m
 
 INCLUDEDIR = -I../bf-avr-sdlib -I../shared
 BUILDDIR = build
+
+PORTS = $(shell ls /dev/tty.usb*)
 
 # ATMega8 fuse bits used above (fuse bits for other devices are different!):
 # Example for 8 MHz internal oscillator
@@ -76,6 +81,9 @@ all:	PETdisk.hex
 flash:	all
 	$(AVRDUDE) -U flash:w:PETdisk.hex
 
+flashnoverify:	all
+	$(AVRDUDE) -V -U flash:w:PETdisk.hex
+
 fuse:
 	$(AVRDUDE) $(FUSES)
 
@@ -113,3 +121,10 @@ disasm:	PETdisk.elf
 cpp:
 	$(COMPILE) -E PETdisk.c ../bf-avr-sdlib/FAT32.c IEEE488.c \
 	../bf-avr-sdlib/SD_routines.c ../bf-avr-sdlib/SPI_routines.c ../shared/UART_routines.c
+
+ports: 
+	python ../shared/getports.py
+
+debug:
+	minicom -D $(SPAREPORT)
+
