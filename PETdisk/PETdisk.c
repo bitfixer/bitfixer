@@ -46,6 +46,9 @@
 #define PET_LOAD_FNAME_ADDR     0xF0
 #define PET_SAVE_FNAME_ADDR     0xF1
 #define PET_OPEN_FNAME_MASK     0xF0
+#define PET_READ_CMD_ADDR       0x60
+#define PET_SAVE_CMD_ADDR       0x61
+#define PET_OPEN_IO_ADDR        0x60
 
 // macro for checking if line is low
 #define SIGNAL_IS_LOW(A, B)     (A & B) == 0x00
@@ -105,7 +108,7 @@ const unsigned char _dirHeader[] PROGMEM =
     0x12,
 };
 
-const unsigned char _versionString[] PROGMEM = "\"PETDISK V3.0b   \"      ";
+const unsigned char _versionString[] PROGMEM = "\"PETDISK V3.0B   \"      ";
 
 const unsigned char _saving[] PROGMEM = "Saving";
 const unsigned char _reading[] PROGMEM = "Reading";
@@ -378,24 +381,24 @@ int main(void)
         // read bus value
         rdbus = PINC;
         
-        if ((rdbus & ATN) == 0x00) // check for bus command
+        if (SIGNAL_IS_LOW(rdbus, ATN)) // check for bus command
         {
             //transmitHex(CHAR, rdchar);
-            if (rdchar == 0xF0)
+            if (rdchar == PET_LOAD_FNAME_ADDR)
             {
                 currentState = LOAD_FNAME_READ;
             }
-            else if (rdchar == 0xF1)
+            else if (rdchar == PET_SAVE_FNAME_ADDR)
             {
                 currentState = SAVE_FNAME_READ;
             }
-            else if ((rdchar & 0xF0) == 0xF0) // open command to another address
+            else if ((rdchar & 0xF0) == PET_OPEN_FNAME_MASK) // open command to another address
             {
                 currentState = OPEN_FNAME_READ;
                 stateVars.openFileAddress = (rdchar & 0x0F);
                 stateVars.fileWriteByte = -1;
             }
-            else if (rdchar == 0x60) // read command
+            else if (rdchar == PET_READ_CMD_ADDR) // read command
             {
                 if (stateVars.fileNotFound == 1)
                 {
@@ -417,11 +420,11 @@ int main(void)
                     }
                 }
             }
-            else if (rdchar == 0x61) // save command
+            else if (rdchar == PET_SAVE_CMD_ADDR) // save command
             {
                 currentState = FILE_SAVE;
             }
-            else if ((rdchar & 0xF0) == 0x60) // print or input command
+            else if ((rdchar & 0xF0) == PET_OPEN_IO_ADDR) // print or input command
             {
                 unsigned char temp = rdchar & 0x0F;
                 if (temp == stateVars.openFileAddress)

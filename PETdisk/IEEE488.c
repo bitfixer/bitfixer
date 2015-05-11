@@ -112,6 +112,18 @@ void wait_for_nrfd_high()
     }
 }
 
+void wait_for_nrfd_low()
+{
+    unsigned char rdchar;
+    rdchar = PINC;
+    rdchar = rdchar & NRFD;
+    while (rdchar != 0x00)
+    {
+        rdchar = PINC;
+        rdchar = rdchar & NRFD;
+    }
+}
+
 void wait_for_ndac_low()
 {
     unsigned char rdchar;

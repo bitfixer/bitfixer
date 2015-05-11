@@ -75,9 +75,8 @@ unsigned char receiveByte( void )
 //***************************************************
 void transmitByte( unsigned char data )
 {
-	while ( !(UCSR0A & (1<<UDRE0)) )
-		; 			                /* Wait for empty transmit buffer */
-	UDR0 = data; 			        /* Start transmition */
+    while ( !(UCSR0A & (1<<UDRE0)) );    // Wait for empty transmit buffer
+	UDR0 = data;                         // Start transmission
 }
 
 
@@ -114,8 +113,10 @@ transmitString (dataString);
 //***************************************************
 void transmitString_F(char* string)
 {
-  while (pgm_read_byte(&(*string)))
-   transmitByte(pgm_read_byte(&(*string++)));
+    while (pgm_read_byte(&(*string)))
+        transmitByte(pgm_read_byte(&(*string++)));
+    
+    TX_NEWLINE;
 }
 
 //***************************************************
@@ -126,6 +127,5 @@ void transmitString(unsigned char* string)
     while (*string)
         transmitByte(*string++);
 
-    transmitByte('\r');
-    transmitByte('\n');
+    TX_NEWLINE;
 }

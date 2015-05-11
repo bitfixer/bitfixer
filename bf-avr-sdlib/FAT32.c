@@ -532,7 +532,7 @@ void openFileForWriting(unsigned char *fileName, unsigned long dirCluster)
     i = 0;
     while (fileName[i] != 0)
     {
-        transmitHex(CHAR, i);
+        //transmitHex(CHAR, i);
         _filePosition.fileName[i] = fileName[i];
         i++;
     }
@@ -642,7 +642,6 @@ void closeFile()
     unsigned char curr_long_entry;
      
     islongfilename = isLongFilename(_filePosition.fileName);
-    transmitHex(CHAR, islongfilename);
     num_long_entries = 0;
     fname_len = 0;
     checkSum = 0;
@@ -723,7 +722,7 @@ void closeFile()
                         SD_writeSingleBlock (firstSector + sector);
                         fileCreatedFlag = 1;
                         
-                        transmitString_F((char *)PSTR(" File Created!"));
+                        transmitString_F((char *)PSTR("File Created!"));
                     }
                 }
                 else

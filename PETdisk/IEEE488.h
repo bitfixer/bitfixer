@@ -33,8 +33,6 @@
 #define DAV 0x04
 #define EOI 0x10
 
-#define TALK 0x40
-
 #define DATA_PORT PORTD
 #define DATA_CTL  DDRD
 #define DATA_HI_IN PIND
@@ -59,6 +57,7 @@ void wait_for_dav_low();
 void wait_for_atn_high();
 void wait_for_atn_low();
 void wait_for_nrfd_high();
+void wait_for_nrfd_low();
 void wait_for_ndac_high();
 unsigned char wait_for_ndac_high_or_atn_low();
 unsigned char wait_for_ndac_low_or_atn_low();
