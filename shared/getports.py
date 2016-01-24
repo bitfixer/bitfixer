@@ -5,37 +5,68 @@
 # Mac OS has an annoying habit of switching the ids for the serial adapters
 
 import os
-
-def timeout_command(command, timeout):
-    """call shell-command and either return its output or kill it
-        if it doesn't normally exit within timeout seconds and return None"""
-    import subprocess, datetime, os, time, signal
-    start = datetime.datetime.now()
-    print start
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    while process.poll() is None:
-        time.sleep(0.1)
-        now = datetime.datetime.now()
-        if (now - start).seconds > timeout:
-            os.kill(process.pid, signal.SIGKILL)
-            os.waitpid(-1, os.WNOHANG)
-            return None
-    return process.stdout.read()
-
+import time
 
 ports = os.popen("ls /dev/tty.usb*").read().split()
-os.popen("rm -r test1")
 
 foundport = 0
+index = 0
 for port in ports:
     if foundport == 0:
-        output = timeout_command(["avrdude", "-P", port, "-c", "stk500v2", "-p", "atmega168", "-U", "efuse:r:test1:i"], 2)
-        if os.path.isfile("test1"):
-            print "stk500 on "+port
-            os.popen("rm test1")
-            os.popen("echo "+port+" > master.port")
-            foundport = 1
+        cmd = "avrdude -P "+port+" -c stk500v2 -p atmega168 -n > avrtest.txt 2>&1 &"
+        print cmd
+        os.system(cmd)
+
+        avrdone = 0
+       
+        #check output file
+        while avrdone == 0:
+            time.sleep(1)
+            f = open('avrtest.txt', 'r')
+            result = f.read()
+            f.close()
+
+            # look for success condition or timeout condition
+            res = result.find('stk500v2_command(): command failed')
+            if res > -1:
+                # stk500 present, no chip
+                foundport = 1
+                avrdone = 1
+                print "avr found at port "+port
+
+            if avrdone == 0:
+                res = result.find('AVR device initialized')
+                if res > -1:
+                    foundport = 1
+                    avrdone = 1
+                    print "avr found at port "+port
+
+            if avrdone == 0:
+                res = result.find('stk500v2_ReceiveMessage(): timeout')
+                if res > -1:
+                    print "timeout, need to kill"
+                    os.system("ps ax | grep avrdude > proc.txt")
+                    f = open('proc.txt', 'r')
+                    line = f.readline()
+                    f.close()
+                    print line
+                    parts = line.split(' ')
+                    pid = parts[0]
+                    cmd = "kill -9 "+str(pid)
+                    print cmd
+                    os.system(cmd)
+                    os.system('rm proc.txt')
+                    avrdone = 1
+
+        os.system('rm avrtest.txt')
+
+        if foundport == 1:
+            print "found port at "+port
+            os.system("echo "+port+" > master.port")
         else:
-            os.popen("echo "+port+" > spare.port")
+            os.system("echo "+port+" > spare.port")
     else:
-        os.popen("echo "+port+" > spare.port")
+        os.system("echo "+port+" > spare.port")
+
+if foundport == 0:
+    print "No AVR Detected."
