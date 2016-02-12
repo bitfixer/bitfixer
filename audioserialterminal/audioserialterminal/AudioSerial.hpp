@@ -1,0 +1,146 @@
+//
+//  AudioSerial.hpp
+//  audioserialterminal
+//
+//  Created by Michael Hill on 1/27/16.
+//  Copyright © 2016 jaunt. All rights reserved.
+//
+
+#ifndef AudioSerial_hpp
+#define AudioSerial_hpp
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <mutex>
+
+template <class t> class CircularBuffer
+{
+public:
+    CircularBuffer(int size) : maxitems(size)
+    {
+        buffer = (t*)malloc(sizeof(t) * maxitems);
+    };
+    
+    ~CircularBuffer()
+    {
+        if (buffer)
+        {
+            free(buffer);
+            buffer = NULL;
+        }
+    }
+    
+    int getsize()
+    {
+        std::lock_guard<std::mutex> guard(mutex);
+        return size;
+    }
+    
+    void push(t val)
+    {
+        std::lock_guard<std::mutex> guard(mutex);
+        buffer[writeindex] = val;
+        writeindex++;
+        if (writeindex >= maxitems)
+        {
+            writeindex = 0;
+        }
+        
+        size++;
+    }
+    
+    t pop()
+    {
+        std::lock_guard<std::mutex> guard(mutex);
+        t val = buffer[readindex];
+        readindex++;
+        if (readindex >= maxitems)
+        {
+            readindex = 0;
+        }
+        
+        size--;
+        return val;
+    }
+    
+private:
+    int maxitems = 0;
+    t* buffer = NULL;
+    
+    int size = 0;
+    int readindex = 0;
+    int writeindex = 0;
+    std::mutex mutex;
+};
+
+
+class AudioSerialPort
+{
+public:
+    AudioSerialPort(float sr, float baudrate)
+    {
+        samplerate = sr;
+        samples_per_bit = samplerate / baudrate;
+        bits_per_sample = 1.0 / samples_per_bit;
+        buffer = new CircularBuffer<unsigned char>(32768);
+        inputbuffer = new CircularBuffer<unsigned char>(32768);
+        samples_remaining_in_bit = samples_per_bit;
+    };
+    
+    ~AudioSerialPort()
+    {
+        if (buffer)
+        {
+            delete buffer;
+            buffer = NULL;
+        }
+    }
+    
+    void send(unsigned char *data, int length);
+    int recv(unsigned char *data, int length);
+    
+    void getaudio(float *samples, int numsamples);
+    void readaudio(float *samples, int numsamples);
+    
+private:
+    
+    typedef enum
+    {
+        SEARCHING,
+        READING
+    } readstate;
+    
+    typedef enum
+    {
+        IDLE,
+        STARTING,
+        ENDING,
+        SENDING
+    } writestate;
+    
+    float samplerate = 48000.0;
+    float baudrate = 19200.0;
+    double samples_per_bit = 0;
+    double bits_per_sample = 0;
+    CircularBuffer<unsigned char> *buffer = NULL;
+    CircularBuffer<unsigned char> *inputbuffer = NULL;
+    
+    unsigned char curr_byte = 0;
+    int bits_remaining = 0;
+    double samples_remaining_in_bit = 0;
+    int burst_samples_remaining = 0;
+    float curr_burst_sample = 1.0;
+    int starting_samples_remaining = 0;
+    int ending_samples_remaining = 0;
+    
+    readstate current_state = SEARCHING;
+    writestate current_write_state = IDLE;
+    
+    unsigned char curr_input_byte;
+    unsigned char curr_input_bit;
+    float input_bit_buckets[10];
+    float input_bit_count[10];
+    unsigned char curr_sample_in_input_byte;
+};
+
+#endif /* AudioSerial_hpp */
