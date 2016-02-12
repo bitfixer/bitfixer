@@ -178,14 +178,20 @@ void AudioSerialPort::readaudio(float *samples, int numsamples)
     // states can be:
     // searching (not in the middle of a byte)
     // reading (reading a byte)
-    float threshold = 0.5;
+    //float threshold = 0.5;
     int curr_sample = 0;
     while (curr_sample < numsamples)
     {
-        if (current_state == SEARCHING)
+        if (current_state == SEARCHING || current_state == NEXT_START_BIT)
         {
             // look for the start of a byte
             // this will be a start bit (0)
+            
+            float threshold = 0.5;
+            if (current_state == NEXT_START_BIT)
+            {
+                threshold = 0.15;
+            }
             
             if (samples[curr_sample] < -threshold)
             {
@@ -206,34 +212,14 @@ void AudioSerialPort::readaudio(float *samples, int numsamples)
             }
             else
             {
-                curr_sample++;
-            }
-        }
-        else if (current_state == NEXT_START_BIT)
-        {
-            if (samples[curr_sample] < -0.15)
-            {
-                curr_input_byte = 0;
-                curr_input_bit = 0;
-                curr_sample_in_input_byte = 0;
-                curr_min_sample = 1.0;
-                curr_max_sample = -1.0;
-                current_state = READING;
-                
-                for (int i = 0; i < 10; i++)
+                if (current_state == NEXT_START_BIT)
                 {
-                    input_bit_buckets[i] = 0.0;
-                    input_bit_count[i] = 0.0;
+                    start_bit_search_samples++;
+                    if (start_bit_search_samples > 10)
+                    {
+                        current_state = SEARCHING;
+                    }
                 }
-            }
-            else
-            {
-                start_bit_search_samples++;
-                if (start_bit_search_samples > 10)
-                {
-                    current_state = SEARCHING;
-                }
-                
                 curr_sample++;
             }
         }
@@ -256,37 +242,25 @@ void AudioSerialPort::readaudio(float *samples, int numsamples)
             
             if (this_bucket > 9) // look for stop bit
             {
-                //if (samples[curr_sample] > threshold)
-                //{
-                    // get running values for 0/1 bit voltages
-                    //float min_avg = input_bit_buckets[0] / input_bit_count[0];
-                    //float max_avg = input_bit_buckets[9] / input_bit_count[9];
-                
-                    //float midpoint = (min_avg + max_avg) / 2.0;
-                
-                    float midpoint = (curr_min_sample + curr_max_sample) / 2.0;
-                    //float midpoint = -0.33;
-                
-                    // done searching
-                    // push result to input buffer
-                    for (int i = 1; i < 9; i++)
+                float midpoint = (curr_min_sample + curr_max_sample) / 2.0;
+            
+                // done searching
+                // push result to input buffer
+                for (int i = 1; i < 9; i++)
+                {
+                    curr_input_byte >>= 1;
+                    
+                    float bucket_avg = input_bit_buckets[i] / input_bit_count[i];
+                    
+                    if (bucket_avg > midpoint)
                     {
-                        curr_input_byte >>= 1;
-                        
-                        float bucket_avg = input_bit_buckets[i] / input_bit_count[i];
-                        
-                        if (bucket_avg > midpoint)
-                        {
-                            curr_input_byte |= 0x80;
-                        }
+                        curr_input_byte |= 0x80;
                     }
-                    //printf("mid %f : %c\n", midpoint, curr_input_byte);
-                    printf("%c", curr_input_byte);
-                    //inputbuffer->push(curr_input_byte);
-                    start_bit_search_samples = 0;
-                    current_state = NEXT_START_BIT;
-                //}
-                
+                }
+                printf("%c", curr_input_byte);
+                //inputbuffer->push(curr_input_byte);
+                start_bit_search_samples = 0;
+                current_state = NEXT_START_BIT;
             }
             else if (this_bucket == next_bucket)
             {
