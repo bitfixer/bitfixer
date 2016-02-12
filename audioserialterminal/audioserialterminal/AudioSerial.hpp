@@ -32,13 +32,15 @@ public:
     
     int getsize()
     {
-        std::lock_guard<std::mutex> guard(mutex);
-        return size;
+        //std::lock_guard<std::mutex> guard(mutex);
+        //return size;
+        
+        return totalWriteIndex - totalReadIndex;
     }
     
     void push(t val)
     {
-        std::lock_guard<std::mutex> guard(mutex);
+        //std::lock_guard<std::mutex> guard(mutex);
         buffer[writeindex] = val;
         writeindex++;
         if (writeindex >= maxitems)
@@ -46,12 +48,13 @@ public:
             writeindex = 0;
         }
         
-        size++;
+        //size++;
+        totalWriteIndex++;
     }
     
     t pop()
     {
-        std::lock_guard<std::mutex> guard(mutex);
+        //std::lock_guard<std::mutex> guard(mutex);
         t val = buffer[readindex];
         readindex++;
         if (readindex >= maxitems)
@@ -59,7 +62,9 @@ public:
             readindex = 0;
         }
         
-        size--;
+        //size--;
+        totalReadIndex++;
+        
         return val;
     }
     
@@ -70,6 +75,8 @@ private:
     int size = 0;
     int readindex = 0;
     int writeindex = 0;
+    long long totalReadIndex = 0;
+    long long totalWriteIndex = 0;
     std::mutex mutex;
 };
 
@@ -107,7 +114,8 @@ private:
     typedef enum
     {
         SEARCHING,
-        READING
+        READING,
+        NEXT_START_BIT
     } readstate;
     
     typedef enum
@@ -133,6 +141,8 @@ private:
     int starting_samples_remaining = 0;
     int ending_samples_remaining = 0;
     
+    int start_bit_search_samples = 0;
+    
     readstate current_state = SEARCHING;
     writestate current_write_state = IDLE;
     
@@ -141,6 +151,8 @@ private:
     float input_bit_buckets[10];
     float input_bit_count[10];
     unsigned char curr_sample_in_input_byte;
+    float curr_min_sample = 0;
+    float curr_max_sample = 0;
 };
 
 #endif /* AudioSerial_hpp */
