@@ -153,6 +153,9 @@ private:
     unsigned char curr_sample_in_input_byte;
     float curr_min_sample = 0;
     float curr_max_sample = 0;
+    
+    //FILE *fp_out;
+    //FILE *fp_in;
 };
 
 #endif /* AudioSerial_hpp */

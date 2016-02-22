@@ -43,7 +43,8 @@ void AudioSerialPort::getaudio(float *samples, int numsamples)
         {
             if (burst_samples_remaining > 0)
             {
-                samples[sampleIndex] = curr_burst_sample;
+                //samples[sampleIndex] = curr_burst_sample;
+                samples[sampleIndex] = 1.0;
                 if (curr_burst_sample == 1.0)
                     curr_burst_sample = -1.0;
                 else
@@ -67,7 +68,7 @@ void AudioSerialPort::getaudio(float *samples, int numsamples)
         {
             if (ending_samples_remaining > 0)
             {
-                samples[sampleIndex] = -1.0;
+                samples[sampleIndex] = 1.0;
                 sampleIndex++;
                 ending_samples_remaining--;
             }
@@ -137,6 +138,7 @@ void AudioSerialPort::getaudio(float *samples, int numsamples)
                 if (buffer->getsize() > 0)
                 {
                     curr_byte = buffer->pop();
+                    //printf("sending: %c\n", curr_byte);
                     bits_remaining = 10; // 1 start, 8 data, 1 stop
                     
                     if (current_write_state == IDLE)
@@ -157,7 +159,7 @@ void AudioSerialPort::getaudio(float *samples, int numsamples)
                     {
                         current_write_state = ENDING;
                         ending_samples_remaining = (int)(samples_per_bit * 10);
-                        sampleIndex++;
+                        //sampleIndex++;
                     }
                     else
                     {
@@ -178,7 +180,6 @@ void AudioSerialPort::readaudio(float *samples, int numsamples)
     // states can be:
     // searching (not in the middle of a byte)
     // reading (reading a byte)
-    //float threshold = 0.5;
     int curr_sample = 0;
     while (curr_sample < numsamples)
     {
@@ -257,7 +258,10 @@ void AudioSerialPort::readaudio(float *samples, int numsamples)
                         curr_input_byte |= 0x80;
                     }
                 }
+                
+                float startavg = input_bit_buckets[0] / input_bit_count[0];
                 printf("%c", curr_input_byte);
+                //printf("%c : %02X start %f stop %f startavg %f\n", curr_input_byte, curr_input_byte, input_bit_buckets[0], input_bit_buckets[9], startavg);
                 //inputbuffer->push(curr_input_byte);
                 start_bit_search_samples = 0;
                 current_state = NEXT_START_BIT;
