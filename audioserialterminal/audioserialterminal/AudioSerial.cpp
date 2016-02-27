@@ -173,9 +173,34 @@ void AudioSerialPort::getaudio(float *samples, int numsamples)
     }
 }
 
-void AudioSerialPort::readaudio(float *samples, int numsamples)
+void AudioSerialPort::readaudio(float *s_in, int numsamples_in)
 {
     // read incoming audio and read serial bytes
+    
+    // do oversampling
+    int numsamples = numsamples_in * oversampling;
+    //oversampling_buffer = (float *)malloc(sizeof(float) * numsamples);
+    
+    for (int s = 0; s < numsamples; s++)
+    {
+        float pos = (float)s / (float)oversampling;
+        int leftIndex = (int)floor(pos);
+        int rightIndex = leftIndex+1;
+        
+        float sample = 0.0;
+        if (rightIndex >= numsamples_in)
+        {
+            sample = s_in[numsamples_in-1];
+        }
+        else
+        {
+            float portion = pos - (float)leftIndex;
+            sample = (1.0 - portion) * s_in[leftIndex] + (portion) * s_in[rightIndex];
+            oversampling_buffer[s] = sample;
+        }
+    }
+    
+    float *samples = oversampling_buffer;
     
     // states can be:
     // searching (not in the middle of a byte)
@@ -191,12 +216,23 @@ void AudioSerialPort::readaudio(float *samples, int numsamples)
             float threshold = 0.5;
             if (current_state == NEXT_START_BIT)
             {
-                threshold = 0.15;
+                //threshold = 0.15;
+                //threshold = -0.15;
+                //threshold = 0.15;
+                threshold = - (last_start_bit_search_sample / 1.5 );
             }
             
             if (samples[curr_sample] < -threshold)
             {
-                //printf("found at %d\n", curr_sample);
+                /*
+                printf("found at %d : %0.3f\n", curr_sample, (float)curr_sample / samplerate);
+                
+                for (int i = curr_sample-10; i < curr_sample+10; i++)
+                {
+                    printf("s[%d] = %f\n", i, samples[i]);
+                }
+                */
+                
                 
                 curr_input_byte = 0;
                 curr_input_bit = 0;
@@ -204,6 +240,7 @@ void AudioSerialPort::readaudio(float *samples, int numsamples)
                 curr_min_sample = 1.0;
                 curr_max_sample = -1.0;
                 current_state = READING;
+                //printf("Byte: start sample %d\n", curr_sample);
                 
                 for (int i = 0; i < 10; i++)
                 {
@@ -244,26 +281,68 @@ void AudioSerialPort::readaudio(float *samples, int numsamples)
             if (this_bucket > 9) // look for stop bit
             {
                 float midpoint = (curr_min_sample + curr_max_sample) / 2.0;
+                
+                float val_diff = curr_max_sample - curr_min_sample;
+                
+                float prev_avg = input_bit_buckets[0] / input_bit_count[0];
+                int prev_bit_value = 0;
             
                 // done searching
                 // push result to input buffer
                 for (int i = 1; i < 9; i++)
                 {
                     curr_input_byte >>= 1;
-                    
                     float bucket_avg = input_bit_buckets[i] / input_bit_count[i];
+                    /*
+                    
+                    int curr_bit_value = 0;
+                    
+                    if (prev_bit_value == 0)
+                    {
+                        if (bucket_avg > prev_avg)
+                        {
+                            if (bucket_avg - prev_avg >= val_diff/3.5)
+                            {
+                                curr_bit_value = 1;
+                            }
+                        }
+                    }
+                    else if (prev_bit_value == 1)
+                    {
+                        curr_bit_value = 1;
+                        if (bucket_avg < prev_avg)
+                        {
+                            if (prev_avg - bucket_avg >= val_diff/3.5)
+                            {
+                                curr_bit_value = 0;
+                            }
+                        }
+                    }
+                    
+                    if (curr_bit_value == 1)
+                    {
+                        curr_input_byte |= 0x80;
+                    }
+                    prev_avg = bucket_avg;
+                    prev_bit_value = curr_bit_value;
+                    */
+                    
                     
                     if (bucket_avg > midpoint)
                     {
                         curr_input_byte |= 0x80;
                     }
+                    
                 }
                 
                 float startavg = input_bit_buckets[0] / input_bit_count[0];
+                //printf("%c : %02X at sample %d : %0.6f\n", curr_input_byte, curr_input_byte, curr_sample, (float)curr_sample / samplerate);
                 printf("%c", curr_input_byte);
                 //printf("%c : %02X start %f stop %f startavg %f\n", curr_input_byte, curr_input_byte, input_bit_buckets[0], input_bit_buckets[9], startavg);
                 //inputbuffer->push(curr_input_byte);
                 start_bit_search_samples = 0;
+                last_start_bit_search_sample = samples[curr_sample];
+                
                 current_state = NEXT_START_BIT;
             }
             else if (this_bucket == next_bucket)
@@ -300,4 +379,6 @@ void AudioSerialPort::readaudio(float *samples, int numsamples)
         }
         
     }
+    
+    //free(oversampling_buffer);
 }

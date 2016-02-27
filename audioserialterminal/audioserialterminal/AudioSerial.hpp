@@ -86,12 +86,16 @@ class AudioSerialPort
 public:
     AudioSerialPort(float sr, float baudrate)
     {
-        samplerate = sr;
+        // test: do oversampling
+        input_samplerate = sr;
+        samplerate = input_samplerate * oversampling;
         samples_per_bit = samplerate / baudrate;
         bits_per_sample = 1.0 / samples_per_bit;
         buffer = new CircularBuffer<unsigned char>(32768);
         inputbuffer = new CircularBuffer<unsigned char>(32768);
         samples_remaining_in_bit = samples_per_bit;
+        
+        oversampling_buffer = (float *)malloc(sizeof(float) * 20000);
     };
     
     ~AudioSerialPort()
@@ -101,6 +105,9 @@ public:
             delete buffer;
             buffer = NULL;
         }
+        
+        if (oversampling_buffer)
+            free(oversampling_buffer);
     }
     
     void send(unsigned char *data, int length);
@@ -126,7 +133,9 @@ private:
         SENDING
     } writestate;
     
-    float samplerate = 48000.0;
+    float input_samplerate = 48000.0;
+    int oversampling = 10;
+    float samplerate = 480000.0;
     float baudrate = 19200.0;
     double samples_per_bit = 0;
     double bits_per_sample = 0;
@@ -142,6 +151,7 @@ private:
     int ending_samples_remaining = 0;
     
     int start_bit_search_samples = 0;
+    float last_start_bit_search_sample = 0.0;
     
     readstate current_state = SEARCHING;
     writestate current_write_state = IDLE;
@@ -153,6 +163,8 @@ private:
     unsigned char curr_sample_in_input_byte;
     float curr_min_sample = 0;
     float curr_max_sample = 0;
+    
+    float *oversampling_buffer = NULL;
     
     //FILE *fp_out;
     //FILE *fp_in;

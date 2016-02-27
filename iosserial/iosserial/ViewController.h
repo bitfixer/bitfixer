@@ -7,9 +7,11 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "AudioSerial.hpp"
 
-@interface ViewController : UIViewController
+@interface ViewController : UIViewController <UITextViewDelegate>
 
+- (BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text;
 
 @end
 
