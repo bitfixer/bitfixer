@@ -95,7 +95,7 @@ public:
         inputbuffer = new CircularBuffer<unsigned char>(32768);
         samples_remaining_in_bit = samples_per_bit;
         
-        oversampling_buffer = (float *)malloc(sizeof(float) * 20000);
+        oversampling_buffer = (float *)malloc(sizeof(float) * max_input_buffer_size * oversampling);
     };
     
     ~AudioSerialPort()
@@ -107,7 +107,10 @@ public:
         }
         
         if (oversampling_buffer)
+        {
             free(oversampling_buffer);
+            oversampling_buffer = NULL;
+        }
     }
     
     void send(unsigned char *data, int length);
@@ -117,6 +120,8 @@ public:
     void readaudio(float *samples, int numsamples);
     
 private:
+    
+    void readAudioInternal(float *samples, int numsamples);
     
     typedef enum
     {
@@ -165,9 +170,8 @@ private:
     float curr_max_sample = 0;
     
     float *oversampling_buffer = NULL;
+    int max_input_buffer_size = 1024;
     
-    //FILE *fp_out;
-    //FILE *fp_in;
 };
 
 #endif /* AudioSerial_hpp */

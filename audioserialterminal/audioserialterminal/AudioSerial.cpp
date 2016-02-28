@@ -173,13 +173,30 @@ void AudioSerialPort::getaudio(float *samples, int numsamples)
     }
 }
 
-void AudioSerialPort::readaudio(float *s_in, int numsamples_in)
+void AudioSerialPort::readaudio(float *samples, int numsamples)
+{
+    int samplesLeft = numsamples;
+    float *buf = samples;
+    while (samplesLeft > 0)
+    {
+        int samplesToProcess = samplesLeft;
+        if (samplesToProcess > max_input_buffer_size)
+        {
+            samplesToProcess = max_input_buffer_size;
+        }
+        
+        readAudioInternal(buf, samplesToProcess);
+        buf += samplesToProcess;
+        samplesLeft -= samplesToProcess;
+    }
+}
+
+void AudioSerialPort::readAudioInternal(float *s_in, int numsamples_in)
 {
     // read incoming audio and read serial bytes
     
     // do oversampling
     int numsamples = numsamples_in * oversampling;
-    //oversampling_buffer = (float *)malloc(sizeof(float) * numsamples);
     
     for (int s = 0; s < numsamples; s++)
     {
@@ -286,7 +303,14 @@ void AudioSerialPort::readaudio(float *s_in, int numsamples_in)
                 
                 float prev_avg = input_bit_buckets[0] / input_bit_count[0];
                 int prev_bit_value = 0;
-            
+                
+                float stop_bit_avg = input_bit_buckets[9] / input_bit_count[9];
+                if (stop_bit_avg < midpoint)
+                {
+                    printf("stop bit is messed up\n");
+                    
+                }
+                    
                 // done searching
                 // push result to input buffer
                 for (int i = 1; i < 9; i++)
@@ -337,7 +361,7 @@ void AudioSerialPort::readaudio(float *s_in, int numsamples_in)
                 
                 float startavg = input_bit_buckets[0] / input_bit_count[0];
                 //printf("%c : %02X at sample %d : %0.6f\n", curr_input_byte, curr_input_byte, curr_sample, (float)curr_sample / samplerate);
-                printf("%c", curr_input_byte);
+                printf("%c\n", curr_input_byte);
                 //printf("%c : %02X start %f stop %f startavg %f\n", curr_input_byte, curr_input_byte, input_bit_buckets[0], input_bit_buckets[9], startavg);
                 //inputbuffer->push(curr_input_byte);
                 start_bit_search_samples = 0;
