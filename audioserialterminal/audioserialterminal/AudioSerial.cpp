@@ -283,8 +283,8 @@ void AudioSerialPort::readAudioInternal(float *s_in, int numsamples_in)
             // decide which bucket to put this sample in
             int next_sample = curr_sample_in_input_byte + 1;
             
-            double sstart = (double)curr_sample_in_input_byte / samples_per_bit;
-            double send = (double)next_sample / samples_per_bit;
+            double sstart = (double)curr_sample_in_input_byte / ovr_samples_per_bit;
+            double send = (double)next_sample / ovr_samples_per_bit;
             
             int this_bucket = (int)floor(sstart);
             int next_bucket = (int)floor(send);
@@ -317,40 +317,6 @@ void AudioSerialPort::readAudioInternal(float *s_in, int numsamples_in)
                 {
                     curr_input_byte >>= 1;
                     float bucket_avg = input_bit_buckets[i] / input_bit_count[i];
-                    /*
-                    
-                    int curr_bit_value = 0;
-                    
-                    if (prev_bit_value == 0)
-                    {
-                        if (bucket_avg > prev_avg)
-                        {
-                            if (bucket_avg - prev_avg >= val_diff/3.5)
-                            {
-                                curr_bit_value = 1;
-                            }
-                        }
-                    }
-                    else if (prev_bit_value == 1)
-                    {
-                        curr_bit_value = 1;
-                        if (bucket_avg < prev_avg)
-                        {
-                            if (prev_avg - bucket_avg >= val_diff/3.5)
-                            {
-                                curr_bit_value = 0;
-                            }
-                        }
-                    }
-                    
-                    if (curr_bit_value == 1)
-                    {
-                        curr_input_byte |= 0x80;
-                    }
-                    prev_avg = bucket_avg;
-                    prev_bit_value = curr_bit_value;
-                    */
-                    
                     
                     if (bucket_avg > midpoint)
                     {
@@ -361,7 +327,7 @@ void AudioSerialPort::readAudioInternal(float *s_in, int numsamples_in)
                 
                 float startavg = input_bit_buckets[0] / input_bit_count[0];
                 //printf("%c : %02X at sample %d : %0.6f\n", curr_input_byte, curr_input_byte, curr_sample, (float)curr_sample / samplerate);
-                printf("%c\n", curr_input_byte);
+                printf("%c", curr_input_byte);
                 //printf("%c : %02X start %f stop %f startavg %f\n", curr_input_byte, curr_input_byte, input_bit_buckets[0], input_bit_buckets[9], startavg);
                 //inputbuffer->push(curr_input_byte);
                 start_bit_search_samples = 0;
@@ -383,8 +349,8 @@ void AudioSerialPort::readAudioInternal(float *s_in, int numsamples_in)
                 double first_portion = (double)next_bucket - sstart;
                 double second_portion = send - (double)next_bucket;
                 
-                double first_pct = first_portion / bits_per_sample;
-                double second_pct = second_portion / bits_per_sample;
+                double first_pct = first_portion / ovr_bits_per_sample;
+                double second_pct = second_portion / ovr_bits_per_sample;
                 
                 input_bit_buckets[this_bucket] += first_pct * samples[curr_sample];
                 input_bit_count[this_bucket] += first_pct;
