@@ -9,29 +9,19 @@
 #include <iostream>
 #include "AudioSerial.hpp"
 #include "portaudio.h"
+#include "xmodem.hpp"
+#include <iostream>
+#include <thread>
 
 float abuffer[1024];
+float obuffer[1024];
 
-static int paTestCallback(const void *inputBuffer, void *outputBuffer,
+static int inputCallback(const void *inputBuffer, void *outputBuffer,
                           unsigned long framesPerBuffer,
                           const PaStreamCallbackTimeInfo* timeInfo,
                           PaStreamCallbackFlags statusFlags,
                           void *userData )
 {
-    /*
-    float *out = (float*)outputBuffer;
-    unsigned long i;
-    (void) timeInfo;
-    (void) statusFlags;
-    (void) inputBuffer;
-    
-    for (i = 0; i < framesPerBuffer; i++)
-    {
-        *out++ = 0.0;
-        *out++ = 0.0;
-    }
-    */
-    
     float *in = (float *)inputBuffer;
     
     // get only right channel
@@ -48,11 +38,94 @@ static int paTestCallback(const void *inputBuffer, void *outputBuffer,
     return paContinue;
 }
 
-int main(int argc, const char * argv[]) {
+static int outputCallback(const void *inputBuffer, void *outputBuffer,
+                          unsigned long framesPerBuffer,
+                          const PaStreamCallbackTimeInfo* timeInfo,
+                          PaStreamCallbackFlags statusFlags,
+                          void *userData )
+{
+    //printf("output\n");
+    float *out = (float *)outputBuffer;
+    AudioSerialPort *port = (AudioSerialPort *)userData;
+    
+    port->getaudio(obuffer, (int)framesPerBuffer);
+    for (int i = 0; i < framesPerBuffer; i++)
+    {
+        *out++ = obuffer[i];
+        *out++ = obuffer[i];
+    }
+    
+    return paContinue;
+}
+
+AudioSerialPort *recvport;
+AudioSerialPort *sendport;
+
+void testrecv()
+{
+    Xmodem xmodem(recvport);
+    xmodem.recv(NULL);
+}
+
+void testsend()
+{
+    sleep(1);
+    //sendport->send((unsigned char *)"sending", 7);
+    
+    Xmodem xmodem(sendport);
+    xmodem.send((const unsigned char *)"SendThisWithXmodem", 18);
+}
+
+int terminal(int argc, const char * argv[]) {
     // insert code here...
     std::cout << "Hello, World!\n";
     
-    AudioSerialPort port(48000.0, 19200.0);
+    //AudioSerialPort port(44100.0, 19200.0);
+    
+    sendport = new AudioSerialPort(44100.0, 19200.0);
+    recvport = new AudioSerialPort(44100.0, 19200.0);
+    
+    std::thread recvthread(testrecv);
+    std::thread sendthread(testsend);
+    
+    float sbuffer[1024];
+    float rbuffer[1024];
+    
+    FILE *rfile = fopen("recv.raw", "wb");
+    
+    while(1)
+    {
+        sendport->getaudio(sbuffer, 1024);
+        recvport->getaudio(rbuffer, 1024);
+        
+        sendport->readaudio(rbuffer, 1024);
+        recvport->readaudio(sbuffer, 1024);
+        
+        fwrite(sbuffer, sizeof(float), 1024, rfile);
+        usleep(23220);
+    }
+    
+    /*
+    // TEST: write sequence
+    AudioSerialPort port(44100.0, 19200.0);
+    
+    unsigned char temp[128];
+    for (int i = 0; i < 128; i++)
+    {
+        temp[i] = i;
+    }
+    
+    port.send(temp, 128);
+    float buf[1024];
+    FILE *fp = fopen("out1.raw", "wb");
+    for (int i = 0; i < 44; i++)
+    {
+        port.getaudio(buf, 1024);
+        fwrite(buf, sizeof(float), 1024, fp);
+    }
+    fclose(fp);
+    */
+    
     //unsigned char str[10000];
     //sprintf((char *)str, "once upon a time there was a cool dude. 12345678");
     
@@ -85,7 +158,7 @@ int main(int argc, const char * argv[]) {
     */
     
     /*
-    FILE *fpin = fopen("aa.raw", "rb");
+    FILE *fpin = fopen("out1.raw", "rb");
     fseek(fpin, 0, SEEK_END);
     long len = ftell(fpin);
     fseek(fpin, 0, SEEK_SET);
@@ -99,7 +172,8 @@ int main(int argc, const char * argv[]) {
     */
     
     //PaStreamParameters outputParameters;
-    PaStreamParameters inputParameters;
+    
+    /*
     PaStream *stream;
     
     PaError err = Pa_Initialize();
@@ -108,6 +182,7 @@ int main(int argc, const char * argv[]) {
         printf("error!\n");
         exit(0);
     }
+    */
      
     
     /*
@@ -130,6 +205,9 @@ int main(int argc, const char * argv[]) {
     exit(0);
     */
     
+    /*
+    PaStreamParameters inputParameters;
+    // create input device
     inputParameters.device = 1;
     if (inputParameters.device == paNoDevice)
     {
@@ -139,7 +217,7 @@ int main(int argc, const char * argv[]) {
     
     inputParameters.channelCount = 2;
     inputParameters.sampleFormat = paFloat32;
-    inputParameters.suggestedLatency = Pa_GetDeviceInfo( inputParameters.device )->defaultLowOutputLatency;
+    inputParameters.suggestedLatency = Pa_GetDeviceInfo( inputParameters.device )->defaultLowInputLatency;
     inputParameters.hostApiSpecificStreamInfo = NULL;
     
     err = Pa_OpenStream(&stream,
@@ -148,24 +226,67 @@ int main(int argc, const char * argv[]) {
                         48000,
                         512,
                         paClipOff,
-                        paTestCallback,
+                        inputCallback,
                         &port);
     err = Pa_StartStream(stream);
     
-    unsigned char temp[1024];
+    PaStreamParameters outputParameters;
+    PaStream *outputStream;
+    // create output parameters
+    outputParameters.device = Pa_GetDefaultOutputDevice();
+    if (outputParameters.device == paNoDevice)
+    {
+        fprintf(stderr,"Error: No default output device.\n");
+        exit(0);
+    }
+    
+    outputParameters.channelCount = 2;
+    outputParameters.sampleFormat = paFloat32;
+    outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
+    outputParameters.hostApiSpecificStreamInfo = NULL;
+    
+    err = Pa_OpenStream(&outputStream,
+                        NULL,
+                        &outputParameters,
+                        48000,
+                        512,
+                        paClipOff,
+                        outputCallback,
+                        &port);
+    err = Pa_StartStream(outputStream);
+    
+    std::string line = " ";
     for (int i = 0; i < 1000; i++)
     {
-        int size = port.recv(temp, 1024);
-        for (int i = 0; i < size; i++)
+        std::cin >> line;
+        if (line.length() > 0)
         {
-            printf("%c", temp[i]);
+            printf("got: %s %d chars\n", line.c_str(), (int)line.length());
+            port.send((unsigned char *)line.c_str(), (int)line.length());
         }
-        Pa_Sleep(100);
+        //Pa_Sleep(100);
     }
     
     err = Pa_CloseStream(stream);
     Pa_Terminate();
     
     printf("done.\n");
+    */
     return 0;
+}
+
+int main(int argc, const char * argv[]) {
+    
+    /*
+     std::string lineInput = " ";
+     while (lineInput.length() > 0)
+     {
+     std::cin >> lineInput;
+     std::cout << lineInput;
+     }
+     
+     return 0;
+     */
+    
+    return terminal(argc, argv);
 }

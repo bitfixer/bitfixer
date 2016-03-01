@@ -31,6 +31,28 @@ int AudioSerialPort::recv(unsigned char *data, int length)
     return available;
 }
 
+int AudioSerialPort::recv_sync(unsigned char *data, int length)
+{
+    // TODO: add timeout capability
+    int remaining = length;
+    unsigned char *ptr = data;
+    while (remaining > 0)
+    {
+        int res = recv(ptr, remaining);
+        if (res > 0)
+        {
+            ptr += res;
+            remaining -= res;
+        }
+        else
+        {
+            usleep(10000);
+        }
+    }
+    
+    return length;
+}
+
 void AudioSerialPort::getaudio(float *samples, int numsamples)
 {
     // clear buffer
@@ -241,15 +263,14 @@ void AudioSerialPort::readAudioInternal(float *s_in, int numsamples_in)
             
             if (samples[curr_sample] < -threshold)
             {
-                /*
-                printf("found at %d : %0.3f\n", curr_sample, (float)curr_sample / samplerate);
                 
+                //printf("found at %d : %0.3f\n", curr_sample, (float)curr_sample / samplerate);
+                /*
                 for (int i = curr_sample-10; i < curr_sample+10; i++)
                 {
                     printf("s[%d] = %f\n", i, samples[i]);
                 }
                 */
-                
                 
                 curr_input_byte = 0;
                 curr_input_bit = 0;
@@ -270,7 +291,7 @@ void AudioSerialPort::readAudioInternal(float *s_in, int numsamples_in)
                 if (current_state == NEXT_START_BIT)
                 {
                     start_bit_search_samples++;
-                    if (start_bit_search_samples > 10)
+                    if (start_bit_search_samples > ovr_samples_per_bit)
                     {
                         current_state = SEARCHING;
                     }
@@ -288,6 +309,8 @@ void AudioSerialPort::readAudioInternal(float *s_in, int numsamples_in)
             
             int this_bucket = (int)floor(sstart);
             int next_bucket = (int)floor(send);
+            
+            //printf("cs %d, bucket %d next %d\n", curr_sample, this_bucket, next_bucket);
             
             if (samples[curr_sample] > curr_max_sample)
                 curr_max_sample = samples[curr_sample];
@@ -307,41 +330,65 @@ void AudioSerialPort::readAudioInternal(float *s_in, int numsamples_in)
                 float stop_bit_avg = input_bit_buckets[9] / input_bit_count[9];
                 if (stop_bit_avg < midpoint)
                 {
-                    printf("stop bit is messed up\n");
-                    
+                    printf("stop bit is messed up: currsample %d\n", curr_sample);
+                    current_state = SEARCHING;
                 }
-                    
-                // done searching
-                // push result to input buffer
-                for (int i = 1; i < 9; i++)
+                else
                 {
-                    curr_input_byte >>= 1;
-                    float bucket_avg = input_bit_buckets[i] / input_bit_count[i];
-                    
-                    if (bucket_avg > midpoint)
+                    // done searching
+                    // push result to input buffer
+                    for (int i = 1; i < 9; i++)
                     {
-                        curr_input_byte |= 0x80;
+                        curr_input_byte >>= 1;
+                        float bucket_avg = input_bit_buckets[i] / input_bit_count[i];
+                        
+                        if (bucket_avg > midpoint)
+                        {
+                            curr_input_byte |= 0x80;
+                        }
+                        
                     }
                     
+                    float startavg = input_bit_buckets[0] / input_bit_count[0];
+                    //printf("%c : %02X at sample %d : %0.6f\n", curr_input_byte, curr_input_byte, curr_sample, (float)curr_sample / samplerate);
+                    //printf("got : %02X sample %d\n", curr_input_byte, curr_sample);
+                    //printf("%c : %02X start %f stop %f startavg %f\n", curr_input_byte, curr_input_byte, input_bit_buckets[0], input_bit_buckets[9], startavg);
+                    inputbuffer->push(curr_input_byte);
+                    start_bit_search_samples = 0;
+                    last_start_bit_search_sample = samples[curr_sample];
+                    
+                    current_state = NEXT_START_BIT;
                 }
-                
-                float startavg = input_bit_buckets[0] / input_bit_count[0];
-                //printf("%c : %02X at sample %d : %0.6f\n", curr_input_byte, curr_input_byte, curr_sample, (float)curr_sample / samplerate);
-                printf("%c", curr_input_byte);
-                //printf("%c : %02X start %f stop %f startavg %f\n", curr_input_byte, curr_input_byte, input_bit_buckets[0], input_bit_buckets[9], startavg);
-                //inputbuffer->push(curr_input_byte);
-                start_bit_search_samples = 0;
-                last_start_bit_search_sample = samples[curr_sample];
-                
-                current_state = NEXT_START_BIT;
             }
             else if (this_bucket == next_bucket)
             {
                 // this sample is fully within one bit
                 input_bit_buckets[this_bucket] += samples[curr_sample];
                 input_bit_count[this_bucket] += 1.0;
-                curr_sample_in_input_byte++;
-                curr_sample++;
+                
+                if (this_bucket == 9) // stop bit
+                {
+                    // only sample half the stop bit, allow for resync with start
+                    float remaining_in_stop_bit = ovr_samples_per_bit - (curr_sample_in_input_byte - ovr_samples_per_bit * 9.0);
+                    
+                    if (remaining_in_stop_bit < ovr_samples_per_bit / 2)
+                    {
+                        curr_sample_in_input_byte = (ovr_samples_per_bit * 10.0) + 1.0;
+                        curr_sample++;
+                    }
+                    else
+                    {
+                        curr_sample_in_input_byte++;
+                        curr_sample++;
+                    }
+                }
+                else
+                {
+                    curr_sample_in_input_byte++;
+                    curr_sample++;
+                }
+                
+                
             }
             else if (this_bucket < next_bucket)
             {

@@ -120,6 +120,7 @@ public:
     
     void send(unsigned char *data, int length);
     int recv(unsigned char *data, int length);
+    int recv_sync(unsigned char *data, int length);
     
     void getaudio(float *samples, int numsamples);
     void readaudio(float *samples, int numsamples);
@@ -174,12 +175,14 @@ private:
     unsigned char curr_input_bit;
     float input_bit_buckets[10];
     float input_bit_count[10];
-    unsigned char curr_sample_in_input_byte;
+    int curr_sample_in_input_byte;
     float curr_min_sample = 0;
     float curr_max_sample = 0;
     
     float *oversampling_buffer = NULL;
     int max_input_buffer_size = 1024;
+    
+    
     
 };
 
