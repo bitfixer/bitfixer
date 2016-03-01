@@ -9,6 +9,12 @@
 /* Begin PBXBuildFile section */
 		27A996131C59425400DBD3F3 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27A996121C59425400DBD3F3 /* main.cpp */; };
 		27A9961B1C5951B300DBD3F3 /* AudioSerial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27A996191C5951B300DBD3F3 /* AudioSerial.cpp */; };
+		656D75251C6D6BDB001BFC10 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 656D75241C6D6BDB001BFC10 /* AudioToolbox.framework */; };
+		656D75271C6D6BE6001BFC10 /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 656D75261C6D6BE6001BFC10 /* AudioUnit.framework */; };
+		656D75291C6D6BFF001BFC10 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 656D75281C6D6BFF001BFC10 /* CoreFoundation.framework */; };
+		656D752B1C6D6C17001BFC10 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 656D752A1C6D6C17001BFC10 /* CoreAudio.framework */; };
+		656D752D1C6D6C49001BFC10 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 656D752C1C6D6C49001BFC10 /* CoreServices.framework */; };
+		6592D2F21C83BC53004B3702 /* xmodem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6592D2F01C83BC53004B3702 /* xmodem.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -28,6 +34,13 @@
 		27A996121C59425400DBD3F3 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		27A996191C5951B300DBD3F3 /* AudioSerial.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AudioSerial.cpp; sourceTree = "<group>"; };
 		27A9961A1C5951B300DBD3F3 /* AudioSerial.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = AudioSerial.hpp; sourceTree = "<group>"; };
+		656D75241C6D6BDB001BFC10 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		656D75261C6D6BE6001BFC10 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = System/Library/Frameworks/AudioUnit.framework; sourceTree = SDKROOT; };
+		656D75281C6D6BFF001BFC10 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		656D752A1C6D6C17001BFC10 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
+		656D752C1C6D6C49001BFC10 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
+		6592D2F01C83BC53004B3702 /* xmodem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xmodem.cpp; sourceTree = "<group>"; };
+		6592D2F11C83BC53004B3702 /* xmodem.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xmodem.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -35,6 +48,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				656D752D1C6D6C49001BFC10 /* CoreServices.framework in Frameworks */,
+				656D752B1C6D6C17001BFC10 /* CoreAudio.framework in Frameworks */,
+				656D75291C6D6BFF001BFC10 /* CoreFoundation.framework in Frameworks */,
+				656D75271C6D6BE6001BFC10 /* AudioUnit.framework in Frameworks */,
+				656D75251C6D6BDB001BFC10 /* AudioToolbox.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -44,6 +62,11 @@
 		27A996061C59425400DBD3F3 = {
 			isa = PBXGroup;
 			children = (
+				656D752C1C6D6C49001BFC10 /* CoreServices.framework */,
+				656D752A1C6D6C17001BFC10 /* CoreAudio.framework */,
+				656D75281C6D6BFF001BFC10 /* CoreFoundation.framework */,
+				656D75261C6D6BE6001BFC10 /* AudioUnit.framework */,
+				656D75241C6D6BDB001BFC10 /* AudioToolbox.framework */,
 				27A996111C59425400DBD3F3 /* audioserialterminal */,
 				27A996101C59425400DBD3F3 /* Products */,
 			);
@@ -63,6 +86,8 @@
 				27A996121C59425400DBD3F3 /* main.cpp */,
 				27A996191C5951B300DBD3F3 /* AudioSerial.cpp */,
 				27A9961A1C5951B300DBD3F3 /* AudioSerial.hpp */,
+				6592D2F01C83BC53004B3702 /* xmodem.cpp */,
+				6592D2F11C83BC53004B3702 /* xmodem.hpp */,
 			);
 			path = audioserialterminal;
 			sourceTree = "<group>";
@@ -124,6 +149,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				27A9961B1C5951B300DBD3F3 /* AudioSerial.cpp in Sources */,
+				6592D2F21C83BC53004B3702 /* xmodem.cpp in Sources */,
 				27A996131C59425400DBD3F3 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -213,6 +239,13 @@
 		27A996171C59425400DBD3F3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/Users/gubbish/portaudio/include,
+				);
+				LIBRARY_SEARCH_PATHS = /Users/gubbish/bitfixer/bitfixer/audioserialterminal;
+				OTHER_LDFLAGS = "-lportaudio";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -220,6 +253,13 @@
 		27A996181C59425400DBD3F3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/Users/gubbish/portaudio/include,
+				);
+				LIBRARY_SEARCH_PATHS = /Users/gubbish/bitfixer/bitfixer/audioserialterminal;
+				OTHER_LDFLAGS = "-lportaudio";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -243,6 +283,7 @@
 				27A996181C59425400DBD3F3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
