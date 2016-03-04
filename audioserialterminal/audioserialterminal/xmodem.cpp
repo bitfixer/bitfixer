@@ -11,7 +11,7 @@
 #define SOH 0x01
 #define ACK 0x06
 #define EOT 0x04
-#define NAK 21
+#define NAK 0x15
 #define XEOF 0x1A
 
 Xmodem::Xmodem(AudioSerialPort *p) : port(p)

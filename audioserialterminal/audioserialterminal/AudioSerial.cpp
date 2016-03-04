@@ -8,6 +8,7 @@
 
 #include "AudioSerial.hpp"
 #include "math.h"
+#include <unistd.h>
 
 void AudioSerialPort::send(unsigned char *data, int length)
 {
@@ -31,22 +32,29 @@ int AudioSerialPort::recv(unsigned char *data, int length)
     return available;
 }
 
-int AudioSerialPort::recv_sync(unsigned char *data, int length)
+int AudioSerialPort::recv_sync(unsigned char *data, int length, int timeout_ms)
 {
     // TODO: add timeout capability
     int remaining = length;
     unsigned char *ptr = data;
+    int time_remaining = timeout_ms;
     while (remaining > 0)
     {
+        if (time_remaining <= 0)
+        {
+            return -1; // timed out
+        }
         int res = recv(ptr, remaining);
         if (res > 0)
         {
             ptr += res;
             remaining -= res;
+            time_remaining = timeout_ms;
         }
         else
         {
             usleep(10000);
+            time_remaining -= 10;
         }
     }
     
@@ -210,6 +218,7 @@ void AudioSerialPort::readaudio(float *samples, int numsamples)
         readAudioInternal(buf, samplesToProcess);
         buf += samplesToProcess;
         samplesLeft -= samplesToProcess;
+        inputSample += samplesToProcess;
     }
 }
 
@@ -252,19 +261,33 @@ void AudioSerialPort::readAudioInternal(float *s_in, int numsamples_in)
             // look for the start of a byte
             // this will be a start bit (0)
             
-            float threshold = 0.5;
+            float threshold = -0.5;
             if (current_state == NEXT_START_BIT)
             {
                 //threshold = 0.15;
                 //threshold = -0.15;
                 //threshold = 0.15;
-                threshold = - (last_start_bit_search_sample / 1.5 );
+                //threshold = - (last_start_bit_search_sample / 1.5 );
+                
+                //threshold = 0.0;
+                
+                // how far apart are the voltages
+                
+                if (curr_max_sample - curr_min_sample < 1.0)
+                {
+                    // keep the voltages at least half the scale apart
+                    curr_min_sample = curr_max_sample - 1.0;
+                }
+                
+                threshold = (curr_max_sample + curr_min_sample) / 2.0;
             }
             
-            if (samples[curr_sample] < -threshold)
+            if (samples[curr_sample] < threshold)
             {
+                int ss = (int)inputSample*oversampling + curr_sample;
+                //printf("found at %d : %0.3f\n", ss, (float)ss / samplerate);
+            
                 
-                //printf("found at %d : %0.3f\n", curr_sample, (float)curr_sample / samplerate);
                 /*
                 for (int i = curr_sample-10; i < curr_sample+10; i++)
                 {
@@ -277,6 +300,10 @@ void AudioSerialPort::readAudioInternal(float *s_in, int numsamples_in)
                 curr_sample_in_input_byte = 0;
                 curr_min_sample = 1.0;
                 curr_max_sample = -1.0;
+                
+                max_undecayed_sample = -1.0;
+                min_undecayed_sample = 1.0;
+                
                 current_state = READING;
                 //printf("Byte: start sample %d\n", curr_sample);
                 
@@ -312,25 +339,46 @@ void AudioSerialPort::readAudioInternal(float *s_in, int numsamples_in)
             
             //printf("cs %d, bucket %d next %d\n", curr_sample, this_bucket, next_bucket);
             
-            if (samples[curr_sample] > curr_max_sample)
-                curr_max_sample = samples[curr_sample];
+            float capacitive_decay = 1.0 / (22.0 * oversampling);
             
+            if (samples[curr_sample] > curr_max_sample)
+            {
+                curr_max_sample = samples[curr_sample];
+            }
+            else if (curr_max_sample > capacitive_decay)
+            {
+                curr_max_sample -= capacitive_decay;
+            }
+            
+            //printf("curr_sample: %d %f\n", curr_sample, samples[curr_sample]);
             if (samples[curr_sample] < curr_min_sample)
+            {
                 curr_min_sample = samples[curr_sample];
+                //printf("min now %f\n", samples[curr_sample]);
+            }
+            else if (curr_min_sample < -capacitive_decay)
+            {
+                curr_min_sample += capacitive_decay;
+                //printf("min decays to %f\n", curr_min_sample);
+            }
+            
+            if (samples[curr_sample] > max_undecayed_sample)
+                max_undecayed_sample = samples[curr_sample];
+            
+            if (samples[curr_sample] < min_undecayed_sample)
+                min_undecayed_sample = samples[curr_sample];
+            
             
             if (this_bucket > 9) // look for stop bit
             {
                 float midpoint = (curr_min_sample + curr_max_sample) / 2.0;
                 
-                float val_diff = curr_max_sample - curr_min_sample;
-                
-                float prev_avg = input_bit_buckets[0] / input_bit_count[0];
-                int prev_bit_value = 0;
-                
                 float stop_bit_avg = input_bit_buckets[9] / input_bit_count[9];
                 if (stop_bit_avg < midpoint)
+                //if (stop_bit_avg < -0.0)
                 {
-                    printf("stop bit is messed up: currsample %d\n", curr_sample);
+                    int ss = (int)inputSample*oversampling + curr_sample;
+                    //printf("stop bit is messed up: currsample %d\n", ss);
                     current_state = SEARCHING;
                 }
                 else
@@ -341,16 +389,30 @@ void AudioSerialPort::readAudioInternal(float *s_in, int numsamples_in)
                     {
                         curr_input_byte >>= 1;
                         float bucket_avg = input_bit_buckets[i] / input_bit_count[i];
+                        float threshold = (max_undecayed_sample + min_undecayed_sample) / 2.0;
                         
-                        if (bucket_avg > midpoint)
+                        if (bucket_avg > threshold)
+                        //if (bucket_avg > 0.0)
+                        //if (bucket_avg > input_midpoints[i])
                         {
                             curr_input_byte |= 0x80;
                         }
-                        
+                        else if (threshold-bucket_avg < 0.1)
+                        {
+                            // check the localized threshold
+                            if (bucket_avg > input_midpoints[i] + 0.1)
+                            {
+                                //printf("mismatch on bit %d : diff %f\n", i, bucket_avg-input_midpoints[i]);
+                                curr_input_byte |= 0x80;
+                            }
+                            
+                        }
                     }
                     
                     float startavg = input_bit_buckets[0] / input_bit_count[0];
-                    //printf("%c : %02X at sample %d : %0.6f\n", curr_input_byte, curr_input_byte, curr_sample, (float)curr_sample / samplerate);
+                    
+                    int ss = (int)inputSample*oversampling + curr_sample;
+                    //printf("%c : %02X at sample %d : %0.6f\n", curr_input_byte, curr_input_byte, ss, (float)ss / samplerate);
                     //printf("got : %02X sample %d\n", curr_input_byte, curr_sample);
                     //printf("%c : %02X start %f stop %f startavg %f\n", curr_input_byte, curr_input_byte, input_bit_buckets[0], input_bit_buckets[9], startavg);
                     inputbuffer->push(curr_input_byte);
@@ -371,7 +433,7 @@ void AudioSerialPort::readAudioInternal(float *s_in, int numsamples_in)
                     // only sample half the stop bit, allow for resync with start
                     float remaining_in_stop_bit = ovr_samples_per_bit - (curr_sample_in_input_byte - ovr_samples_per_bit * 9.0);
                     
-                    if (remaining_in_stop_bit < ovr_samples_per_bit / 2)
+                    if (remaining_in_stop_bit < ovr_samples_per_bit / 3)
                     {
                         curr_sample_in_input_byte = (ovr_samples_per_bit * 10.0) + 1.0;
                         curr_sample++;
@@ -388,6 +450,7 @@ void AudioSerialPort::readAudioInternal(float *s_in, int numsamples_in)
                     curr_sample++;
                 }
                 
+                input_midpoints[this_bucket] = (curr_max_sample + curr_min_sample) / 2.0;
                 
             }
             else if (this_bucket < next_bucket)
