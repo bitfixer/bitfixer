@@ -18,8 +18,8 @@ public:
     void send(const unsigned char *data, int len);
     void recv(char *buffer);
     
-private:
-    uint16_t calcrc(unsigned char *ptr, int count);
+//private:
+    static uint16_t calcrc(unsigned char *ptr, int count);
     
     AudioSerialPort *port = NULL;
 };

@@ -7,6 +7,7 @@
 //
 
 #include "xmodem.hpp"
+#include <unistd.h>
 #define SOH 0x01
 #define ACK 0x06
 #define EOT 0x04
@@ -43,10 +44,14 @@ void Xmodem::send(const unsigned char *data, int len)
 {
     unsigned char start = 0;
     unsigned char blknum = 1;
+    /*
     while (port->recv(&start, 1) == 0)
     {
         usleep(10000);
     }
+    */
+    printf("waiting to start\n");
+    port->recv_sync(&start, 1);
     
     printf("send: got char %02X %c\n", start, start);
     
@@ -64,6 +69,9 @@ void Xmodem::send(const unsigned char *data, int len)
         temp = SOH;
         port->send(&temp, 1);
         port->send(&blknum, 1);
+        
+        unsigned char blknum_comp = 255 - blknum;
+        port->send(&blknum_comp, 1);
         
         memset(block, XEOF, 128);
         int bytesInBlock = 128;
@@ -88,10 +96,13 @@ void Xmodem::send(const unsigned char *data, int len)
         // wait for ACK or NAK
         port->recv_sync(&temp, 1);
         
+        printf("looking for ACK, got %02X\n", temp);
+        
         if (temp == ACK)
         {
             currptr += bytesInBlock;
             remainingBytes -= bytesInBlock;
+            blknum++;
         }
     }
     
@@ -119,60 +130,172 @@ void Xmodem::recv(char *buffer)
         }
     }
     */
+    printf("Receiving!\n");
+    
+    unsigned char recv_buffer[1000000];
+    long recv_pos = 0;
     
     unsigned char ch = 'C';
+    
     port->send(&ch, 1);
+    printf("sent C\n");
     
     unsigned char soh = 0;
     unsigned char blknum = 0;
+    unsigned char blknum_comp = 255;
     unsigned char block[128];
     int recv_checksum = 0;
     int calc_checksum = 0;
     unsigned char cksum[2];
     
-    port->recv_sync(&soh, 1);
-    if (soh == SOH)
+    bool done = false;
+    unsigned char prev_block = 1;
+    bool last_block_good = false;
+    bool first_block_received = false;
+    
+    while (!done)
     {
-        port->recv_sync(&blknum, 1);
-        printf("blknum was %02X\n", blknum);
-        port->recv_sync(block, 128);
-        
-        for (int i = 0; i < 128; i++)
+        port->recv_sync(&soh, 1);
+        //printf("got %02X\n", soh);
+        if (soh == SOH)
         {
-            printf("%d: %02X %c\n", i, block[i], block[i]);
+            port->recv_sync(&blknum, 1);
+            //printf("blknum was %02X\n", blknum);
+            port->recv_sync(&blknum_comp, 1);
+            //printf("blknum_comp was %02X\n", blknum_comp);
+            
+            int res = port->recv_sync(block, 128);
+            printf("block recv %d\n", res);
+            
+            /*
+            for (int i = 0; i < 128; i++)
+            {
+                printf("%d: %02X\n", i, block[i]);
+            }
+            */
+            
+            
+            port->recv_sync(cksum, 2);
+            
+            recv_checksum = cksum[0];
+            recv_checksum = recv_checksum << 8;
+            recv_checksum = recv_checksum | cksum[1];
+            printf("recv checksum: %d\n", recv_checksum);
+            
+            calc_checksum = calcrc(block, 128);
+            printf("calc checksum: %d\n", calc_checksum);
+            printf("received block %d\n", blknum);
+            first_block_received = true;
+            
+            if (recv_checksum == calc_checksum)
+            {
+                // block was good
+                // write received block
+                bool block_ok = true;
+                if (blknum != prev_block)
+                {
+                    // block should only advance by 1
+                    unsigned char next_block = prev_block + 1; // wrap around
+                    if (blknum == next_block && blknum_comp == 255 - blknum)
+                    {
+                        // advance position
+                        recv_pos += 128;
+                    }
+                    else
+                    {
+                        block_ok = false;
+                    }
+                }
+                if (block_ok)
+                {
+                    prev_block = blknum;
+                    memcpy(&recv_buffer[recv_pos], block, 128);
+                    printf("sending ACK\n");
+                    last_block_good = true;
+                    // send ACK
+                    unsigned char ack = ACK;
+                    port->send(&ack, 1);
+                }
+                else // block number mismatch, reject block
+                {
+                    last_block_good = false;
+                    printf("sending NAK\n");
+                    // error, need to resend
+                    unsigned char nak = NAK;
+                    port->send(&nak, 1);
+                }
+            }
+            else
+            {
+                last_block_good = false;
+                printf("sending NAK\n");
+                // error, need to resend
+                unsigned char nak = NAK;
+                port->send(&nak, 1);
+                
+                // TEST TEST
+                //done = true;
+            }
         }
-        
-        port->recv_sync(cksum, 2);
-        printf("checksum bytes %02X %02X\n", cksum[0], cksum[1]);
-        
-        recv_checksum = cksum[0];
-        recv_checksum = recv_checksum << 8;
-        recv_checksum = recv_checksum | cksum[1];
-        printf("recv checksum: %d\n", recv_checksum);
-        
-        calc_checksum = calcrc(block, 128);
-        printf("calc checksum: %d\n", calc_checksum);
-        printf("received block\n");
-        
-        if (recv_checksum == calc_checksum)
+        else if (soh == EOT)
         {
-            // block was good
-            // send ACK
-            unsigned char ack = ACK;
-            port->send(&ack, 1);
+            if (last_block_good)
+            {
+                // done
+                printf("file received!\n");
+                unsigned char ack = ACK;
+                port->send(&ack, 1);
+                done = true;
+            }
+            else
+            {
+                printf("sending NAK\n");
+                // error, need to resend
+                unsigned char nak = NAK;
+                port->send(&nak, 1);
+            }
         }
         else
         {
-            // error, need to resend
-            unsigned char nak = NAK;
-            port->send(&nak, 1);
+            // something's off
+            usleep(100000);
+            // flush buffer
+            unsigned char temp[1024];
+            while (port->recv(temp, 1024) > 0) {}
+            
+            //if (first_block_received)
+            {
+                printf("sending NAK?\n");
+                // error, need to resend
+                unsigned char nak = NAK;
+                port->send(&nak, 1);
+            }
+            
+            /*
+            else
+            {
+                // try to start again
+                unsigned char start = 'C';
+                port->send(&start, 1);
+            }
+            */
         }
     }
-    else if (soh == EOT)
-    {
-        // done
-    }
     
+    /*
+    long len = 0;
+    for (long i = 0; i < recv_pos; i++)
+    {
+        if (recv_buffer[i] == XEOF)
+        {
+            recv_buffer[i] = 0x00;
+            len = i;
+        }
+    }
+    */
+    
+    printf("received:\n%s\n", recv_buffer);
+     
     /*
     while (port->recv(&soh, 1) == 0)
     {
