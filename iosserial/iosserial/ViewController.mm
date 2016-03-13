@@ -12,6 +12,7 @@
 //#import "Novocaine.h"
 #include <math.h>
 #include "AudioSerial.hpp"
+#include "Xmodem.hpp"
 #include "Novocaine.h"
 
 #define MAXINT 2147483647
@@ -31,7 +32,8 @@
     Novocaine *audioManager;
     
     FILE *fp_debug;
-    //float temp[10000];
+    float temp[10000];
+    float phase;
 }
 
 void checkStatus(OSStatus status)
@@ -50,7 +52,11 @@ void checkStatus(OSStatus status)
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
+    //port = new AudioSerialPort(44100.0, 38400.0);
     port = new AudioSerialPort(44100.0, 19200.0);
+    //port = new AudioSerialPort(44100.0, 14400.0);
+    //port = new AudioSerialPort(44100.0, 9600.0);
+    phase = 0.0;
     
     textView = [[UITextView alloc] init];
     [self.view addSubview:textView];
@@ -59,44 +65,95 @@ void checkStatus(OSStatus status)
     textView.backgroundColor = [UIColor redColor];
     textView.delegate = self;
     
+    
+    UIButton *button = [[UIButton alloc] init];
+    button.frame = CGRectMake(0, 0, 100, 100);
+    button.backgroundColor = [UIColor greenColor];
+    [self.view addSubview:button];
+    
+    [button addTarget:self action:@selector(receive) forControlEvents:UIControlEventTouchUpInside];
+    
     // configure audio session
     self.graphSampleRate = 48000;
     
     NSString *docsDir = [ViewController applicationDocumentsDirectory];
-    docsDir = [docsDir stringByAppendingPathComponent:@"audio3.raw"];
-    fp_debug = fopen([docsDir cStringUsingEncoding:NSUTF8StringEncoding], "wb");
+    NSString *audioFile = [docsDir stringByAppendingPathComponent:@"audio_blarg.raw"];
+    fp_debug = fopen([audioFile cStringUsingEncoding:NSUTF8StringEncoding], "wb");
+    
+    
+    NSString *inputFile = [docsDir stringByAppendingPathComponent:@"input.txt"];
+    FILE *fp = fopen([inputFile cStringUsingEncoding:NSUTF8StringEncoding], "rb");
+    fseek(fp, 0, SEEK_END);
+    long flen = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    
+    unsigned char *buf = (unsigned char *)malloc(sizeof(unsigned char) * flen);
+    fread(buf, sizeof(unsigned char), flen, fp);
+    fclose(fp);
     
     audioManager = [Novocaine audioManager];
     __weak ViewController *wself = self;
+    
+    
     [audioManager setInputBlock:^(float *data, UInt32 numFrames, UInt32 numChannels) {
-        //printf("input: %ld frames, %ld channels\n", numFrames, numChannels);
-        //printf("%f\n", data[0]);
-        //if (data[0] > 0.05)
-        //    printf("%f\n", data[0]);
-        
-        /*
-        float min = 1.0;
-        float max = -1.0;
-        for (int i = 0; i < numFrames; i++)
-        {
-            if (data[i] < min)
-                min = data[i];
-            
-            if (data[i] > max)
-                max = data[i];
-        }
-        
-        if (max > 0.4)
-            printf("%0.3f\t%0.3f\n", min, max);
-        */
-         
         ViewController *vc = (ViewController *)wself;
         vc->port->readaudio(data, numFrames);
-        
         fwrite(data, sizeof(float), numFrames, vc->fp_debug);
     }];
     
+    [audioManager setOutputBlock:^(float *data, UInt32 numFrames, UInt32 numChannels) {
+        ViewController *vc = (ViewController *)wself;
+        vc->port->getaudio(vc->temp, numFrames);
+        
+        float step = 2.0 * M_PI * 12000.0 / 44100.0;
+        
+        for (int i = 0; i < numFrames; i++)
+        {
+            *data++ = temp[i];
+            *data++ = sin(vc->phase);
+            //*data++ = 0.0;
+            phase += step;
+        }
+        
+        vc->phase = fmodf(vc->phase, 2.0f * M_PI);
+        
+        /*
+         float step = 2.0 * M_PI * 12000.0 / 48000.0;
+         port->getaudio(readBuffer, inNumberFrames);
+         float *floatData = (float *)buf->mData;
+         
+         for (int i = 0; i < inNumberFrames; i++)
+         {
+         *floatData++ = readBuffer[i];
+         *floatData++ = sin(phase);
+         phase += step;
+         }
+         
+         phase = fmodf(phase, 2.0f * M_PI);
+         
+         return 0;
+        */
+        
+    }];
+    
     [audioManager play];
+    
+    
+    
+    /*
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        Xmodem xmodem(port);
+        //xmodem.send(buf, (int)flen);
+        xmodem.recv(NULL);
+    });
+    */
+
+    
+    //[self performSelector:@selector(receive) withObject:nil afterDelay:5.0];
+    
+    
+    
+     
     /*
     NSError *audioSessionError = nil;
     AVAudioSession *mySession = [AVAudioSession sharedInstance];
@@ -153,6 +210,29 @@ void checkStatus(OSStatus status)
     OSStatus result = AUGraphInitialize(processingGraph);
     AUGraphStart(processingGraph);
     */
+}
+
+- (void)receive
+{
+    char *buffer = (char *)malloc(sizeof(char) * 1000000);
+    Xmodem xmodem(port);
+    //xmodem.recv(NULL);
+    
+    int bytesReceived = xmodem.recv((char *)buffer);
+    
+    NSString *docsDir = [ViewController applicationDocumentsDirectory];
+    NSString *audioFile = [docsDir stringByAppendingPathComponent:@"filerec.bin"];
+    FILE *fp = fopen([audioFile cStringUsingEncoding:NSUTF8StringEncoding], "wb");
+    
+    fwrite(buffer, 1, bytesReceived, fp);
+    fclose(fp);
+    printf("File complete: %s\n", [audioFile cStringUsingEncoding:NSUTF8StringEncoding]);
+    free(buffer);
+    
+    
+    //unsigned char test[100];
+    //sprintf((char *)test, "Howza poopen my friend!");
+    //port->send(test, strlen((char *)test));
 }
 
 - (void)layout

@@ -7,15 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		658C71D11C7DA635005D69DA /* Novocaine.m in Sources */ = {isa = PBXBuildFile; fileRef = 658C71CF1C7DA635005D69DA /* Novocaine.m */; };
+		6592D2F51C86CAB5004B3702 /* xmodem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6592D2F31C86CAB5004B3702 /* xmodem.cpp */; };
+		65E4FD911C7C446A0007C7B6 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65E4FD901C7C446A0007C7B6 /* Accelerate.framework */; };
+		65E4FD931C7C44A60007C7B6 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65E4FD921C7C44A60007C7B6 /* CoreAudio.framework */; };
+		65E4FD951C7C44AB0007C7B6 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65E4FD941C7C44AB0007C7B6 /* UIKit.framework */; };
+		65E4FD971C7C44C00007C7B6 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65E4FD961C7C44C00007C7B6 /* Foundation.framework */; };
 		65E519A61C7460290038D480 /* AudioSerial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65E519A41C7460290038D480 /* AudioSerial.cpp */; };
 		65E519BA1C7463660038D480 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65E519B91C7463660038D480 /* AVFoundation.framework */; };
 		65E519BE1C7463B00038D480 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65E519BD1C7463B00038D480 /* AudioToolbox.framework */; };
 		65E87DD01C71692D009DEBC3 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 65E87DCF1C71692D009DEBC3 /* main.m */; };
-		65E87DD31C71692D009DEBC3 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 65E87DD21C71692D009DEBC3 /* AppDelegate.m */; };
+		65E87DD31C71692D009DEBC3 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 65E87DD21C71692D009DEBC3 /* AppDelegate.mm */; };
 		65E87DD61C71692D009DEBC3 /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 65E87DD51C71692D009DEBC3 /* ViewController.mm */; };
-		65E87DD91C71692D009DEBC3 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 65E87DD71C71692D009DEBC3 /* Main.storyboard */; };
 		65E87DDB1C71692D009DEBC3 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 65E87DDA1C71692D009DEBC3 /* Images.xcassets */; };
-		65E87DDE1C71692D009DEBC3 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 65E87DDC1C71692D009DEBC3 /* LaunchScreen.xib */; };
 		65E87DEA1C71692E009DEBC3 /* iosserialTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 65E87DE91C71692E009DEBC3 /* iosserialTests.m */; };
 /* End PBXBuildFile section */
 
@@ -30,6 +34,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		658C71CF1C7DA635005D69DA /* Novocaine.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Novocaine.m; sourceTree = "<group>"; };
+		658C71D01C7DA635005D69DA /* Novocaine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Novocaine.h; sourceTree = "<group>"; };
+		6592D2F31C86CAB5004B3702 /* xmodem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = xmodem.cpp; path = ../../audioserialterminal/audioserialterminal/xmodem.cpp; sourceTree = "<group>"; };
+		6592D2F41C86CAB5004B3702 /* xmodem.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = xmodem.hpp; path = ../../audioserialterminal/audioserialterminal/xmodem.hpp; sourceTree = "<group>"; };
+		65E4FD8E1C7C44350007C7B6 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		65E4FD901C7C446A0007C7B6 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		65E4FD921C7C44A60007C7B6 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
+		65E4FD941C7C44AB0007C7B6 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		65E4FD961C7C44C00007C7B6 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		65E519A41C7460290038D480 /* AudioSerial.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AudioSerial.cpp; path = ../../audioserialterminal/audioserialterminal/AudioSerial.cpp; sourceTree = "<group>"; };
 		65E519A51C7460290038D480 /* AudioSerial.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = AudioSerial.hpp; path = ../../audioserialterminal/audioserialterminal/AudioSerial.hpp; sourceTree = "<group>"; };
 		65E519B91C7463660038D480 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
@@ -38,12 +51,10 @@
 		65E87DCE1C71692D009DEBC3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		65E87DCF1C71692D009DEBC3 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		65E87DD11C71692D009DEBC3 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
-		65E87DD21C71692D009DEBC3 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		65E87DD21C71692D009DEBC3 /* AppDelegate.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AppDelegate.mm; sourceTree = "<group>"; };
 		65E87DD41C71692D009DEBC3 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		65E87DD51C71692D009DEBC3 /* ViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ViewController.mm; sourceTree = "<group>"; };
-		65E87DD81C71692D009DEBC3 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		65E87DDA1C71692D009DEBC3 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
-		65E87DDD1C71692D009DEBC3 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
 		65E87DE31C71692E009DEBC3 /* iosserialTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iosserialTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		65E87DE81C71692E009DEBC3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		65E87DE91C71692E009DEBC3 /* iosserialTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = iosserialTests.m; sourceTree = "<group>"; };
@@ -54,6 +65,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				65E4FD971C7C44C00007C7B6 /* Foundation.framework in Frameworks */,
+				65E4FD951C7C44AB0007C7B6 /* UIKit.framework in Frameworks */,
+				65E4FD931C7C44A60007C7B6 /* CoreAudio.framework in Frameworks */,
+				65E4FD911C7C446A0007C7B6 /* Accelerate.framework in Frameworks */,
 				65E519BE1C7463B00038D480 /* AudioToolbox.framework in Frameworks */,
 				65E519BA1C7463660038D480 /* AVFoundation.framework in Frameworks */,
 			);
@@ -80,6 +95,8 @@
 		65E519A31C74600C0038D480 /* AudioSerial */ = {
 			isa = PBXGroup;
 			children = (
+				6592D2F31C86CAB5004B3702 /* xmodem.cpp */,
+				6592D2F41C86CAB5004B3702 /* xmodem.hpp */,
 				65E519A41C7460290038D480 /* AudioSerial.cpp */,
 				65E519A51C7460290038D480 /* AudioSerial.hpp */,
 			);
@@ -89,6 +106,11 @@
 		65E87DC11C71692D009DEBC3 = {
 			isa = PBXGroup;
 			children = (
+				65E4FD961C7C44C00007C7B6 /* Foundation.framework */,
+				65E4FD941C7C44AB0007C7B6 /* UIKit.framework */,
+				65E4FD921C7C44A60007C7B6 /* CoreAudio.framework */,
+				65E4FD901C7C446A0007C7B6 /* Accelerate.framework */,
+				65E4FD8E1C7C44350007C7B6 /* CoreFoundation.framework */,
 				65E519BD1C7463B00038D480 /* AudioToolbox.framework */,
 				65E87DCC1C71692D009DEBC3 /* iosserial */,
 				65E87DE61C71692E009DEBC3 /* iosserialTests */,
@@ -108,15 +130,15 @@
 		65E87DCC1C71692D009DEBC3 /* iosserial */ = {
 			isa = PBXGroup;
 			children = (
+				658C71CF1C7DA635005D69DA /* Novocaine.m */,
+				658C71D01C7DA635005D69DA /* Novocaine.h */,
 				65E519A31C74600C0038D480 /* AudioSerial */,
 				65E519981C725B660038D480 /* Frameworks */,
 				65E87DD11C71692D009DEBC3 /* AppDelegate.h */,
-				65E87DD21C71692D009DEBC3 /* AppDelegate.m */,
+				65E87DD21C71692D009DEBC3 /* AppDelegate.mm */,
 				65E87DD41C71692D009DEBC3 /* ViewController.h */,
 				65E87DD51C71692D009DEBC3 /* ViewController.mm */,
-				65E87DD71C71692D009DEBC3 /* Main.storyboard */,
 				65E87DDA1C71692D009DEBC3 /* Images.xcassets */,
-				65E87DDC1C71692D009DEBC3 /* LaunchScreen.xib */,
 				65E87DCD1C71692D009DEBC3 /* Supporting Files */,
 			);
 			path = iosserial;
@@ -229,8 +251,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				65E87DD91C71692D009DEBC3 /* Main.storyboard in Resources */,
-				65E87DDE1C71692D009DEBC3 /* LaunchScreen.xib in Resources */,
 				65E87DDB1C71692D009DEBC3 /* Images.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -250,9 +270,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				65E87DD61C71692D009DEBC3 /* ViewController.mm in Sources */,
-				65E87DD31C71692D009DEBC3 /* AppDelegate.m in Sources */,
+				6592D2F51C86CAB5004B3702 /* xmodem.cpp in Sources */,
+				65E87DD31C71692D009DEBC3 /* AppDelegate.mm in Sources */,
 				65E519A61C7460290038D480 /* AudioSerial.cpp in Sources */,
 				65E87DD01C71692D009DEBC3 /* main.m in Sources */,
+				658C71D11C7DA635005D69DA /* Novocaine.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -273,25 +295,6 @@
 			targetProxy = 65E87DE41C71692E009DEBC3 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
-
-/* Begin PBXVariantGroup section */
-		65E87DD71C71692D009DEBC3 /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				65E87DD81C71692D009DEBC3 /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
-		65E87DDC1C71692D009DEBC3 /* LaunchScreen.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				65E87DDD1C71692D009DEBC3 /* Base */,
-			);
-			name = LaunchScreen.xib;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		65E87DEB1C71692E009DEBC3 /* Debug */ = {
