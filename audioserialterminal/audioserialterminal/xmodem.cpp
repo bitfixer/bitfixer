@@ -114,7 +114,7 @@ void Xmodem::send(const unsigned char *data, int len)
     
 }
 
-void Xmodem::recv(char *buffer)
+int Xmodem::recv(char *buffer)
 {
     /*
     int characters_received = 0;
@@ -295,6 +295,9 @@ void Xmodem::recv(char *buffer)
     */
     
     printf("received:\n%s\n", recv_buffer);
+    int bytes_recv = recv_pos + 128;
+    memcpy(buffer, recv_buffer, bytes_recv);
+    return bytes_recv;
      
     /*
     while (port->recv(&soh, 1) == 0)

@@ -12,6 +12,7 @@
 #include "xmodem.hpp"
 #include <iostream>
 #include <thread>
+#include <unistd.h>
 
 float abuffer[1024];
 float obuffer[1024];
@@ -72,16 +73,28 @@ void testsend()
     sleep(1);
     //sendport->send((unsigned char *)"sending", 7);
     
+    FILE *fp = fopen("input.txt", "rb");
+    fseek(fp, 0, SEEK_END);
+    long flen = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    
+    unsigned char *buf = (unsigned char *)malloc(sizeof(unsigned char) * flen);
+    fread(buf, sizeof(unsigned char), flen, fp);
+    fclose(fp);
+    
     Xmodem xmodem(sendport);
-    xmodem.send((const unsigned char *)"SendThisWithXmodem", 18);
+    xmodem.send(buf, (int)flen);
+    
+    free(buf);
 }
 
 int terminal(int argc, const char * argv[]) {
     // insert code here...
     std::cout << "Hello, World!\n";
     
-    //AudioSerialPort port(44100.0, 19200.0);
+    AudioSerialPort port(44100.0, 19200.0);
     
+    /*
     sendport = new AudioSerialPort(44100.0, 19200.0);
     recvport = new AudioSerialPort(44100.0, 19200.0);
     
@@ -104,6 +117,7 @@ int terminal(int argc, const char * argv[]) {
         fwrite(sbuffer, sizeof(float), 1024, rfile);
         usleep(23220);
     }
+    */
     
     /*
     // TEST: write sequence
@@ -157,19 +171,161 @@ int terminal(int argc, const char * argv[]) {
     fclose(fp);
     */
     
+    // TEST TEST
     /*
-    FILE *fpin = fopen("out1.raw", "rb");
+    FILE *text = fopen("2600-9-3.txt", "rb");
+    unsigned char temp[128];
+    fread(temp, 1, 128, text);
+    fclose(text);
+    
+    for (int i = 0; i < 128; i++)
+    {
+        printf("%d: %02X\n", i, temp[i]);
+    }
+    
+    uint16_t cksum = Xmodem::calcrc(temp, 128);
+    printf("cksum is %d\n", cksum);
+    */
+    
+    /*
+    FILE *fpin = fopen("2600-9.3.txt", "rb");
+    fseek(fpin, 0, SEEK_END);
+    long len = ftell(fpin);
+    fseek(fpin, 0, SEEK_SET);
+    
+    unsigned char temp;
+    for (long i = 0; i < len; i++)
+    {
+        fread(&temp, 1, 1, fpin);
+        
+    }
+    */
+    
+    /*
+    FILE *fpin = fopen("2600_lopass.raw", "rb");
     fseek(fpin, 0, SEEK_END);
     long len = ftell(fpin);
     fseek(fpin, 0, SEEK_SET);
     int numfloats = (int)len / sizeof(float);
     
-    float *recv = (float *)malloc(sizeof(float) * numfloats);
-    fread(recv, sizeof(float), numfloats, fpin);
-    fclose(fpin);
     
-    port.readaudio(recv, numfloats);
+    FILE *fpout = fopen("2600_max.raw", "wb");
+    FILE *fpmin = fopen("2600_min.raw", "wb");
+    FILE *fpcenter = fopen("2600_center.raw", "wb");
+    FILE *fpcorr = fopen("2600_corr.raw", "wb");
+    
+    float max_sample = 0.0;
+    float min_sample = 0.0;
+    float decay = 1.0 / 44.0;
+    
+    float prev_max_sample = 0.0;
+    float prev_min_sample = 0.0;
+    int prev_peak = 0;
+    int prev_min = 0;
+    int samplesWritten = 0;
+    
+    float *maxenvelope = (float *)calloc(sizeof(float),numfloats);
+    float *minenvelope = (float *)calloc(sizeof(float),numfloats);
+    
+    float *maxptr = maxenvelope;
+    float *minptr = minenvelope;
+    
+    for (int i = 0; i < numfloats; i++)
+    {
+        float sample;
+        fread(&sample, sizeof(float), 1, fpin);
+        
+        if (sample > max_sample)
+        {
+            // set sample values on envelope
+            int rampsamples = (i - prev_peak);
+            float ramprise = sample - prev_max_sample;
+            for (int s = 0; s < rampsamples; s++)
+            {
+                float portion = (float)s / (float)rampsamples;
+                float thissample = prev_max_sample + (portion * ramprise);
+                fwrite(&thissample, sizeof(float), 1, fpout);
+                *maxptr = thissample;
+                maxptr++;
+                samplesWritten++;
+            }
+            max_sample = sample;
+            prev_max_sample = max_sample;
+            prev_peak = i;
+        }
+        else if (max_sample > decay)
+        {
+            max_sample -= decay;
+        }
+        
+        if (sample < min_sample)
+        {
+            // set sample values on envelope
+            int rampsamples = (i - prev_min);
+            float ramprise = sample - prev_min_sample;
+            for (int s = 0; s < rampsamples; s++)
+            {
+                float portion = (float)s / (float)rampsamples;
+                float thissample = prev_min_sample + (portion * ramprise);
+                fwrite(&thissample, sizeof(float), 1, fpmin);
+                *minptr = thissample;
+                minptr++;
+            }
+            min_sample = sample;
+            prev_min_sample = min_sample;
+            prev_min = i;
+        }
+        else if (min_sample < -decay)
+        {
+            min_sample += decay;
+        }
+        
+        //fwrite(&max_sample, sizeof(float), 1, fpout);
+    }
+    
+    fseek(fpin, 0, SEEK_SET);
+    
+    for (int i = 0; i < numfloats; i++)
+    {
+        float mid = (maxenvelope[i] + minenvelope[i]) / 2.0;
+        fwrite(&mid, sizeof(float), 1, fpcenter);
+        float s;
+        fread(&s, sizeof(float), 1, fpin);
+        float corr = s - mid;
+        
+        if (corr > 1.0)
+            corr = 1.0;
+        if (corr < -1.0)
+            corr = -1.0;
+        
+        fwrite(&corr, sizeof(float), 1, fpcorr);
+    }
+    
+    fclose(fpout);
+    fclose(fpin);
+    fclose(fpmin);
+    fclose(fpcenter);
+    fclose(fpcorr);
+    
+    printf("written %d read %d\n", samplesWritten, numfloats);
     */
+     
+    {
+        FILE *fpin = fopen("audio_2600_2.raw", "rb");
+        fseek(fpin, 0, SEEK_END);
+        long len = ftell(fpin);
+        fseek(fpin, 0, SEEK_SET);
+        int numfloats = (int)len / sizeof(float);
+        
+        float *recv = (float *)malloc(sizeof(float) * numfloats);
+        fread(recv, sizeof(float), numfloats, fpin);
+        fclose(fpin);
+        
+        port.readaudio(recv, numfloats);
+        Xmodem xm(&port);
+        xm.recv(NULL);
+    }
+    
     
     //PaStreamParameters outputParameters;
     

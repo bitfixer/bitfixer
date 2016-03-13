@@ -16,7 +16,7 @@ class Xmodem
 public:
     Xmodem(AudioSerialPort *p);
     void send(const unsigned char *data, int len);
-    void recv(char *buffer);
+    int recv(char *buffer);
     
 //private:
     static uint16_t calcrc(unsigned char *ptr, int count);
