@@ -30,13 +30,7 @@ userport serial clients
 #include <time.h>
 #include <c64.h>
 #include <string.h>
-
-// memory addresses for I/O
-#define PORTB           0xDD01
-#define DDRB            0xDD03
-#define PORTA           0xDD00
-#define DDRA            0xDD02
-#define ICR             0xDD0D
+#include "serial.h"
 
 #define VMEM_START      0x0400
 #define COLORMEM_START  0xD800
@@ -45,7 +39,6 @@ userport serial clients
 int main (void)
 {
     unsigned char data;
-    unsigned char d1;
     unsigned char done = 0;
     unsigned char spinner = 0;
     unsigned char *cursorpos = (unsigned char *)VMEM_START;
@@ -53,23 +46,16 @@ int main (void)
     unsigned char *icr = (unsigned char *)ICR;
     int x;
     
+    data = test();
+    
     for (x = 0; x < 1000; x++)
     {
         colormem[x] = 0;
     }
     
-    // set portb (userport data) to input
-    POKE(DDRB, 0x00);
+    serial_init();
     
-    // set handshake line PA2 to output
-    POKE(DDRA, 0x04);
-    
-    // set PA2 high
-    POKE(PORTA, 0x04);
-    
-    // read ICR to clear flag
-    data = PEEK(ICR);
-    
+    /*
     while (!done)
     {
         // look for FLAG2 (data ready)
@@ -98,6 +84,27 @@ int main (void)
          
         POKE(PORTA, 0x04);
     }
+    */
+    
+    while (!done)
+    {
+        if (serial_byte_ready())
+        {
+            data = serial_read_byte();
+            *cursorpos = data;
+            cursorpos++;
+            if (data == 'q' || data == 'Q')
+            {
+                done = 1;
+            }
+            serial_done_reading();
+        }
+        else
+        {
+            *cursorpos = spinner++;
+        }
+    }
+    
     
 	return EXIT_SUCCESS;
 }
