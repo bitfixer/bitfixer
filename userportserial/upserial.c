@@ -80,7 +80,10 @@ void init()
     
     // all data lines output
     DDRC = 0xFF;
-    uart0_init(51); // 19.2kbaud
+    //uart0_init(51); // 19.2kbaud
+    uart0_init(25); // 38.4kbaud
+    //uart0_init(12); // 76.8kbaud
+    //uart0_init(8); // 115.2kbaud
 }
 
 int main(void)

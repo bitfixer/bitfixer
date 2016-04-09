@@ -33,8 +33,53 @@ userport serial clients
 #include "serial.h"
 
 #define VMEM_START      0x0400
-#define COLORMEM_START  0xD800
+#define SIDADDR         0xD400
 #define RUN_STOP 3
+
+typedef struct
+{
+    unsigned char buffer[3];
+    unsigned char *type;
+    unsigned char *sid_offset;
+    unsigned char *value;
+    unsigned char bytes_recv;
+    unsigned char ready;
+} control_packet;
+
+void init_control_packet(control_packet *pkt)
+{
+    pkt->type = &pkt->buffer[0];
+    pkt->sid_offset = &pkt->buffer[1];
+    pkt->value = &pkt->buffer[2];
+    
+    *pkt->type = 0;
+    *pkt->sid_offset = 0;
+    *pkt->value = 0;
+    pkt->bytes_recv = 0;
+    pkt->ready = 0;
+}
+
+void add_byte_to_control_packet(unsigned char byte, control_packet *pkt)
+{
+    pkt->buffer[pkt->bytes_recv] = byte;
+    pkt->bytes_recv++;
+    
+    if (pkt->bytes_recv >= 3)
+    {
+        pkt->bytes_recv = 0;
+        pkt->ready = 1;
+    }
+}
+
+void process_control_packet(control_packet *pkt)
+{
+    // process packet according to type
+    if (*pkt->type == 1)
+    {
+        unsigned char *sid = (unsigned char *)SIDADDR;
+        sid[*pkt->sid_offset] = *pkt->value;
+    }
+}
 
 int main (void)
 {
@@ -42,9 +87,11 @@ int main (void)
     unsigned char done = 0;
     unsigned char spinner = 0;
     unsigned char *cursorpos = (unsigned char *)VMEM_START;
-    unsigned char *colormem = (unsigned char *)COLORMEM_START;
-    unsigned char *icr = (unsigned char *)ICR;
+    unsigned char *colormem = COLOR_RAM;
     int x;
+    
+    control_packet pkt;
+    init_control_packet(&pkt);
     
     data = test();
     
@@ -55,37 +102,43 @@ int main (void)
     
     serial_init();
     
-    /*
     while (!done)
     {
-        // look for FLAG2 (data ready)
-        data = PEEK(ICR);
-        data = data & 0x10;
-        while (data == 0)
+        // check for a ready control packet
+        if (pkt.ready)
         {
+            process_control_packet(&pkt);
+            pkt.ready = 0; // packet no longer ready
+        }
+        
+        if (serial_byte_ready())
+        {
+            // process byte
+            data = serial_read_byte();
+            
+            // do stuff
+            if ((data == 'q' || data == 'Q') && pkt.bytes_recv == 0)
+            {
+                done = 1;
+            }
+            else
+            {
+                add_byte_to_control_packet(data, &pkt);
+                *cursorpos = data;
+                cursorpos++;
+            }
+            
+            serial_done_reading();
+        }
+        else
+        {
+            // idle, do background tasks
             *cursorpos = spinner++;
-            data = PEEK(ICR);
-            data = data & 0x10;
         }
-        
-        // data is ready, get a byte from userport
-        data = PEEK(PORTB);
-        
-        // display
-        *cursorpos = data;
-        // toggle PA2 to indicate byte was read
-        POKE(PORTA, 0x00);
-        cursorpos++;
-        
-        if (data == 'q' || data == 'Q')
-        {
-            done = 1;
-        }
-         
-        POKE(PORTA, 0x04);
     }
-    */
     
+    
+    /*
     while (!done)
     {
         if (serial_byte_ready())
@@ -104,6 +157,7 @@ int main (void)
             *cursorpos = spinner++;
         }
     }
+    */
     
     
 	return EXIT_SUCCESS;

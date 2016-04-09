@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		659D73781CA8E36E005F88C1 /* SerialPort.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 659D73761CA8E36E005F88C1 /* SerialPort.cpp */; };
+		659D737B1CB835DB005F88C1 /* sid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 659D737A1CB835DB005F88C1 /* sid.cpp */; };
 		65D23B571CA8A6E60015C31A /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65D23B561CA8A6E60015C31A /* main.cpp */; };
 /* End PBXBuildFile section */
 
@@ -23,6 +25,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		659D73761CA8E36E005F88C1 /* SerialPort.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SerialPort.cpp; sourceTree = "<group>"; };
+		659D73771CA8E36E005F88C1 /* SerialPort.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SerialPort.hpp; sourceTree = "<group>"; };
+		659D73791CB814F8005F88C1 /* sid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sid.h; sourceTree = "<group>"; };
+		659D737A1CB835DB005F88C1 /* sid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sid.cpp; sourceTree = "<group>"; };
 		65D23B531CA8A6E60015C31A /* serialtest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = serialtest; sourceTree = BUILT_PRODUCTS_DIR; };
 		65D23B561CA8A6E60015C31A /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -57,7 +63,11 @@
 		65D23B551CA8A6E60015C31A /* serialtest */ = {
 			isa = PBXGroup;
 			children = (
+				659D73791CB814F8005F88C1 /* sid.h */,
 				65D23B561CA8A6E60015C31A /* main.cpp */,
+				659D73761CA8E36E005F88C1 /* SerialPort.cpp */,
+				659D73771CA8E36E005F88C1 /* SerialPort.hpp */,
+				659D737A1CB835DB005F88C1 /* sid.cpp */,
 			);
 			path = serialtest;
 			sourceTree = "<group>";
@@ -118,6 +128,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				659D737B1CB835DB005F88C1 /* sid.cpp in Sources */,
+				659D73781CA8E36E005F88C1 /* SerialPort.cpp in Sources */,
 				65D23B571CA8A6E60015C31A /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -205,6 +217,7 @@
 		65D23B5B1CA8A6E60015C31A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -212,6 +225,7 @@
 		65D23B5C1CA8A6E60015C31A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -235,6 +249,7 @@
 				65D23B5C1CA8A6E60015C31A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

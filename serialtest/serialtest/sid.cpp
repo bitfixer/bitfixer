@@ -52,6 +52,11 @@ void SidController::update()
 void Sid::init()
 {
     memset((void *)&s, 0, sizeof(struct __sid));
+    
+    for (int i = 0; i < 3; i++)
+    {
+        wfForVoice[i] = TRIANGLE;
+    }
 }
 
 void Sid::setVolume(float volume)
@@ -134,4 +139,24 @@ void Sid::setRelease(int voice, float release)
     s.v[voice].sr = sr;
     update();
 }
+
+void Sid::setWaveform(int voice, waveForm wf)
+{
+    wfForVoice[voice] = wf;
+}
+
+void Sid::noteOn(int voice)
+{
+    unsigned char val = wfForVoice[voice] + 1;
+    s.v[voice].ctrl = val;
+    update();
+}
+
+void Sid::noteOff(int voice)
+{
+    unsigned char val = wfForVoice[voice];
+    s.v[voice].ctrl = val;
+    update();
+}
+
 

@@ -44,6 +44,14 @@ public:
     {
         return &s;
     }
+    
+    typedef enum
+    {
+        NOISE = 0x80,
+        PULSE = 0x40,
+        SAWTOOTH = 0x20,
+        TRIANGLE = 0x10
+    } waveForm;
 
     void setVolume(float volume);
     void setFrequency(int voice, float freq);
@@ -51,6 +59,10 @@ public:
     void setDecay(int voice, float decay);
     void setSustain(int voice, float sustain);
     void setRelease(int voice, float release);
+    
+    void setWaveform(int voice, waveForm wf);
+    void noteOn(int voice);
+    void noteOff(int voice);
     
     virtual void update() {};
     
@@ -64,6 +76,8 @@ private:
         low = fn_int & 0x00FF;
         high = (fn_int & 0xFF00) >> 8;
     }
+    
+    waveForm wfForVoice[3];
 };
 
 void send_control_packet(SerialPort *port, unsigned char type, unsigned char offset, unsigned char val);

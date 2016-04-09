@@ -1,5 +1,5 @@
 #include "serial.h"
-#include <peekpoke.h>
+#include <c64.h>
 
 unsigned char test()
 {
@@ -10,21 +10,21 @@ void serial_init()
 {
     unsigned char temp;
     // set portb (userport data) to input
-    POKE(DDRB, 0x00);
+    CIA2.ddrb = 0x00;
     
     // set handshake line PA2 to output
-    POKE(DDRA, PA2);
+    CIA2.ddra = PA2;
     
     // set PA2 high
-    POKE(PORTA, PA2);
+    CIA2.pra = PA2;
     
     // read ICR to clear flag
-    temp = PEEK(ICR);
+    temp = CIA2.icr;
 }
 
 unsigned char serial_byte_ready()
 {
-    unsigned char data = PEEK(ICR) & FLAG;
+    unsigned char data = CIA2.icr & FLAG;
     if (data == 0)
         return 0;
     
@@ -33,12 +33,12 @@ unsigned char serial_byte_ready()
 
 unsigned char serial_read_byte()
 {
-    unsigned char data = PEEK(PORTB);
-    POKE(PORTA, 0x00);
+    unsigned char data = CIA2.prb;
+    CIA2.pra = 0x00;
     return data;
 }
 
 void serial_done_reading()
 {
-    POKE(PORTA, PA2);
+    CIA2.pra = PA2;
 }

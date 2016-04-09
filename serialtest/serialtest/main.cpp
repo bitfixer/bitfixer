@@ -75,17 +75,35 @@ int main(int argc, const char * argv[])
     
     controller->init();
     controller->setVolume(1.0);
-    controller->setFrequency(0, 440.0);
+    controller->setFrequency(0, 220.0);
     controller->setSustain(0, 0.85);
-    controller->setRelease(0, 0.6);
+    controller->setRelease(0, 0.1);
+    controller->setWaveform(0, Sid::waveForm::TRIANGLE);
     
-    unsigned char addr = 4;
-    unsigned char cmd = 16+1;
-    send_control_packet(port, 1, addr, cmd);
+    /*
+    for (int i = 0; i < 40; i++)
+    {
+        controller->noteOn(0);
+        //usleep(10000);
+        controller->noteOff(0);
+        usleep(100000);
+    }
+    */
     
-    cmd = 16;
-    send_control_packet(port, 1, addr, cmd);
-    
+    controller->noteOn(0);
+    float curr = 220.0;
+    for (int i = 0; i < 40; i++)
+    {
+        if (curr == 220.0)
+            curr = 440.0;
+        else
+            curr = 220.0;
+        
+        controller->setFrequency(0, curr);
+        
+        usleep(100000);
+    }
+    controller->noteOff(0);
     
     unsigned char tt = 'Q';
     port->send(&tt, 1);

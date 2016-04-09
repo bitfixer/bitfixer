@@ -1,13 +1,6 @@
 #ifndef __SERIAL_H__
 #define __SERIAL_H__
 
-// memory addresses for I/O
-#define PORTB           0xDD01
-#define DDRB            0xDD03
-#define PORTA           0xDD00
-#define DDRA            0xDD02
-#define ICR             0xDD0D
-
 // flag bit in ICR register
 #define FLAG            0x10
 
