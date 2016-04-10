@@ -9,6 +9,19 @@
 #ifndef __soundcontroller__DCT__
 #define __soundcontroller__DCT__
 
-#include <stdio.h>
+#include <stdlib.h>
+
+class DCT
+{
+public:
+    DCT(int length);
+    ~DCT();
+    void getDCT(float *input, float *output, int size);
+    float delta(int i);
+    
+private:
+    int length;
+    float **coslookup = NULL;
+};
 
 #endif /* defined(__soundcontroller__DCT__) */
