@@ -39,22 +39,16 @@ DCT::~DCT()
 void DCT::getDCT(float *input, float *output, int size)
 {
     // perform DCT
-    //float coeff = sqrtf((2.0 / (float)size));
     for (int u = 0; u < size; u++)
     {
         float sum = 0;
         for (int i = 0; i < size; i++)
         {
-            //float c = cosf( ((M_PI * u)/(2.0*size)) * (2*i + 1) );
-            //float c = coslookup[i][u];
-            //float res = delta(i) * c * input[i];
             float res = coslookup[i][u] * input[i];
             sum += res;
         }
         
         output[u] = sum;
-        
-        //output[u] = coeff * sum;
     }
 }
 

@@ -10,6 +10,7 @@
 #import "Novocaine.h"
 #include "DCT.h"
 #include "Net.h"
+#include "FrequencyDetector.h"
 
 @interface ViewController ()
 
@@ -18,18 +19,23 @@
 @implementation ViewController
 {
     Novocaine *audioManager;
-    DCT *dct;
-    float *output;
-    float *input;
-    int dct_length;
-    float *freq_table;
+    
+    
+    //DCT *dct;
+    //float *output;
+    //float *input;
+    //int dct_length;
+    //float *freq_table;
     net::Socket socket;
+    FrequencyDetector *freqDetector;
     int port;
 }
 
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
+    
+    /*
     dct_length = 64;
     dct = new DCT(dct_length);
     output = (float *)malloc(sizeof(float) * dct_length);
@@ -46,6 +52,9 @@
     {
         freq_table[i] = f_inc * i;
     }
+    */
+    
+    freqDetector = new FrequencyDetector(44100.0, 1500.0, 256);
     
     port = 30000;
     if ( !socket.Open( port ) )
@@ -58,10 +67,17 @@
     
     __block double time = CACurrentMediaTime();
     [audioManager setInputBlock:^(float *data, UInt32 numFrames, UInt32 numChannels) {
-        //printf("got input block! %ld frames %ld channels\n", numFrames, numChannels);
-        
         ViewController *vc = (ViewController *)wself;
         
+        vc->freqDetector->detect(data, numFrames);
+        float topfreq = vc->freqDetector->getTopFrequency();
+        
+        double now = CACurrentMediaTime();
+        double diff = now - time;
+        printf("Time is %lf\tf %f\n", diff, topfreq);
+        time = now;
+        
+        /*
         for (int i = 0; i < dct_length; i++)
         {
             vc->input[i] = data[i*input_samples_per_dct_sample];
@@ -95,26 +111,10 @@
         }
         
         time = now;
+        */
     }];
     
     [audioManager play];
-    
-    // create socket
-    //const char data[] = "hello world!";
-    
-    //socket.Send( Address(127,0,0,1,port), data, sizeof(data) );
-    //socket.Send(net::Address(10,0,0,5,port), data, sizeof(data));
-     
-    /*
-    // test
-    NSString *msg = @"yo dude";
-    NSString *host = @"10.0.0.5";
-    int port = 30000;
-    NSData *data = [msg dataUsingEncoding:NSUTF8StringEncoding];
-    long tag = 1234;
-    [udpSocket sendData:data toHost:host port:port withTimeout:-1 tag:tag];
-    NSLog(@"SENT (%i): %@", (int)tag, msg);
-    */
 }
 
 - (void)didReceiveMemoryWarning {
