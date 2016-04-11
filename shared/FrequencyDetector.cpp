@@ -61,8 +61,8 @@ void FrequencyDetector::detect(float *samples, int numsamples)
     // perform low pass filtering
     lowPassFrequency(samples, inputbuffer, numsamples, samplerate, maxfreq);
     
-    float end_time = current_time + (numsamples / samplerate);
-    float sample_time = current_time + remainder_time;
+    float end_time = (numsamples / samplerate);
+    float sample_time = remainder_time;
     while (sample_time < end_time)
     {
         if (samples_in_buffer == numsteps)
@@ -73,8 +73,7 @@ void FrequencyDetector::detect(float *samples, int numsamples)
             has_result = true;
         }
         
-        float diff = sample_time - current_time;
-        int input_sample_index = (int)floor(diff * samplerate);
+        int input_sample_index = (int)floor(sample_time * samplerate);
         
         // use nearest neighbor for efficiency
         buffer[samples_in_buffer] = inputbuffer[input_sample_index];
@@ -84,7 +83,6 @@ void FrequencyDetector::detect(float *samples, int numsamples)
     }
     
     // prepare for next iteration
-    //current_time = end_time;
     remainder_time = sample_time-end_time;
 }
 

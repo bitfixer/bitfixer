@@ -44,15 +44,11 @@ private:
     float inputbuffer[2048];
     
     float *buffer = NULL;
-    float *dctoutput = NULL;
-
     int samples_in_buffer = 0;
     
+    float *dctoutput = NULL;
     float effective_sample_rate;
-    
-    float current_time = 0.0;
     float remainder_time = 0.0;
-    
     float *freq_table;
     bool has_result = false;
 };
