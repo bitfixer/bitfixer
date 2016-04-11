@@ -10,6 +10,9 @@
 #include <math.h>
 #include <iostream>
 #include "sid.h"
+#include "timer.hpp"
+#include <unistd.h>
+#include "Net.h"
     
 using namespace std;
 
@@ -59,6 +62,16 @@ int main(int argc, const char * argv[])
         }
     }
     
+    float freq = 50.0;
+    float fmax = 2000.0;
+    float steps = 100.0;
+    // fst * r^n = fmax
+    float rn = fmax / freq;
+    float r = powf(rn, 1.0/steps);
+    printf("r = %f\n", r);
+    
+    int st = (int)steps;
+    
     for (int i = 0; i < 3; i++)
     {
         int offset = offsetof(struct __sid, v[i]);
@@ -71,14 +84,111 @@ int main(int argc, const char * argv[])
     SerialPort *port = new SerialPort(argv[1], (int)bauds);
     SidController *controller = new SidController(port);
     
+    net::Socket socket;
+    int sock_port = 30000;
+    if (!socket.Open(sock_port))
+    {
+        printf("boo\n");
+    }
+    
     sleep(2);
+    
     
     controller->init();
     controller->setVolume(1.0);
-    controller->setFrequency(0, 220.0);
-    controller->setSustain(0, 0.85);
-    controller->setRelease(0, 0.1);
-    controller->setWaveform(0, Sid::waveForm::TRIANGLE);
+    
+    for (int i = 0; i < 2; i++)
+    {
+        controller->setFrequency(i, freq*(i+1));
+        controller->setSustain(i, 0.85);
+        controller->setRelease(i, 0.1);
+        controller->setWaveform(i, Sid::waveForm::SAWTOOTH);
+    }
+    
+    controller->setFrequency(2, 220.0);
+    controller->setSustain(2, 0.85);
+    controller->setRelease(2, 0.1);
+    controller->setWaveform(2, Sid::waveForm::NOISE);
+    
+    
+    // play note
+    controller->noteOn(0);
+    
+    Timer t;
+    t.start();
+    t.end();
+    unsigned char buffer[256];
+    
+    while (t.getTime() < 30.0)
+    {
+        net::Address sender;
+        int bytes_read = socket.Receive(sender, buffer, sizeof(buffer));
+        if (bytes_read)
+        {
+            float *data = (float *)buffer;
+            printf("freq %f\n", *data);
+            
+            float harmonic = *data * 2.0;
+            controller->setFrequency(0, harmonic);
+        }
+        
+        t.end();
+    }
+    
+    controller->noteOff(0);
+    
+    /*
+    for (int i = 0; i < 2; i++)
+    {
+        controller->noteOn(i);
+    }
+    
+    for (int i = 0; i < st; i++)
+    {
+        freq *= r;
+        printf("freq is %f\n", freq);
+        controller->setFrequency(0, freq);
+        controller->setFrequency(1, freq*1.5);
+        usleep(50000);
+    }
+    
+    for (int i = 0; i < 3; i++)
+    {
+        controller->noteOff(i);
+    }
+    */
+    
+    /*
+    t.start();
+    double interval = 1.0 / 4.0;
+    for (int i = 0; i < 20; i++)
+    {
+        t.end();
+        double noteStartTime = t.getTime();
+        controller->noteOn(2);
+        usleep(100000);
+        controller->noteOff(2);
+        
+        // measure time
+        t.end();
+        double currTime = t.getTime();
+        
+        // calculate next time
+        double nextTime = (double)(i+1) * interval;
+        double waitTime = nextTime - currTime;
+        long useconds = (long)round(waitTime * 1000000.0);
+        
+        printf("st %lf en %lf nx %lf us %ld", noteStartTime, currTime, nextTime, useconds);
+        usleep(useconds);
+        
+        //usleep(50000);
+    }
+    
+    for (int i = 0; i < 3; i++)
+    {
+        controller->noteOff(i);
+    }
+    */
     
     /*
     for (int i = 0; i < 40; i++)
@@ -90,9 +200,10 @@ int main(int argc, const char * argv[])
     }
     */
     
+    /*
     controller->noteOn(0);
     float curr = 220.0;
-    for (int i = 0; i < 40; i++)
+    for (int i = 0; i < 400; i++)
     {
         if (curr == 220.0)
             curr = 440.0;
@@ -101,11 +212,12 @@ int main(int argc, const char * argv[])
         
         controller->setFrequency(0, curr);
         
-        usleep(100000);
+        usleep(15000);
     }
     controller->noteOff(0);
-    
-    unsigned char tt = 'Q';
+    */
+     
+    unsigned char tt = 255;
     port->send(&tt, 1);
     
     sleep(2);
