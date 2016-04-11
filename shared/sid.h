@@ -3,7 +3,6 @@
 
 #include <inttypes.h>
 #include <math.h>
-#include "SerialPort.hpp"
 
 /* Define a structure with the sid register offsets */
 struct __sid_voice {
@@ -78,21 +77,6 @@ private:
     }
     
     waveForm wfForVoice[3];
-};
-
-void send_control_packet(SerialPort *port, unsigned char type, unsigned char offset, unsigned char val);
-
-class SidController : public Sid
-{
-public:
-    SidController(SerialPort *p);
-    void init();
-    void update();
-    
-private:
-    unsigned char type = 1;
-    SerialPort *port = NULL;
-    struct __sid sid_state;
 };
 
 
