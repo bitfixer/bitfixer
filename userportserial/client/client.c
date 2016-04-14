@@ -52,8 +52,6 @@ int main (void)
     // initialize serial port
     serial_init();
     
-    asm("ldx #$00");
-    asm("ldy #$04");
 loopstart:
     // read one byte
     asm("lda %w", CIA2_ICR);
@@ -62,17 +60,86 @@ loopstart:
     
 firstbyte:
     
-    //cursorpos[0] = 'A';
+    // read byte from port B
+    asm("lda %w", CIA2_PRB);
+    
+    // store value in x
+    asm("tax");
+    
+    // poke value to video memory
+    asm("sta %w", VMEM_START);
+    
+    asm("ldy #$00");
+    asm("tya");
+    asm("sta %w", CIA2_PRA);
+    asm("ldy #$04");
+    asm("tya");
+    
+    // some nops for delay
+    asm("nop");
+    asm("nop");
+    asm("nop");
+    asm("nop");
+    asm("nop");
+    asm("nop");
+    asm("nop");
+    asm("nop");
+    
+    asm("sta %w", CIA2_PRA);
+    //asm("jmp %g", loopstart);
+    
+loopstart2:
+    // read one byte
+    asm("lda %w", CIA2_ICR);
+    asm("and #$10"); // and the flag bit in ICR
+    asm("beq %g", loopstart2);
+    
+secondbyte:
+    
+    // read byte from port B
+    asm("lda %w", CIA2_PRB);
+    
+    // store value in offset determined by x
+    asm("sta %w,x", SIDADDR);
+    
+    asm("ldy #$00");
+    asm("tya");
+    asm("sta %w", CIA2_PRA);
+    asm("ldy #$04");
+    asm("tya");
+    
+    // some nops for delay
+    asm("nop");
+    asm("nop");
+    asm("nop");
+    asm("nop");
+    asm("nop");
+    asm("nop");
+    asm("nop");
+    asm("nop");
+    
+    asm("sta %w", CIA2_PRA);
+    
+    asm("jmp %g", loopstart);
+    
+    /*
+    asm("ldy #$00");
+    
     // read byte from port B
     asm("lda %w", CIA2_PRB);
     
     // poke value to video memory
     asm("sta %w", VMEM_START);
     
-    // transfer x to accumulator
-    asm("txa");
+    // store value in x register
+    asm("tax");
+    
+    // transfer y to accumulator
+    asm("tya");
     asm("sta %w", CIA2_PRA);
     
+    // PA2 bit for signalling
+    asm("ldy #$04");
     // transfer y to accumulator
     asm("tya");
     
@@ -81,12 +148,42 @@ firstbyte:
     asm("nop");
     asm("nop");
     asm("nop");
-    //asm("nop");
     
     asm("sta %w", CIA2_PRA);
     
     asm("jmp %g", loopstart);
+    */
     
+/*
+
+    
+secondbyte:
+    
+    asm("ldy #$00");
+    // read byte from port B
+    asm("lda %w", CIA2_PRB);
+    
+    // store value in offset determined by x
+    asm("sta %w,x", SIDADDR);
+    
+    // transfer y to accumulator
+    asm("tya");
+    asm("sta %w", CIA2_PRA);
+    
+    // PA2 bit for signalling
+    asm("ldy #$04");
+    // transfer x to accumulator
+    asm("tya");
+    
+    // some nops for delay
+    asm("nop");
+    asm("nop");
+    asm("nop");
+    asm("nop");
+    
+    asm("sta %w", CIA2_PRA);
+    asm("jmp %g", loopstart);
+*/
     
     // read another byte
     
