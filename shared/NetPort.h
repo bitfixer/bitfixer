@@ -11,17 +11,32 @@
 
 #include "CommPort.h"
 #include "Net.h"
+#include "timer.hpp"
 
 class NetPort : public CommPort
 {
 public:
+    typedef struct
+    {
+        double time;
+        double sendTime;
+        int unique_id;
+        unsigned char buffer[256];
+    } TimedPacket;
+    
     NetPort(unsigned char a, unsigned char b, unsigned char c, unsigned char d, int port);
     ~NetPort();
-    void send(unsigned char *data, int length);
+    int send(unsigned char *data, int length);
+    double getTime();
+    
+    double delay = 0.0;
 private:
     net::Socket socket;
     net::Address destination;
     unsigned char addr[4];
+    Timer timer;
+    TimedPacket pkt;
+    int port_id = -1;
     int port;
 };
 

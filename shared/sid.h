@@ -46,10 +46,10 @@ public:
     
     typedef enum
     {
-        NOISE = 0x80,
-        PULSE = 0x40,
+        TRIANGLE = 0x10,
         SAWTOOTH = 0x20,
-        TRIANGLE = 0x10
+        PULSE = 0x40,
+        NOISE = 0x80
     } waveForm;
 
     void setVolume(float volume);

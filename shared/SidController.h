@@ -13,18 +13,18 @@
 #include "CommPort.h"
 #include "sid.h"
 
-void send_control_packet(CommPort *port, unsigned char type, unsigned char offset, unsigned char val);
-
 class SidController : public Sid
 {
 public:
     SidController(CommPort *p);
     void init();
     void update();
+    int send_control_packet(CommPort *port, unsigned char type, unsigned char offset, unsigned char val, unsigned char *dest);
     
 private:
     unsigned char type = 1;
     CommPort *port = NULL;
+    unsigned char buffer[256];
     struct __sid sid_state;
 };
 

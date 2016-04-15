@@ -14,7 +14,7 @@ class CommPort
 public:
     CommPort() {};
     virtual ~CommPort() {};
-    virtual void send(unsigned char *data, int length) = 0;
+    virtual int send(unsigned char *data, int length) = 0;
     //int recv(unsigned char *data, int length);
     //int recv_sync(unsigned char *data, int length, int timeout_ms = 200);
 };
