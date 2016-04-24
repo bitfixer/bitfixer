@@ -59,7 +59,9 @@ SerialPort::~SerialPort()
         close(fd);
 }
 
-void SerialPort::send(unsigned char *data, int length)
+int SerialPort::send(unsigned char *data, int length)
 {
-    write(fd, data, length);
+    int res = (int)write(fd, data, length);
+    printf("write returned %d\n", res);
+    return res;
 }

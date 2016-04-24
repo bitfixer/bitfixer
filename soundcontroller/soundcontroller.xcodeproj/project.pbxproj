@@ -10,11 +10,16 @@
 		6590A7AC1CB9FCF20026CD1B /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 6590A7AB1CB9FCF20026CD1B /* main.m */; };
 		6590A7AF1CB9FCF20026CD1B /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 6590A7AE1CB9FCF20026CD1B /* AppDelegate.m */; };
 		6590A7B21CB9FCF20026CD1B /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 6590A7B11CB9FCF20026CD1B /* ViewController.mm */; };
-		6590A7B51CB9FCF20026CD1B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6590A7B31CB9FCF20026CD1B /* Main.storyboard */; };
 		6590A7B71CB9FCF20026CD1B /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6590A7B61CB9FCF20026CD1B /* Images.xcassets */; };
-		6590A7BA1CB9FCF20026CD1B /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 6590A7B81CB9FCF20026CD1B /* LaunchScreen.xib */; };
 		6590A7D21CB9FE090026CD1B /* Novocaine.m in Sources */ = {isa = PBXBuildFile; fileRef = 6590A7D01CB9FE090026CD1B /* Novocaine.m */; };
 		6590A7D51CBA01D60026CD1B /* DCT.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6590A7D31CBA01D60026CD1B /* DCT.cpp */; };
+		6590A7FB1CBAD1290026CD1B /* FrequencyDetector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6590A7F91CBAD1290026CD1B /* FrequencyDetector.cpp */; };
+		6590A7FE1CBB3B640026CD1B /* MusicController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6590A7FC1CBB3B640026CD1B /* MusicController.cpp */; };
+		6590A8041CBB3CD50026CD1B /* sid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6590A8021CBB3CD50026CD1B /* sid.cpp */; };
+		6590A80D1CBB3F080026CD1B /* SidController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6590A80B1CBB3F080026CD1B /* SidController.cpp */; };
+		6590A8101CBB3F380026CD1B /* NetPort.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6590A80E1CBB3F380026CD1B /* NetPort.cpp */; };
+		6590A8131CBB3F620026CD1B /* CommPort.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6590A8121CBB3F620026CD1B /* CommPort.cpp */; };
+		6590A8161CC05BE20026CD1B /* timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6590A8141CC05BE20026CD1B /* timer.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,9 +30,7 @@
 		6590A7AE1CB9FCF20026CD1B /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		6590A7B01CB9FCF20026CD1B /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		6590A7B11CB9FCF20026CD1B /* ViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ViewController.mm; sourceTree = "<group>"; };
-		6590A7B41CB9FCF20026CD1B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		6590A7B61CB9FCF20026CD1B /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
-		6590A7B91CB9FCF20026CD1B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
 		6590A7C41CB9FCF20026CD1B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6590A7C51CB9FCF20026CD1B /* soundcontrollerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = soundcontrollerTests.m; sourceTree = "<group>"; };
 		6590A7D01CB9FE090026CD1B /* Novocaine.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Novocaine.m; path = ../../external/Novocaine/Novocaine.m; sourceTree = "<group>"; };
@@ -35,6 +38,20 @@
 		6590A7D31CBA01D60026CD1B /* DCT.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DCT.cpp; path = ../../shared/DCT.cpp; sourceTree = "<group>"; };
 		6590A7D41CBA01D60026CD1B /* DCT.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DCT.h; path = ../../shared/DCT.h; sourceTree = "<group>"; };
 		6590A7F61CBA1CAA0026CD1B /* Net.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Net.h; path = ../../external/Net/Net.h; sourceTree = "<group>"; };
+		6590A7F91CBAD1290026CD1B /* FrequencyDetector.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FrequencyDetector.cpp; path = ../../shared/FrequencyDetector.cpp; sourceTree = "<group>"; };
+		6590A7FA1CBAD1290026CD1B /* FrequencyDetector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FrequencyDetector.h; path = ../../shared/FrequencyDetector.h; sourceTree = "<group>"; };
+		6590A7FC1CBB3B640026CD1B /* MusicController.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MusicController.cpp; sourceTree = "<group>"; };
+		6590A7FD1CBB3B640026CD1B /* MusicController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MusicController.h; sourceTree = "<group>"; };
+		6590A8021CBB3CD50026CD1B /* sid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sid.cpp; path = ../../shared/sid.cpp; sourceTree = "<group>"; };
+		6590A8031CBB3CD50026CD1B /* sid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sid.h; path = ../../shared/sid.h; sourceTree = "<group>"; };
+		6590A80B1CBB3F080026CD1B /* SidController.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SidController.cpp; path = ../../shared/SidController.cpp; sourceTree = "<group>"; };
+		6590A80C1CBB3F080026CD1B /* SidController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SidController.h; path = ../../shared/SidController.h; sourceTree = "<group>"; };
+		6590A80E1CBB3F380026CD1B /* NetPort.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NetPort.cpp; path = ../../shared/NetPort.cpp; sourceTree = "<group>"; };
+		6590A80F1CBB3F380026CD1B /* NetPort.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NetPort.h; path = ../../shared/NetPort.h; sourceTree = "<group>"; };
+		6590A8111CBB3F620026CD1B /* CommPort.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommPort.h; path = ../../shared/CommPort.h; sourceTree = "<group>"; };
+		6590A8121CBB3F620026CD1B /* CommPort.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CommPort.cpp; path = ../../shared/CommPort.cpp; sourceTree = "<group>"; };
+		6590A8141CC05BE20026CD1B /* timer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = timer.cpp; path = ../../shared/timer.cpp; sourceTree = "<group>"; };
+		6590A8151CC05BE20026CD1B /* timer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = timer.hpp; path = ../../shared/timer.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,18 +85,30 @@
 		6590A7A81CB9FCF20026CD1B /* soundcontroller */ = {
 			isa = PBXGroup;
 			children = (
+				6590A8141CC05BE20026CD1B /* timer.cpp */,
+				6590A8151CC05BE20026CD1B /* timer.hpp */,
+				6590A8111CBB3F620026CD1B /* CommPort.h */,
+				6590A8121CBB3F620026CD1B /* CommPort.cpp */,
+				6590A80B1CBB3F080026CD1B /* SidController.cpp */,
+				6590A80C1CBB3F080026CD1B /* SidController.h */,
+				6590A8021CBB3CD50026CD1B /* sid.cpp */,
+				6590A8031CBB3CD50026CD1B /* sid.h */,
 				6590A7F51CBA1C9C0026CD1B /* Net */,
 				6590A7CF1CB9FDFE0026CD1B /* Novocaine */,
 				6590A7AD1CB9FCF20026CD1B /* AppDelegate.h */,
 				6590A7AE1CB9FCF20026CD1B /* AppDelegate.m */,
 				6590A7B01CB9FCF20026CD1B /* ViewController.h */,
 				6590A7B11CB9FCF20026CD1B /* ViewController.mm */,
-				6590A7B31CB9FCF20026CD1B /* Main.storyboard */,
 				6590A7B61CB9FCF20026CD1B /* Images.xcassets */,
-				6590A7B81CB9FCF20026CD1B /* LaunchScreen.xib */,
 				6590A7A91CB9FCF20026CD1B /* Supporting Files */,
 				6590A7D31CBA01D60026CD1B /* DCT.cpp */,
 				6590A7D41CBA01D60026CD1B /* DCT.h */,
+				6590A7F91CBAD1290026CD1B /* FrequencyDetector.cpp */,
+				6590A7FA1CBAD1290026CD1B /* FrequencyDetector.h */,
+				6590A7FC1CBB3B640026CD1B /* MusicController.cpp */,
+				6590A7FD1CBB3B640026CD1B /* MusicController.h */,
+				6590A80E1CBB3F380026CD1B /* NetPort.cpp */,
+				6590A80F1CBB3F380026CD1B /* NetPort.h */,
 			);
 			path = soundcontroller;
 			sourceTree = "<group>";
@@ -184,8 +213,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6590A7B51CB9FCF20026CD1B /* Main.storyboard in Resources */,
-				6590A7BA1CB9FCF20026CD1B /* LaunchScreen.xib in Resources */,
 				6590A7B71CB9FCF20026CD1B /* Images.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -197,34 +224,22 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6590A8041CBB3CD50026CD1B /* sid.cpp in Sources */,
+				6590A80D1CBB3F080026CD1B /* SidController.cpp in Sources */,
 				6590A7D51CBA01D60026CD1B /* DCT.cpp in Sources */,
 				6590A7D21CB9FE090026CD1B /* Novocaine.m in Sources */,
+				6590A8101CBB3F380026CD1B /* NetPort.cpp in Sources */,
+				6590A7FB1CBAD1290026CD1B /* FrequencyDetector.cpp in Sources */,
+				6590A8131CBB3F620026CD1B /* CommPort.cpp in Sources */,
+				6590A7FE1CBB3B640026CD1B /* MusicController.cpp in Sources */,
 				6590A7B21CB9FCF20026CD1B /* ViewController.mm in Sources */,
 				6590A7AF1CB9FCF20026CD1B /* AppDelegate.m in Sources */,
 				6590A7AC1CB9FCF20026CD1B /* main.m in Sources */,
+				6590A8161CC05BE20026CD1B /* timer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXVariantGroup section */
-		6590A7B31CB9FCF20026CD1B /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				6590A7B41CB9FCF20026CD1B /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
-		6590A7B81CB9FCF20026CD1B /* LaunchScreen.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				6590A7B91CB9FCF20026CD1B /* Base */,
-			);
-			name = LaunchScreen.xib;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		6590A7C71CB9FCF20026CD1B /* Debug */ = {

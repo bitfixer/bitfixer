@@ -9,13 +9,15 @@
 #ifndef SerialPort_hpp
 #define SerialPort_hpp
 
-class SerialPort
+#include "CommPort.h"
+
+class SerialPort : public CommPort
 {
 public:
     SerialPort(const char *device, int baudrate);
     
     ~SerialPort();
-    void send(unsigned char *data, int length);
+    int send(unsigned char *data, int length);
     //int recv(unsigned char *data, int length);
     //int recv_sync(unsigned char *data, int length, int timeout_ms = 200);
     

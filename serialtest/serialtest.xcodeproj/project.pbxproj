@@ -7,8 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6590A8011CBB3CB00026CD1B /* sid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6590A7FF1CBB3CB00026CD1B /* sid.cpp */; };
+		6590A8071CBB3D0F0026CD1B /* SidController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6590A8051CBB3D0F0026CD1B /* SidController.cpp */; };
+		6590A80A1CBB3E400026CD1B /* CommPort.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6590A8081CBB3E400026CD1B /* CommPort.cpp */; };
+		6590A8191CC0A7EF0026CD1B /* timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6590A8171CC0A7EF0026CD1B /* timer.cpp */; };
 		659D73781CA8E36E005F88C1 /* SerialPort.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 659D73761CA8E36E005F88C1 /* SerialPort.cpp */; };
-		659D737B1CB835DB005F88C1 /* sid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 659D737A1CB835DB005F88C1 /* sid.cpp */; };
 		65D23B571CA8A6E60015C31A /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65D23B561CA8A6E60015C31A /* main.cpp */; };
 /* End PBXBuildFile section */
 
@@ -25,10 +28,17 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		6590A7F81CBA216C0026CD1B /* Net.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Net.h; path = ../external/Net/Net.h; sourceTree = "<group>"; };
+		6590A7FF1CBB3CB00026CD1B /* sid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sid.cpp; path = ../../shared/sid.cpp; sourceTree = "<group>"; };
+		6590A8001CBB3CB00026CD1B /* sid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sid.h; path = ../../shared/sid.h; sourceTree = "<group>"; };
+		6590A8051CBB3D0F0026CD1B /* SidController.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SidController.cpp; path = ../../shared/SidController.cpp; sourceTree = "<group>"; };
+		6590A8061CBB3D0F0026CD1B /* SidController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SidController.h; path = ../../shared/SidController.h; sourceTree = "<group>"; };
+		6590A8081CBB3E400026CD1B /* CommPort.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CommPort.cpp; path = ../../shared/CommPort.cpp; sourceTree = "<group>"; };
+		6590A8091CBB3E400026CD1B /* CommPort.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommPort.h; path = ../../shared/CommPort.h; sourceTree = "<group>"; };
+		6590A8171CC0A7EF0026CD1B /* timer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = timer.cpp; path = ../../shared/timer.cpp; sourceTree = "<group>"; };
+		6590A8181CC0A7EF0026CD1B /* timer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = timer.hpp; path = ../../shared/timer.hpp; sourceTree = "<group>"; };
 		659D73761CA8E36E005F88C1 /* SerialPort.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SerialPort.cpp; sourceTree = "<group>"; };
 		659D73771CA8E36E005F88C1 /* SerialPort.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SerialPort.hpp; sourceTree = "<group>"; };
-		659D73791CB814F8005F88C1 /* sid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sid.h; sourceTree = "<group>"; };
-		659D737A1CB835DB005F88C1 /* sid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sid.cpp; sourceTree = "<group>"; };
 		65D23B531CA8A6E60015C31A /* serialtest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = serialtest; sourceTree = BUILT_PRODUCTS_DIR; };
 		65D23B561CA8A6E60015C31A /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -44,9 +54,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		6590A7F71CBA21650026CD1B /* Net */ = {
+			isa = PBXGroup;
+			children = (
+				6590A7F81CBA216C0026CD1B /* Net.h */,
+			);
+			name = Net;
+			sourceTree = "<group>";
+		};
 		65D23B4A1CA8A6E60015C31A = {
 			isa = PBXGroup;
 			children = (
+				6590A7F71CBA21650026CD1B /* Net */,
 				65D23B551CA8A6E60015C31A /* serialtest */,
 				65D23B541CA8A6E60015C31A /* Products */,
 			);
@@ -63,11 +82,17 @@
 		65D23B551CA8A6E60015C31A /* serialtest */ = {
 			isa = PBXGroup;
 			children = (
-				659D73791CB814F8005F88C1 /* sid.h */,
+				6590A8171CC0A7EF0026CD1B /* timer.cpp */,
+				6590A8181CC0A7EF0026CD1B /* timer.hpp */,
+				6590A7FF1CBB3CB00026CD1B /* sid.cpp */,
+				6590A8001CBB3CB00026CD1B /* sid.h */,
 				65D23B561CA8A6E60015C31A /* main.cpp */,
 				659D73761CA8E36E005F88C1 /* SerialPort.cpp */,
 				659D73771CA8E36E005F88C1 /* SerialPort.hpp */,
-				659D737A1CB835DB005F88C1 /* sid.cpp */,
+				6590A8051CBB3D0F0026CD1B /* SidController.cpp */,
+				6590A8061CBB3D0F0026CD1B /* SidController.h */,
+				6590A8081CBB3E400026CD1B /* CommPort.cpp */,
+				6590A8091CBB3E400026CD1B /* CommPort.h */,
 			);
 			path = serialtest;
 			sourceTree = "<group>";
@@ -128,9 +153,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				659D737B1CB835DB005F88C1 /* sid.cpp in Sources */,
+				6590A8011CBB3CB00026CD1B /* sid.cpp in Sources */,
 				659D73781CA8E36E005F88C1 /* SerialPort.cpp in Sources */,
+				6590A8071CBB3D0F0026CD1B /* SidController.cpp in Sources */,
 				65D23B571CA8A6E60015C31A /* main.cpp in Sources */,
+				6590A80A1CBB3E400026CD1B /* CommPort.cpp in Sources */,
+				6590A8191CC0A7EF0026CD1B /* timer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

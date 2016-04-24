@@ -37,21 +37,57 @@ userport serial clients
 #define CIA2_ICR        0xDD0D
 #define CIA2_PRA        0xDD00
 #define CIA2_PRB        0xDD01
+
+#define BGCOLOR         0xD020
+#define BORDERCOLOR     0xD021
+
 #define RUN_STOP 3
+
+extern unsigned char data[];
 
 int main (void)
 {
     unsigned char *colormem = COLOR_RAM;
     unsigned char *cursorpos = (unsigned char *)VMEM_START;
     int x;
+    int y;
+    int z;
     for (x = 0; x < 1000; x++)
     {
-        colormem[x] = 0;
+        colormem[x] = 6;
     }
     
     // initialize serial port
     serial_init();
     
+    // set colors
+    POKE(BGCOLOR, 0);
+    POKE(BORDERCOLOR, 0);
+    
+    for (x = 0; x < 1000; x++)
+    {
+        cursorpos[x] = data[x];
+    }
+    
+    for (y = 0; y < 4; y++)
+    {
+        z = 503 + y*40;
+        for (x = 0; x < 15; x++)
+        {
+            colormem[z + x] = 2;
+        }
+    }
+    
+    for (x = 0; x < 40; x++)
+    {
+        //cursorpos[x] = '*';
+        colormem[x] = (x % 15)+1;
+        colormem[960+x] = (x % 15)+1;
+    }
+    
+    z = 0;
+    
+    //asm("ldx #$00");
 loopstart:
     // read one byte
     asm("lda %w", CIA2_ICR);
@@ -66,8 +102,11 @@ firstbyte:
     // store value in x
     asm("tax");
     
+    
     // poke value to video memory
-    asm("sta %w", VMEM_START);
+    //asm("sta %w", VMEM_START);
+    //asm("sta %w,x", VMEM_START);
+    //asm("inx");
     
     asm("ldy #$00");
     asm("tya");
@@ -88,6 +127,7 @@ firstbyte:
     asm("sta %w", CIA2_PRA);
     //asm("jmp %g", loopstart);
     
+
 loopstart2:
     // read one byte
     asm("lda %w", CIA2_ICR);
@@ -120,6 +160,16 @@ secondbyte:
     
     asm("sta %w", CIA2_PRA);
     
+    //asm("jmp %g", loopstart);
+    
+    
+    cursorpos[z] = 0x20;
+    cursorpos[999-z] = 0x20;
+    z++;
+    if (z >= 40)
+        z = 0;
+    cursorpos[z] = '*';
+    cursorpos[999-z] = '*';
     asm("jmp %g", loopstart);
     
     /*

@@ -44,7 +44,8 @@ int main( int argc, char * argv[] )
 	{
 		const char data[] = "hello world!";
 
-		socket.Send( Address(127,0,0,1,port), data, sizeof(data) );
+		//socket.Send( Address(127,0,0,1,port), data, sizeof(data) );
+        //socket.Send(Address(10,0,0,5,port), data, sizeof(data));
 			
 		while ( true )
 		{
@@ -53,12 +54,16 @@ int main( int argc, char * argv[] )
 			int bytes_read = socket.Receive( sender, buffer, sizeof( buffer ) );
 			if ( !bytes_read )
 				break;
-			printf( "received packet from %d.%d.%d.%d:%d (%d bytes)\n", 
-				sender.GetA(), sender.GetB(), sender.GetC(), sender.GetD(), 
-				sender.GetPort(), bytes_read );
+			
+            //printf( "received packet from %d.%d.%d.%d:%d (%d bytes)\n",
+			//	sender.GetA(), sender.GetB(), sender.GetC(), sender.GetD(),
+			//	sender.GetPort(), bytes_read );
+            
+            float *data = (float *)buffer;
+            printf("freq %f\n", *data);
 		}
 		
-		wait( 0.25f );
+		//wait( 0.25f );
 	}
 	
 	// shutdown socket layer

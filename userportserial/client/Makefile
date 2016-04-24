@@ -6,7 +6,7 @@ clean:
 	rm -f client.wav
 
 client.prg:
-	cl65 -t c64 client.c serial.c -o client.prg
+	cl65 -t c64 client.c serial.c binary.c -o client.prg
 
 client.tap: client.prg
 	./prg2wav -s -t client.tap -m c64ntsc client.prg

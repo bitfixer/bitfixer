@@ -51,6 +51,7 @@
     NSMutableArray *controlRows;
     
     int numColumns;
+    int numControls;
     int port;
     float tempo;
     bool shouldExit;
@@ -59,17 +60,24 @@
     
     long currTick;
     double netTime;
+    
+    BOOL harmonize;
+    
+    float samples[5000000];
+    int numsamples;
 }
 
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    //buttons = [[NSMutableArray alloc] init];
     buttonRows = [[NSMutableArray alloc] init];
     controlRows = [[NSMutableArray alloc] init];
     tempo = 120;
     tickIndex = 0;
     shouldExit = false;
+    numControls = 3;
+    harmonize = NO;
+    numsamples = 0;
     
     // create layout view
     UIView *view = [[UIView alloc] init];
@@ -108,16 +116,45 @@
         [buttonRows addObject:buttons];
     }
     
+    float textHeight = 50;
+    float controlLabelY = 100;
+    float controlRowY = controlLabelY + textHeight;
+    
+    float adsrControlWidth = 100.0;
+    float adsrControlX = view.frame.size.width - (5*margin + 4*adsrControlWidth);
+    
+    for (int c = 0; c < numRows; c++)
+    {
+        UILabel *label = [[UILabel alloc] init];
+        label.backgroundColor = [UIColor colorWithRed:0.2 green:0.2 blue:0.2 alpha:1.0];
+        label.textColor = [UIColor whiteColor];
+        label.textAlignment = NSTextAlignmentCenter;
+        if (c == 0)
+        {
+            label.text = @"TRI";
+        }
+        else if (c == 1)
+        {
+            label.text = @"SAW";
+        }
+        else if (c == 2)
+        {
+            label.text = @"NOI";
+        }
+        label.frame = CGRectMake((c+1)*margin + (c*buttonWidth), controlLabelY, buttonWidth, buttonWidth);
+        [view addSubview:label];
+    }
+    
     // create channel control buttons
     for (int r = 0; r < numRows; r++)
     {
-        float rowY = 100 + (r+1)*margin + (r*buttonWidth);
+        float rowY = controlRowY + (r+1)*margin + (r*buttonWidth);
         NSMutableArray *buttons = [[NSMutableArray alloc] init];
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < numControls; i++)
         {
             ButtonHolder *holder = [[ButtonHolder alloc] init];
             holder.button = [[UIButton alloc] init];
-            holder.button.tag = r*4 + i;
+            holder.button.tag = r*numControls + i;
             float x = margin + (margin + buttonWidth)*i;
             holder.button.frame = CGRectMake(x, rowY, buttonWidth, buttonWidth);
             holder.button.backgroundColor = [UIColor blueColor];
@@ -134,25 +171,101 @@
         [controlRows addObject:buttons];
     }
     
+    float currAdsrControlX = adsrControlX;
+    for (int i = 0; i < 4; i++)
+    {
+        UILabel *label = [[UILabel alloc] init];
+        label.backgroundColor = [UIColor colorWithRed:0.2 green:0.2 blue:0.2 alpha:1.0];
+        label.textColor = [UIColor whiteColor];
+        label.textAlignment = NSTextAlignmentCenter;
+        
+        if (i == 0)
+        {
+            label.text = @"A";
+        }
+        else if (i == 1)
+        {
+            label.text = @"D";
+        }
+        else if (i == 2)
+        {
+            label.text = @"S";
+        }
+        else if (i == 3)
+        {
+            label.text = @"R";
+        }
+        
+        currAdsrControlX += margin;
+        label.frame = CGRectMake(currAdsrControlX, controlLabelY, adsrControlWidth, textHeight);
+        [view addSubview:label];
+        
+        float currSliderY = controlLabelY + textHeight;
+        
+        float freqSliderX = (numControls+1)*margin + numControls*buttonWidth;
+        float freqSliderWidth = adsrControlX - freqSliderX;
+        
+        label = [[UILabel alloc] init];
+        label.frame = CGRectMake(freqSliderX, controlLabelY, freqSliderWidth, textHeight);
+        label.backgroundColor = [UIColor colorWithRed:0.2 green:0.2 blue:0.2 alpha:1.0];
+        label.textColor = [UIColor whiteColor];
+        label.textAlignment = NSTextAlignmentCenter;
+        label.text = @"Frequency";
+        [view addSubview:label];
+        
+        for (int s = 0; s < numRows; s++)
+        {
+            // create sliders for channels
+            UISlider *slider = [[UISlider alloc] init];
+            currSliderY += margin;
+            slider.frame = CGRectMake(currAdsrControlX, currSliderY, adsrControlWidth, buttonWidth);
+            slider.tag = s*4 + i;
+            [slider addTarget:self action:@selector(adsrSlider:) forControlEvents:UIControlEventValueChanged];
+            [view addSubview:slider];
+            
+            if (i == 0)
+            {
+                // add frequency slider
+                UISlider *freqSlider = [[UISlider alloc] init];
+                freqSlider.frame = CGRectMake(freqSliderX, currSliderY, freqSliderWidth, buttonWidth);
+                freqSlider.tag = s;
+                [freqSlider addTarget:self action:@selector(freqSlider:) forControlEvents:UIControlEventValueChanged];
+                [view addSubview:freqSlider];
+            }
+            
+            currSliderY += buttonWidth;
+        }
+        
+        currAdsrControlX += adsrControlWidth;
+        
+    }
     
+    // add reset button
+    float resetButtonWidth = 100.0;
+    float resetButtonX = view.frame.size.width - (margin+resetButtonWidth);
+    UIButton *resetButton = [[UIButton alloc] init];
+    resetButton.backgroundColor = [UIColor blueColor];
+    [resetButton setTitle:@"Reset" forState:UIControlStateNormal];
+    [resetButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    resetButton.frame = CGRectMake(resetButtonX, margin, resetButtonWidth, buttonWidth);
+    [resetButton addTarget:self action:@selector(resetButtonTapped:) forControlEvents:UIControlEventTouchUpInside];
+    [view addSubview:resetButton];
+    
+    UILabel *tempoLabel = [[UILabel alloc] init];
+    tempoLabel.frame = CGRectMake(margin, margin, (numControls-1)*margin + numControls*buttonWidth, buttonWidth);
+    tempoLabel.backgroundColor = [[UIColor alloc] initWithRed:0.2 green:0.2 blue:0.2 alpha:1.0];
+    tempoLabel.textColor = [UIColor whiteColor];
+    tempoLabel.textAlignment = NSTextAlignmentCenter;
+    tempoLabel.text = @"Tempo";
+    [view addSubview:tempoLabel];
+    
+    float tempoSliderX = (numControls+1)*margin + numControls*buttonWidth;
+    float tempoSliderWidth = adsrControlX - tempoSliderX;
     // add tempo slider
     UISlider *tempoSlider = [[UISlider alloc] init];
-    tempoSlider.frame = CGRectMake(0, 0, 200, 100);
+    tempoSlider.frame = CGRectMake(tempoSliderX, margin, tempoSliderWidth, buttonWidth);
     [tempoSlider addTarget:self action:@selector(sliderSlid:) forControlEvents:UIControlEventValueChanged];
     [view addSubview:tempoSlider];
-    
-    // add frequency sliders
-    UISlider *freqSlider = [[UISlider alloc] init];
-    freqSlider.frame = CGRectMake(200, 0, 200, 100);
-    freqSlider.tag = 0;
-    [freqSlider addTarget:self action:@selector(freqSlider:) forControlEvents:UIControlEventValueChanged];
-    [view addSubview:freqSlider];
-    
-    freqSlider = [[UISlider alloc] init];
-    freqSlider.frame = CGRectMake(400, 0, 200, 100);
-    freqSlider.tag = 1;
-    [freqSlider addTarget:self action:@selector(freqSlider:) forControlEvents:UIControlEventValueChanged];
-    [view addSubview:freqSlider];
     
     CGAffineTransform centerTrans = CGAffineTransformMakeTranslation(-self.view.frame.size.height/2.0, -self.view.frame.size.width/2.0);
     CGAffineTransform rotTrans = CGAffineTransformMakeRotation(-M_PI / 2.0);
@@ -161,12 +274,24 @@
     view.transform = combinedTrans;
     [self.view addSubview:view];
     
+    /*
+    UIButton *harmonizeButton = [[UIButton alloc] init];
+    harmonizeButton.backgroundColor = [UIColor colorWithRed:0.2 green:0.2 blue:0.2 alpha:1.0];
+    harmonizeButton.titleLabel.textColor = [UIColor whiteColor];
+    harmonizeButton.titleLabel.text = @"Harmonize";
+    [harmonizeButton addTarget:self action:@selector(harmonizeStart:) forControlEvents:UIControlEventTouchDown];
+    [harmonizeButton addTarget:self action:@selector(harmonizeEnd:) forControlEvents:UIControlEventTouchUpInside];
+    harmonizeButton.frame = CGRectMake(margin, 400, 200, buttonWidth);
+    [view addSubview:harmonizeButton];
+    */
     // Do any additional setup after loading the view, typically from a nib.
     freqDetector = new FrequencyDetector(44100.0, 1500.0, 256);
     
     // initialize SID
     //169.254.85.110
-    netPort = new NetPort(192, 168, 0, 109, 29999);
+    //netPort = new NetPort(192, 168, 0, 109, 29999);
+    netPort = new NetPort(169,254,225,31, 29999);
+    
     controller = new SidController(netPort);
     
     audioManager = [Novocaine audioManager];
@@ -176,8 +301,29 @@
     [audioManager setInputBlock:^(float *data, UInt32 numFrames, UInt32 numChannels) {
         ViewController *vc = (ViewController *)wself;
         
+        /*
         vc->freqDetector->detect(data, numFrames);
         float topfreq = vc->freqDetector->getTopFrequency();
+        
+        if (vc->harmonize && topfreq > 0.0)
+        {
+            vc->controller->setFrequency(0, topfreq * 1.5);
+        }
+        */
+        
+        if (harmonize == YES && numsamples + numFrames < 500000)
+        {
+            float *d = &samples[numsamples];
+            for (int i = 0; i < numFrames/32; i++)
+            {
+                d[i] = data[i*32];
+                numsamples++;
+            }
+            
+            //memcpy(d, data, sizeof(float) * numFrames);
+            //numsamples += numFrames;
+        }
+        
     }];
     
     [audioManager play];
@@ -220,7 +366,7 @@
 
         NSMutableArray *controlRow = [controlRows objectAtIndex:r];
         // update control buttons
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < numControls; i++)
         {
             ButtonHolder *holder = [controlRow objectAtIndex:i];
             if (holder.selected)
@@ -268,13 +414,6 @@
         controller->setRelease(i, 0.1);
         controller->setWaveform(i, Sid::waveForm::TRIANGLE);
     }
-    
-    /*
-    controller->setFrequency(2, 220.0);
-    controller->setSustain(2, 0.85);
-    controller->setRelease(2, 0.1);
-    controller->setWaveform(2, Sid::waveForm::NOISE);
-    */
      
     [self setTempo:tempo];
     while (!shouldExit)
@@ -327,7 +466,22 @@
                 }
             }
         }
+        
         usleep(usec);
+        /*
+        usleep(usec/2);
+        int numRows = [buttonRows count];
+        for (int r = 0; r < numRows; r++)
+        {
+            NSMutableArray *buttons = [buttonRows objectAtIndex:r];
+            
+            // send note update
+            ButtonHolder *holder = [buttons objectAtIndex:tickIndex];
+            if (holder.selected)
+                controller->noteOff(r);
+        }
+        usleep(usec/2);
+        */
         
         dispatch_async(dispatch_get_main_queue(), ^{
             [self updateUI];
@@ -355,8 +509,8 @@
 - (void)controlButtonTapped:(UIButton *)button
 {
     int i = button.tag;
-    int col = i % 4;
-    int row = (i-col) / 4;
+    int col = i % numControls;
+    int row = (i-col) / numControls;
     
     NSMutableArray *buttons = [controlRows objectAtIndex:row];
     
@@ -381,14 +535,38 @@
     }
     else if (col == 2)
     {
-        controller->setWaveform(row, Sid::waveForm::PULSE);
-    }
-    else if (col == 3)
-    {
         controller->setWaveform(row, Sid::waveForm::NOISE);
     }
     
     [self updateUI];
+}
+
+- (void)resetButtonTapped:(UIButton *)button
+{
+    // unselect all buttons
+    int numRows = [buttonRows count];
+    for (int r = 0; r < numRows; r++)
+    {
+        NSMutableArray *buttons = [buttonRows objectAtIndex:r];
+        for (int b = 0; b < [buttons count]; b++)
+        {
+            ButtonHolder *holder = [buttons objectAtIndex:b];
+            holder.selected = false;
+        }
+    }
+    
+    controller->init();
+    controller->setVolume(1.0);
+    
+    for (int i = 0; i < 3; i++)
+    {
+        controller->setFrequency(i, 440.0*(i+1));
+        controller->setSustain(i, 0.85);
+        controller->setRelease(i, 0.1);
+        controller->setWaveform(i, Sid::waveForm::TRIANGLE);
+    }
+    
+    [self setTempo:tempo];
 }
 
 - (void)sliderSlid:(UISlider *)slider
@@ -401,6 +579,48 @@
     
     float newTempo = minTempo + (maxTempo-minTempo)*val;
     [self setTempo:newTempo];
+}
+
+- (void)adsrSlider:(UISlider *)slider
+{
+    int i = slider.tag;
+    int col = i % 4;
+    int row = (i-col) / 4;
+    
+    // send control signal
+    if (col == 0)
+    {
+        controller->setAttack(row, slider.value);
+    }
+    else if (col == 1)
+    {
+        controller->setDecay(row, slider.value);
+    }
+    else if (col == 2)
+    {
+        controller->setSustain(row, slider.value);
+    }
+    else if (col == 3)
+    {
+        controller->setRelease(row, slider.value);
+    }
+}
+
+- (void)harmonizeStart:(UIButton *)button
+{
+    harmonize = YES;
+    numsamples = 0;
+}
+
+- (void)harmonizeEnd:(UIButton *)button
+{
+    harmonize = NO;
+    
+    // play a sampled sound
+    for (int i = 0; i < numsamples; i++)
+    {
+        controller->setVolume(samples[i]);
+    }
 }
 
 - (void)freqSlider:(UISlider *)slider

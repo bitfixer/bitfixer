@@ -96,7 +96,7 @@ float FrequencyDetector::getTopFrequency()
     for (int i = 0; i < numsteps; i++)
     {
         float val = dctoutput[i] > 0 ? dctoutput[i] : -dctoutput[i];
-        if (val > max)
+        if (val > max && val > 0.1)
         {
             max = val;
             ind = i;
