@@ -109,9 +109,8 @@ void checkStatus(OSStatus status)
         
         for (int i = 0; i < numFrames; i++)
         {
-            *data++ = temp[i];
+            *data++ = vc->temp[i];
             *data++ = sin(vc->phase);
-            //*data++ = 0.0;
             phase += step;
         }
         
