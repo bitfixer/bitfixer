@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		6590A7EB1CBA1B0E0026CD1B /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6590A7EA1CBA1B0E0026CD1B /* main.cpp */; };
+		6590A7F41CBA1B3D0026CD1B /* Simple.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6590A7F31CBA1B3D0026CD1B /* Simple.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -24,7 +24,8 @@
 
 /* Begin PBXFileReference section */
 		6590A7E71CBA1B0E0026CD1B /* netreceive */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = netreceive; sourceTree = BUILT_PRODUCTS_DIR; };
-		6590A7EA1CBA1B0E0026CD1B /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		6590A7F21CBA1B2D0026CD1B /* Net.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Net.h; path = ../external/Net/Net.h; sourceTree = "<group>"; };
+		6590A7F31CBA1B3D0026CD1B /* Simple.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Simple.cpp; path = ../../external/Net/Simple.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -41,6 +42,7 @@
 		6590A7DE1CBA1B0E0026CD1B = {
 			isa = PBXGroup;
 			children = (
+				6590A7F11CBA1B210026CD1B /* Net */,
 				6590A7E91CBA1B0E0026CD1B /* netreceive */,
 				6590A7E81CBA1B0E0026CD1B /* Products */,
 			);
@@ -57,9 +59,17 @@
 		6590A7E91CBA1B0E0026CD1B /* netreceive */ = {
 			isa = PBXGroup;
 			children = (
-				6590A7EA1CBA1B0E0026CD1B /* main.cpp */,
+				6590A7F31CBA1B3D0026CD1B /* Simple.cpp */,
 			);
 			path = netreceive;
+			sourceTree = "<group>";
+		};
+		6590A7F11CBA1B210026CD1B /* Net */ = {
+			isa = PBXGroup;
+			children = (
+				6590A7F21CBA1B2D0026CD1B /* Net.h */,
+			);
+			name = Net;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -118,7 +128,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6590A7EB1CBA1B0E0026CD1B /* main.cpp in Sources */,
+				6590A7F41CBA1B3D0026CD1B /* Simple.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

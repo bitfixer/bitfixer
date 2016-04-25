@@ -7,7 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		65607B701C967B7F00CF60E4 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65607B6F1C967B7F00CF60E4 /* main.cpp */; };
+		65607B771C967B9700CF60E4 /* tap2wav.c in Sources */ = {isa = PBXBuildFile; fileRef = 65607B761C967B9700CF60E4 /* tap2wav.c */; };
+		65607B7C1C967BC500CF60E4 /* filter.c in Sources */ = {isa = PBXBuildFile; fileRef = 65607B781C967BC500CF60E4 /* filter.c */; };
+		65607B7D1C967BC500CF60E4 /* wav.c in Sources */ = {isa = PBXBuildFile; fileRef = 65607B7A1C967BC500CF60E4 /* wav.c */; };
+		65607B801C967BEF00CF60E4 /* tap.c in Sources */ = {isa = PBXBuildFile; fileRef = 65607B7E1C967BEF00CF60E4 /* tap.c */; };
+		65607B821C967C4200CF60E4 /* io.c in Sources */ = {isa = PBXBuildFile; fileRef = 65607B811C967C4200CF60E4 /* io.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -24,7 +28,14 @@
 
 /* Begin PBXFileReference section */
 		65607B6C1C967B7F00CF60E4 /* c64tape */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = c64tape; sourceTree = BUILT_PRODUCTS_DIR; };
-		65607B6F1C967B7F00CF60E4 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		65607B761C967B9700CF60E4 /* tap2wav.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tap2wav.c; path = "../../c64tapedecode-0.1-src/src/tap2wav.c"; sourceTree = "<group>"; };
+		65607B781C967BC500CF60E4 /* filter.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = filter.c; path = "../../c64tapedecode-0.1-src/src/filter.c"; sourceTree = "<group>"; };
+		65607B791C967BC500CF60E4 /* filter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = filter.h; path = "../../c64tapedecode-0.1-src/src/filter.h"; sourceTree = "<group>"; };
+		65607B7A1C967BC500CF60E4 /* wav.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = wav.c; path = "../../c64tapedecode-0.1-src/src/wav.c"; sourceTree = "<group>"; };
+		65607B7B1C967BC500CF60E4 /* wav.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wav.h; path = "../../c64tapedecode-0.1-src/src/wav.h"; sourceTree = "<group>"; };
+		65607B7E1C967BEF00CF60E4 /* tap.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tap.c; path = "../../c64tapedecode-0.1-src/src/tap.c"; sourceTree = "<group>"; };
+		65607B7F1C967BEF00CF60E4 /* tap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tap.h; path = "../../c64tapedecode-0.1-src/src/tap.h"; sourceTree = "<group>"; };
+		65607B811C967C4200CF60E4 /* io.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = io.c; path = "../../c64tapedecode-0.1-src/src/io.c"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,7 +68,14 @@
 		65607B6E1C967B7F00CF60E4 /* c64tape */ = {
 			isa = PBXGroup;
 			children = (
-				65607B6F1C967B7F00CF60E4 /* main.cpp */,
+				65607B811C967C4200CF60E4 /* io.c */,
+				65607B7E1C967BEF00CF60E4 /* tap.c */,
+				65607B7F1C967BEF00CF60E4 /* tap.h */,
+				65607B781C967BC500CF60E4 /* filter.c */,
+				65607B791C967BC500CF60E4 /* filter.h */,
+				65607B7A1C967BC500CF60E4 /* wav.c */,
+				65607B7B1C967BC500CF60E4 /* wav.h */,
+				65607B761C967B9700CF60E4 /* tap2wav.c */,
 			);
 			path = c64tape;
 			sourceTree = "<group>";
@@ -118,7 +136,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				65607B701C967B7F00CF60E4 /* main.cpp in Sources */,
+				65607B821C967C4200CF60E4 /* io.c in Sources */,
+				65607B7D1C967BC500CF60E4 /* wav.c in Sources */,
+				65607B771C967B9700CF60E4 /* tap2wav.c in Sources */,
+				65607B7C1C967BC500CF60E4 /* filter.c in Sources */,
+				65607B801C967BEF00CF60E4 /* tap.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
