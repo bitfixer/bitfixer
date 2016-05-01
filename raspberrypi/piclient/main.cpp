@@ -224,13 +224,12 @@ int main(void)
             b = buffer;
             total = 0;
             bytes_received = 1;
-            digitalWrite(3, HIGH);
             readytogo = false;
             while (bytes_received == 1 && !readytogo)
             {
                 bytes_received = spi.recvbyte(b);
-                if (*b == 'o')
-                    readytogo = true;
+                //if (*b == 'o')
+                //    readytogo = true;
                 b += bytes_received;
                 total += bytes_received;
             }
@@ -240,6 +239,7 @@ int main(void)
             //byte = 'X';
             //spi.send(byte);
             
+            /*
             byte = 'X';
             bytes_received = spi.sendbyte(b, byte);
             b += bytes_received;
@@ -248,6 +248,7 @@ int main(void)
             bytes_received = spi.recvbyte(b);
             b += bytes_received;
             total += bytes_received;
+            */
              
             for (int bb = 0; bb < total; bb++)
             {
