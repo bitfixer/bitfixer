@@ -1,4 +1,4 @@
-REMOTE := 10.0.0.9
+REMOTE := 10.0.0.5
 
 all:
 	g++ -o main -lwiringPi main.cpp
