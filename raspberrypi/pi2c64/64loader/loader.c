@@ -3,11 +3,13 @@
 #include <peekpoke.h>
 #include "../commands.h"
 
-#define PA2 0x04;
-#define NPA2 0xFB;
+#define PA2 0x04
+#define NPA2 0xFB
 
-#define FLAG 0x10;
-#define SCREENRAM 0x0400;
+#define FLAG 0x10
+#define SCREENRAM 0x0400
+#define BITMAP_LOCATION_REG 0xD018
+#define VICII 0xD011
 
 void set_userport_output()
 {
@@ -105,6 +107,65 @@ void send_command(unsigned char command_id)
  
 int main(void)
 {
+    // TEST: bitmap mode
+    unsigned base = 8192;
+    unsigned char val;
+    unsigned char *addr;
+    unsigned i;
+    
+    init();
+    
+    // set bitmap at 8192
+    addr = (unsigned char *)BITMAP_LOCATION_REG;
+    val = *addr;
+    val |= 0x08;
+    *addr = val;
+    
+    // enter bit map mode
+    addr = (unsigned char *)VICII;
+    val = *addr;
+    val |= 0x20;
+    *addr = val;
+    
+    for (i = base; i < base+8000; i++)
+    {
+        *((unsigned char *)i) = 0;
+    }
+    
+    for (i = 1024; i < 2023; i++)
+    {
+        *((unsigned char *)i) = 0x25;
+    }
+    
+    send_command(COMMAND_GET_FRAME);
+    set_userport_input();
+    for (i = base; i < base+8000; i++)
+    {
+        val = receive_byte_with_handshake();
+        *((unsigned char *)i) = val;
+    }
+    set_userport_output();
+    
+    
+    signal_byte_not_ready();
+    set_userport_output();
+   
+    for (i = 0; i < 1000; i++)
+    {
+        asm("nop");
+    }
+    
+    /*
+    // exit bit map mode
+    addr = (unsigned char *)VICII;
+    val = *addr;
+    val &= 0xDF;
+    *addr = val;
+    */
+     
+    return 1;
+    
+    /*
     unsigned i = 0;
     unsigned j = 0;
     unsigned char c;
@@ -120,7 +181,7 @@ int main(void)
     }
     
     init();
-    for (i = 0; i < 100; i++)
+    for (i = 0; i < 10; i++)
     {
         send_command(COMMAND_GET_FRAME);
     
@@ -140,4 +201,5 @@ int main(void)
     set_userport_output();
     //printf("done.\n");
     return 1;
+    */
 }
