@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <c64.h>
 #include <peekpoke.h>
+#include "../commands.h"
 
 #define PA2 0x04;
 #define NPA2 0xFB;
 
 #define FLAG 0x10;
+#define SCREENRAM 0x0400;
 
 void set_userport_output()
 {
@@ -96,55 +98,46 @@ unsigned char receive_byte_with_handshake()
     return byte;
 }
 
+void send_command(unsigned char command_id)
+{
+    send_byte_with_handshake(command_id);
+}
+ 
 int main(void)
 {
-    /*
-    unsigned char byte;
-    int i = 0;
-    // TEST
-    init();
-    set_userport_input();
-    for (i = 0; i < 255; i++)
-    {
-        byte = receive_byte();
-        printf("received %d\n", byte);
-        
-    }
-    return 1;
-    */
-    
     unsigned i = 0;
+    unsigned j = 0;
     unsigned char c;
-    init();
+    unsigned char *screen = (unsigned char *)SCREENRAM;
+    for (j = 0; j < 1000; j++)
+    {
+        COLOR_RAM[j] = 0;
+    }
     
-    // test
-    
-    printf("start\n");
-    for (i = 0; i < 255; i++)
+    for (j = 0; j < 1000; j++)
     {
         asm("nop");
     }
     
-    for (i = 0; i < 1; i++)
+    init();
+    for (i = 0; i < 100; i++)
     {
-        for (c = 0; c < 255; c++)
+        send_command(COMMAND_GET_FRAME);
+    
+        set_userport_input();
+        // get response
+        for (j = 0; j < 1000; j++)
         {
-            send_byte_with_handshake(c);
+            //c = receive_byte_with_handshake();
+            c = receive_byte_with_handshake();
+            //printf("received %d\n", c);
+            screen[j] = c;
         }
-    }
-    
-    send_byte_with_handshake(0xff);
-    
-    // now receive some bytes
-    set_userport_input();
-    for (i = 0; i < 255; i++)
-    {
-        c = receive_byte_with_handshake();
-        //printf("received %d\n", c);
+        set_userport_output();
     }
     
     signal_byte_not_ready();
     set_userport_output();
-    printf("done.\n");
+    //printf("done.\n");
     return 1;
 }

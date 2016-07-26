@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include "commands.h"
 
 void set_port_input()
 {
@@ -52,7 +53,6 @@ void piWriteByte(unsigned char byte)
     {
         digitalWrite(i, byte & 0x01);
         byte >>= 1;
-        //digitalWrite(i, LOW);
     }
 }
 
@@ -115,6 +115,14 @@ void send_byte_with_handshake(unsigned char byte)
     signal_notready();
 }
 
+void receive_command()
+{
+    unsigned char cmd;
+    cmd = receive_byte_with_handshake();
+    
+    printf("cmd is %d\n", cmd);
+}
+
 // test - watch for input
 int main(void)
 {
@@ -123,23 +131,10 @@ int main(void)
     bool started = false;
     init();
     
-    /*
-    // TEST
-    set_port_output();
-    
-    for (int i = 0; i < 256; i++)
-    {
-        printf("hey\n");
-        piWriteByte(i);
-        usleep(200000);
-    }
-    //set_port_input();
-    return 1;
-    */
-    
     bool done = false;
     int bytesReceived = 0;
-    //for (int i = 0; i < 255; i++)
+
+    /*
     while (!done)
     {
         unsigned char byte = receive_byte_with_handshake();
@@ -167,6 +162,23 @@ int main(void)
         send_byte_with_handshake(100+i);
     }
     set_port_input();
+    */
+    
+    unsigned char ch = 'A';
+    for (int i = 0; i < 100; i++)
+    {
+        receive_command();
+        bytesReceived++;
+    
+        // send response
+        set_port_output();
+        for (int j = 0; j < 1000; j++)
+        {
+            send_byte_with_handshake(ch);
+        }
+        ch++;
+        set_port_input();
+    }
     
     gettimeofday(&endTime, NULL);
     double start = (double)startTime.tv_sec + ((double)startTime.tv_usec / 1000000.0);
