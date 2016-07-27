@@ -5,6 +5,83 @@
 #include <math.h>
 #include <string.h>
 #include "commands.h"
+#include "image_utilities.h"
+
+typedef struct
+{
+    unsigned char r;
+    unsigned char g;
+    unsigned char b;
+} color;
+
+void get_64_colors(color *c64_colors)
+{
+    // black
+    c64_colors[0].r = 0;
+    c64_colors[0].g = 0;
+    c64_colors[0].b = 0;
+    
+    c64_colors[1].r = 255;
+    c64_colors[1].g = 255;
+    c64_colors[1].b = 255;
+    
+    c64_colors[2].r = 104;
+    c64_colors[2].g = 55;
+    c64_colors[2].b = 43;
+    
+    c64_colors[3].r = 112;
+    c64_colors[3].g = 164;
+    c64_colors[3].b = 178;
+    
+    c64_colors[4].r = 111;
+    c64_colors[4].g = 61;
+    c64_colors[4].b = 134;
+    
+    c64_colors[5].r = 88;
+    c64_colors[5].g = 141;
+    c64_colors[5].b = 67;
+    
+    c64_colors[6].r = 53;
+    c64_colors[6].g = 40;
+    c64_colors[6].b = 121;
+    
+    c64_colors[7].r = 184;
+    c64_colors[7].g = 199;
+    c64_colors[7].b = 111;
+    
+    c64_colors[8].r = 111;
+    c64_colors[8].g = 79;
+    c64_colors[8].b = 37;
+    
+    c64_colors[9].r = 67;
+    c64_colors[9].g = 57;
+    c64_colors[9].b = 0;
+    
+    c64_colors[10].r = 154;
+    c64_colors[10].g = 103;
+    c64_colors[10].b = 89;
+    
+    c64_colors[11].r = 68;
+    c64_colors[11].g = 68;
+    c64_colors[11].b = 68;
+    
+    c64_colors[12].r = 108;
+    c64_colors[12].g = 108;
+    c64_colors[12].b = 108;
+    
+    c64_colors[13].r = 154;
+    c64_colors[13].g = 210;
+    c64_colors[13].b = 132;
+    
+    c64_colors[14].r = 108;
+    c64_colors[14].g = 94;
+    c64_colors[14].b = 181;
+    
+    c64_colors[15].r = 149;
+    c64_colors[15].g = 149;
+    c64_colors[15].b = 149;
+}
+
 
 void set_port_input()
 {
@@ -121,7 +198,203 @@ void receive_command()
 {
     unsigned char cmd;
     cmd = receive_byte_with_handshake();
-    //printf("cmd is %d\n", cmd);
+    printf("cmd is %d\n", cmd);
+}
+
+void read_rgb_from_ppm(unsigned char *dest, const char *fname)
+{
+    FILE *fp = fopen(fname, "rb");
+    char temp[128];
+    // parse ppm header
+    bool done = false;
+    int headerlen = 0;
+    char *t = temp;
+    while (!done)
+    {
+        size_t res = fread(t, 1, 1, fp);
+        headerlen++;
+        if (*t == 0x0A)
+        {
+            // look for "255"
+            *t = 0x00;
+            printf("got: %s\n", temp);
+            
+            if (strcmp(temp, "255") == 0)
+            {
+                done = true;
+            }
+            
+            t = temp;
+        }
+        else
+        {
+            t++;
+        }
+    }
+    
+    // now read all the pixels
+    int width = 320;
+    int height = 200;
+    int colors = 3;
+    
+    int bytes = width*height*colors;
+    fread(dest, 1, bytes, fp);
+    fclose(fp);
+}
+
+void bitmap_from_rgb(unsigned char *bitmap, unsigned char *rgb, unsigned char *colormap,
+                     unsigned char *mod_rgb, int width, int height, color *colors)
+{
+    int ncolors = 3;
+    int rows = height/8;
+    int columns = width/8;
+    
+    for (int h = 0; h < height; h++)
+    {
+        for (int w = 0; w < width; w++)
+        {
+            int row = h/8;
+            int col = w/8;
+            int colormap_index = row*columns + col;
+            unsigned char colorbyte = colormap[colormap_index];
+            
+            int c1 = (colorbyte & 0xF0) >> 4;
+            int c2 = (colorbyte & 0x0F);
+            
+            int index = h*width*ncolors + w*ncolors;
+            int bitmap_index = h*width + w;
+            unsigned char r = rgb[index];
+            unsigned char g = rgb[index+1];
+            unsigned char b = rgb[index+2];
+            
+            float dr1 = (float)colors[c1].r-(float)r;
+            float dg1 = (float)colors[c1].g-(float)g;
+            float db1 = (float)colors[c1].b-(float)b;
+            
+            float dr2 = (float)colors[c2].r-(float)r;
+            float dg2 = (float)colors[c2].g-(float)g;
+            float db2 = (float)colors[c2].b-(float)b;
+            
+            float err1 = sqrt(dr1*dr1 + dg1*dg1 + db1*db1);
+            float err2 = sqrt(dr2*dr2 + dg2*dg2 + db2*db2);
+            
+            if (err1 < err2)
+            {
+                bitmap[bitmap_index] = 1;
+                
+                mod_rgb[index] = colors[c1].r;
+                mod_rgb[index+1] = colors[c1].g;
+                mod_rgb[index+2] = colors[c1].b;
+            }
+            else
+            {
+                bitmap[bitmap_index] = 0;
+                mod_rgb[index] = colors[c2].r;
+                mod_rgb[index+1] = colors[c2].g;
+                mod_rgb[index+2] = colors[c2].b;
+            }
+        }
+    }
+}
+
+unsigned char color_byte_for_block(unsigned char *rgb, int xstart, int ystart, int width, int height, color *colors)
+{
+    //return 0x10;
+    
+    //printf("block at %d %d\n", xstart, ystart);
+    
+    int c1_min = 0;
+    int c2_min = 0;
+    int ncolors = 3;
+    float minerror = 999999.0;
+    
+    for (int c1 = 0; c1 < 15; c1++)
+    {
+        for (int c2 = c1+1; c2 < 16; c2++)
+        {
+            //printf("colors %d %d\n", c1, c2);
+            // get total error for this color pair
+            float totalerror = 0;
+            for (int y = ystart; y < ystart+8; y++)
+            {
+                for (int x = xstart; x < xstart+8; x++)
+                {
+                    int index = y*width*ncolors + x*ncolors;
+                    unsigned char r = rgb[index];
+                    unsigned char g = rgb[index+1];
+                    unsigned char b = rgb[index+2];
+                    
+                    float dr1 = (float)colors[c1].r-(float)r;
+                    float dg1 = (float)colors[c1].g-(float)g;
+                    float db1 = (float)colors[c1].b-(float)b;
+                    
+                    float dr2 = (float)colors[c2].r-(float)r;
+                    float dg2 = (float)colors[c2].g-(float)g;
+                    float db2 = (float)colors[c2].b-(float)b;
+                    
+                    float err1 = sqrt(dr1*dr1 + dg1*dg1 + db1*db1);
+                    float err2 = sqrt(dr2*dr2 + dg2*dg2 + db2*db2);
+                    
+                    float minerr = (err1 < err2) ? err1 : err2;
+                    totalerror += minerr;
+                }
+            }
+            
+            if (totalerror < minerror)
+            {
+                c1_min = c1;
+                c2_min = c2;
+                minerror = totalerror;
+            }
+        }
+    }
+    
+    //printf("colors %d %d\n", c1_min, c2_min);
+    
+    // create color byte
+    unsigned char colorbyte = (c1_min << 4) + c2_min;
+    return colorbyte;
+}
+
+void colormap_from_rgb(unsigned char *colormap, unsigned char *rgb, int width, int height, color *colors)
+{
+    int rows = height/8;
+    int columns = width/8;
+    
+    for (int r = 0; r < rows; r++)
+    {
+        for (int c = 0; c < columns; c++)
+        {
+            int x = c*8;
+            int y = r*8;
+            int colormap_index = r*columns + c;
+            
+            unsigned char colorbyte = color_byte_for_block(rgb, x, y, width, height, colors);
+            //unsigned char colorbyte = 0x1;
+            colormap[colormap_index] = colorbyte;
+            
+            /*
+            for (int yy = y; yy < y+8; y++)
+            {
+                for (int xx = x; xx < x+8; x++)
+                {
+                    int index = yy*width*ncolors + xx*ncolors;
+                    int bitmap_index = h*width + w;
+                    unsigned char r = rgb[index];
+                    unsigned char g = rgb[index+1];
+                    unsigned char b = rgb[index+2];
+                    
+                    *bl = r;
+                    bl++;
+                    *bl = g;
+                    bl++;
+                    *bl = b;
+                }
+            }
+            */
+        }
+    }
+    printf("got colormap\n");
 }
 
 void create_test_bitmap(unsigned char *dest, int width, int height)
@@ -135,6 +408,16 @@ void create_test_bitmap(unsigned char *dest, int width, int height)
         }
     }
     
+    for (int h = 0; h < 8; h++)
+    {
+        for (int w = 0; w < width; w++)
+        {
+            //printf("setting index %d to 1\n", h*width+w);
+            dest[h*width + w] = 1;
+        }
+    }
+    
+    /*
     float xcenter = (float)width/(float)2.0;
     float ycenter = (float)height/(float)2.0;
     float radius = 60.0;
@@ -159,13 +442,14 @@ void create_test_bitmap(unsigned char *dest, int width, int height)
             }
         }
     }
+    */
 }
 
 // input - pixel-addressed bitmap
 // output - c64 bitmap bytes
 void create_c64_bitmap(unsigned char *dest, unsigned char *src, int width, int height)
 {
-    int c64bytes = (width/8) * (height/8);
+    int c64bytes = (width/8) * (height/8) * 8;
     // clear
     memset(dest, 0, c64bytes);
     
@@ -173,13 +457,17 @@ void create_c64_bitmap(unsigned char *dest, unsigned char *src, int width, int h
     {
         for (int w = 0; w < width; w++)
         {
-            if (dest[h*width + w] == 1)
+            //printf("src %d = %d\n", h*width+w, src[h*width+w]);
+            if (src[h*width + w] == 1)
             {
                 int row = h/8;
                 int c = w/8;
                 int line = h & 7;
                 int bit = 7 - (w & 7);
                 int byte = row*320 + c*8 + line;
+                
+                //printf("h %d w %d: row %d col %d line %d bit %d byte %d\n",
+                //       h,w,row,c,line,bit,byte);
                 
                 unsigned char b = dest[byte];
                 unsigned char mask = 1 << bit;
@@ -188,9 +476,6 @@ void create_c64_bitmap(unsigned char *dest, unsigned char *src, int width, int h
             }
         }
     }
-    
-    
-    
 }
 
 // test - watch for input
@@ -199,15 +484,31 @@ int main(void)
     struct timeval startTime;
     struct timeval endTime;
     bool started = false;
+    unsigned char rgb[320*200*3];
+    unsigned char mod_rgb[320*200*3];
+    unsigned char bitmap[320*200];
+    unsigned char colormap[1000];
+    unsigned char c64_bitmap[8000];
+    color c64_colors[16];
+    get_64_colors(c64_colors);
+    
+    read_rgb_from_ppm(rgb, (const char *)"saeid.ppm");
+    colormap_from_rgb(colormap, rgb, 320, 200, c64_colors);
+    //create_test_bitmap(bitmap, 320, 200);
+    bitmap_from_rgb(bitmap, rgb, colormap, mod_rgb, 320, 200, c64_colors);
+    //SaveFrameFromRgb(mod_rgb, 320, 200, 999);
+    create_c64_bitmap(c64_bitmap, bitmap, 320, 200);
+    //return 1;
+    //printf("hey\n");
     init();
     
     bool done = false;
     int bytesReceived = 0;
-    unsigned char bitmap[320*200];
-    unsigned char c64_bitmap[8000];
     
-    create_test_bitmap(bitmap, 320, 200);
-    create_c64_bitmap(c64_bitmap, bitmap, 320, 200);
+    
+    
+    //create_test_bitmap(bitmap, 320, 200);
+   
     printf("ready.\n");
     
     /*
@@ -270,6 +571,12 @@ int main(void)
     gettimeofday(&startTime, NULL);
     
     set_port_output();
+    for (int i = 0; i < 1000; i++)
+    {
+        send_byte_with_handshake(colormap[i]);
+        //send_byte_with_handshake(0x03);
+    }
+    
     for (int j = 0; j < 8000; j++)
     {
         send_byte_with_handshake(c64_bitmap[j]);

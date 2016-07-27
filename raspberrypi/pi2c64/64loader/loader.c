@@ -10,6 +10,7 @@
 #define SCREENRAM 0x0400
 #define BITMAP_LOCATION_REG 0xD018
 #define VICII 0xD011
+#define BORDER 0xD020
 
 void set_userport_output()
 {
@@ -67,6 +68,11 @@ void wait_for_remote_notready()
     }
 }
 
+void set_border_color(unsigned char color_index)
+{
+    *((unsigned char *)BORDER) = color_index;
+}
+
 void init()
 {
     // set port register a to output for bit 2
@@ -78,6 +84,8 @@ void init()
     signal_byte_not_ready();
     set_userport_output();
     transmit_byte(0x00);
+    
+    set_border_color(0);
 }
 
 void send_byte_with_handshake(unsigned char byte)
@@ -132,13 +140,24 @@ int main(void)
         *((unsigned char *)i) = 0;
     }
     
-    for (i = 1024; i < 2023; i++)
+    /*
+    for (i = base; i < base+320; i++)
     {
-        *((unsigned char *)i) = 0x25;
+        *((unsigned char *)i) = 255;
     }
     
+    return 1;
+    */
+     
     send_command(COMMAND_GET_FRAME);
     set_userport_input();
+    
+    for (i = 1024; i < 2024; i++)
+    {
+        val = receive_byte_with_handshake();
+        *((unsigned char *)i) = val;
+    }
+    
     for (i = base; i < base+8000; i++)
     {
         val = receive_byte_with_handshake();
@@ -150,7 +169,7 @@ int main(void)
     signal_byte_not_ready();
     set_userport_output();
    
-    for (i = 0; i < 1000; i++)
+    for (i = 0; i < 10000; i++)
     {
         asm("nop");
     }
