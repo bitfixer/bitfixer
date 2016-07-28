@@ -171,10 +171,15 @@ void signal_ready()
 void signal_notready()
 {
     fastDigitalWrite(9, HIGH);
+    usleep(10);
+    fastDigitalWrite(9, LOW);
+    usleep(10);
+    fastDigitalWrite(9, HIGH);
 }
 
 unsigned char receive_byte_with_handshake()
 {
+    fastDigitalWrite(9, HIGH);
     wait_for_signal();
     unsigned char byte = piReadByte();
     signal_ready();
@@ -186,11 +191,16 @@ unsigned char receive_byte_with_handshake()
 
 void send_byte_with_handshake(unsigned char byte)
 {
+    fastDigitalWrite(9, HIGH);
+    printf("1..\n");
     wait_for_signal();
+    printf("2..\n");
     // put byte on bus
     piWriteByte(byte);
     signal_ready();
+    printf("3..\n");
     wait_for_signal_notready();
+    printf("4\n");
     signal_notready();
 }
 
@@ -478,6 +488,26 @@ void create_c64_bitmap(unsigned char *dest, unsigned char *src, int width, int h
     }
 }
 
+void generate_test_rgb(unsigned char *rgb, int width, int height)
+{
+    for (int y = 0; y < height; y++)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            float grad = (float)y / (float)height;
+            float r = grad * 255.0;
+            
+            float gradx = (float)x / (float)width;
+            float g = gradx * 255.0;
+            
+            int index = y*width*3 + x*3;
+            rgb[index] = (int)r;
+            rgb[index+1] = (int)g;
+            rgb[index+2] = 0;
+        }
+    }
+}
+
 // test - watch for input
 int main(void)
 {
@@ -491,99 +521,65 @@ int main(void)
     unsigned char c64_bitmap[8000];
     color c64_colors[16];
     get_64_colors(c64_colors);
-    
-    read_rgb_from_ppm(rgb, (const char *)"saeid.ppm");
-    colormap_from_rgb(colormap, rgb, 320, 200, c64_colors);
-    //create_test_bitmap(bitmap, 320, 200);
-    bitmap_from_rgb(bitmap, rgb, colormap, mod_rgb, 320, 200, c64_colors);
-    //SaveFrameFromRgb(mod_rgb, 320, 200, 999);
-    create_c64_bitmap(c64_bitmap, bitmap, 320, 200);
-    //return 1;
-    //printf("hey\n");
-    init();
-    
     bool done = false;
     int bytesReceived = 0;
     
+    Decoder decoder;
+    decoder.init();
+    init();
     
-    
-    //create_test_bitmap(bitmap, 320, 200);
-   
-    printf("ready.\n");
-    
-    /*
-    while (!done)
+    for (int i = 0; i < 1; i++)
     {
-        unsigned char byte = receive_byte_with_handshake();
-        if (!started)
-        {
-            started = true;
-            gettimeofday(&startTime, NULL);
-        }
-        printf("got byte: %d\n", byte);
-        bytesReceived++;
         
-        if (bytesReceived % 100 == 0)
+        /*
+        //bool gotFrame = false;
+        int gotFrames = 0;
+        // get a frame from decoder
+        //while (!gotFrame)
+        while (gotFrames < 10)
         {
-            printf("br %d\n", bytesReceived);
+            bool gotFrame = decoder.getFrameRGB(rgb, 99);
+            if (gotFrame)
+            {
+                gotFrames++;
+            }
         }
+        */
         
-        if (byte == 0xff)
-            done = true;
-    }
-    
-    // output
-    set_port_output();
-    for (int i = 0; i < 255; i++)
-    {
-        send_byte_with_handshake(100+i);
-    }
-    set_port_input();
-    */
-    
-    /*
-    unsigned char ch = 'A';
-    for (int i = 0; i < 10; i++)
-    {
+        //generate_test_rgb(rgb, 320, 200);
+         
+        printf("got frame.\n");
+        read_rgb_from_ppm(rgb, (const char *)"avh.ppm");
+        colormap_from_rgb(colormap, rgb, 320, 200, c64_colors);
+        bitmap_from_rgb(bitmap, rgb, colormap, mod_rgb, 320, 200, c64_colors);
+        create_c64_bitmap(c64_bitmap, bitmap, 320, 200);
+        printf("ready.\n");
+        
+        // send one bitmap frame
         receive_command();
         if (!started)
         {
             started = true;
             gettimeofday(&startTime, NULL);
         }
-    
-        // send response
+        
         set_port_output();
-        for (int j = 0; j < 1000; j++)
+        for (int i = 0; i < 1000; i++)
         {
-            send_byte_with_handshake(ch);
+            printf("sending byte %d\n", i);
+            send_byte_with_handshake(colormap[i]);
         }
-        ch++;
         
-        bytesReceived += 1001;
-        
+        /*
+        for (int j = 0; j < 8000; j++)
+        {
+            send_byte_with_handshake(c64_bitmap[j]);
+        }
+        */
+        bytesReceived += 9000;
         set_port_input();
     }
-    */
     
-    // send one bitmap frame
-    receive_command();
-    gettimeofday(&startTime, NULL);
-    
-    set_port_output();
-    for (int i = 0; i < 1000; i++)
-    {
-        send_byte_with_handshake(colormap[i]);
-        //send_byte_with_handshake(0x03);
-    }
-    
-    for (int j = 0; j < 8000; j++)
-    {
-        send_byte_with_handshake(c64_bitmap[j]);
-    }
-    bytesReceived += 8000;
-    set_port_input();
-     
     gettimeofday(&endTime, NULL);
     double start = (double)startTime.tv_sec + ((double)startTime.tv_usec / 1000000.0);
     double end = (double)endTime.tv_sec + ((double)endTime.tv_usec / 1000000.0);

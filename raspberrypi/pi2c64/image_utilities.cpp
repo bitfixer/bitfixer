@@ -1,15 +1,12 @@
-extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libavutil/error.h>
-#include <libswscale/swscale.h>
-}
-
+#include "image_utilities.h"
 #include <stdio.h>
 #include <string>
 
-const int final_height = 200;
-const int final_width = 320;
+//const int final_height = 200;
+//const int final_width = 320;
+const int final_height = 1920;
+const int final_width = 1080;
+
 const int num_channels = 3;
 
 bool initialize_ffmpeg() {
@@ -205,6 +202,121 @@ int reading_loop( AVCodecContext *pCodecCtx, AVCodec *pCodec, AVFormatContext *p
 	avcodec_close(pCodecCtx);
 	avformat_close_input(&pFormatCtx);
 
+}
+
+int Decoder::init()
+{
+    initialize_ffmpeg();
+    open_video("dirkMonoClip.mp4", pCodecCtx, pCodec, pFormatCtx, videoStream);
+    pFrame = av_frame_alloc();
+    pFrameRGB = av_frame_alloc();
+    if (pFrameRGB == NULL) {
+        return -1;
+    }
+    
+    int numBytes = avpicture_get_size(PIX_FMT_RGB24, final_width, final_height);
+    buffer = (uint8_t *)av_malloc(numBytes * sizeof(uint8_t));
+    avpicture_fill((AVPicture *)pFrameRGB, buffer, PIX_FMT_RGB24, final_width, final_height);
+    img_convert_ctx = sws_getContext(pCodecCtx->width,
+                                     pCodecCtx->height,
+                                     pCodecCtx->pix_fmt,
+                                     final_width,
+                                     final_height,
+                                     PIX_FMT_RGB24,
+                                     SWS_BICUBIC,
+                                     NULL,
+                                     NULL,
+                                     NULL);
+    return 1;
+}
+
+void Decoder::projectFrame(AVFrame *frame, unsigned char *rgb, int width, int height, int srcwidth, int srcheight)
+{
+    // project a frame!
+    float yaw_offset = 0.0;
+    float fovy = M_PI / 2.0;
+    float fovx = M_PI / 2.0;
+    
+    float d = 1.0;
+    float rectw = d * tan(fovx);
+    float recth = d * tan(fovy);
+    
+    float xcenter = (float)width / 2.0;
+    float ycenter = (float)height / 2.0;
+    
+    float srccenterx = (float)srcwidth / 2.0;
+    float srccentery = (float)srcheight / 2.0;
+    
+    // loop through pixels
+    for (int y = 0; y < height; y++)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            // calculate yaw and pitch
+            float xdist = ((x - xcenter) / (float)width) * rectw;
+            float ydist = ((y - ycenter) / (float)height) * recth;
+            
+            float yaw = yaw_offset + atan(xdist / d);
+            float pitch = atan(ydist / d);
+            
+            float projx = ((yaw / (M_PI*2.0)) * (float)srcwidth) + srccenterx;
+            float projy = ((pitch / (M_PI)) * (float)srcheight) + srccentery;
+            
+            int px = (int)floor(projx);
+            int py = (int)floor(projy);
+            
+            int srcindex = y*frame->linesize[0] + px*3;
+            int rgbindex = y*width*3 + x*3;
+            
+            rgb[rgbindex] = frame->data[0][srcindex];
+            rgb[rgbindex+1] = frame->data[0][srcindex+1];
+            rgb[rgbindex+2] = frame->data[0][srcindex+2];
+        }
+    }
+}
+
+bool Decoder::getFrameRGB(unsigned char *rgb, int frameIndex)
+{
+    bool gotFrame = false;
+    int res = av_read_frame(pFormatCtx, &packet);
+    if (res >= 0)
+    {
+        if (packet.stream_index == *videoStream) {
+            avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, &packet);
+        }
+        
+        if (frameFinished) {
+            
+            // Convert the image from native to RGB
+            if ( sws_scale(img_convert_ctx, pFrame->data, pFrame->linesize, 0, pCodecCtx->height, pFrameRGB->data, pFrameRGB->linesize) < 0) {
+                return false;
+            }
+            
+            //SaveFrame(pFrameRGB, final_width, final_height, frameIndex);
+            
+            // copy frame into buffer
+            // Write pixel data
+            
+            printf("loading frame %d %d\n", final_width, final_height);
+            
+            /*
+            unsigned char *rgbptr = rgb;
+            for (int y = 0; y < final_height; y++) {
+                memcpy(rgbptr,
+                       pFrameRGB->data[0]+y*pFrameRGB->linesize[0],
+                       final_width*3);
+                rgbptr += final_width*3;
+            }
+            */
+            projectFrame(pFrameRGB, rgb, 320, 200, final_width, final_height);
+             
+            gotFrame = true;
+        }
+        
+        av_free_packet(&packet);
+    }
+    
+    return gotFrame;
 }
 
 /*
