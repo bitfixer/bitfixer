@@ -6,7 +6,7 @@ clean:
 	rm -f loader.wav
 
 loader.prg: clean
-	cl65 -t c64 loader.c -o loader.prg
+	cl65 -t c64 loader.c asmloaders.c -o loader.prg
 	
 loader.tap: loader.prg
 	./prg2wav -s -t loader.tap -m c64ntsc loader.prg

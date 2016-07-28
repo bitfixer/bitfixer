@@ -2,10 +2,10 @@
 #include <stdio.h>
 #include <string>
 
-//const int final_height = 200;
-//const int final_width = 320;
-const int final_height = 1920;
-const int final_width = 1080;
+const int final_height = 200;
+const int final_width = 320;
+//const int final_height = 1920;
+//const int final_width = 1080;
 
 const int num_channels = 3;
 
@@ -299,7 +299,7 @@ bool Decoder::getFrameRGB(unsigned char *rgb, int frameIndex)
             
             printf("loading frame %d %d\n", final_width, final_height);
             
-            /*
+            
             unsigned char *rgbptr = rgb;
             for (int y = 0; y < final_height; y++) {
                 memcpy(rgbptr,
@@ -307,8 +307,8 @@ bool Decoder::getFrameRGB(unsigned char *rgb, int frameIndex)
                        final_width*3);
                 rgbptr += final_width*3;
             }
-            */
-            projectFrame(pFrameRGB, rgb, 320, 200, final_width, final_height);
+            
+            //projectFrame(pFrameRGB, rgb, 320, 200, final_width, final_height);
              
             gotFrame = true;
         }

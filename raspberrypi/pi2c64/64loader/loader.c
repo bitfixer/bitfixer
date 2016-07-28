@@ -3,6 +3,7 @@
 #include <peekpoke.h>
 #include <string.h>
 #include "../commands.h"
+#include "asmloaders.h"
 
 #define PA2 0x04
 #define NPA2 0xFB
@@ -326,8 +327,6 @@ wait44:
     // inc pointer
     asm("inx");
     asm("bne %g", loop4);
-    
-    
 }
  
 int main(void)
@@ -371,12 +370,13 @@ int main(void)
     return 1;
     */
     
-    for (frame = 0; frame < 1; frame++)
+    for (frame = 0; frame < 10; frame++)
     {
         send_command(COMMAND_GET_FRAME);
         set_userport_input();
         
         load_color_mem();
+        load_image();
         /*
         for (i = 1024; i < 2024; i++)
         {

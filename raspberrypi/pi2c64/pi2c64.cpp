@@ -171,9 +171,11 @@ void signal_ready()
 void signal_notready()
 {
     fastDigitalWrite(9, HIGH);
-    usleep(10);
+    //usleep(1);
+    delayMicroseconds(1);
     fastDigitalWrite(9, LOW);
-    usleep(10);
+    //usleep(1);
+    delayMicroseconds(1);
     fastDigitalWrite(9, HIGH);
 }
 
@@ -192,15 +194,15 @@ unsigned char receive_byte_with_handshake()
 void send_byte_with_handshake(unsigned char byte)
 {
     fastDigitalWrite(9, HIGH);
-    printf("1..\n");
+    //printf("1..\n");
     wait_for_signal();
-    printf("2..\n");
+    //printf("2..\n");
     // put byte on bus
     piWriteByte(byte);
     signal_ready();
-    printf("3..\n");
+    //printf("3..\n");
     wait_for_signal_notready();
-    printf("4\n");
+   // printf("4\n");
     signal_notready();
 }
 
@@ -524,19 +526,24 @@ int main(void)
     bool done = false;
     int bytesReceived = 0;
     
+    // pre-process
     Decoder decoder;
     decoder.init();
+    
+    
+    
+    
+    
     init();
     
-    for (int i = 0; i < 1; i++)
+    for (int i = 0; i < 10; i++)
     {
         
-        /*
         //bool gotFrame = false;
         int gotFrames = 0;
         // get a frame from decoder
         //while (!gotFrame)
-        while (gotFrames < 10)
+        while (gotFrames < 5)
         {
             bool gotFrame = decoder.getFrameRGB(rgb, 99);
             if (gotFrame)
@@ -544,12 +551,11 @@ int main(void)
                 gotFrames++;
             }
         }
-        */
-        
+         
         //generate_test_rgb(rgb, 320, 200);
          
         printf("got frame.\n");
-        read_rgb_from_ppm(rgb, (const char *)"avh.ppm");
+        //read_rgb_from_ppm(rgb, (const char *)"avh.ppm");
         colormap_from_rgb(colormap, rgb, 320, 200, c64_colors);
         bitmap_from_rgb(bitmap, rgb, colormap, mod_rgb, 320, 200, c64_colors);
         create_c64_bitmap(c64_bitmap, bitmap, 320, 200);
@@ -566,16 +572,15 @@ int main(void)
         set_port_output();
         for (int i = 0; i < 1000; i++)
         {
-            printf("sending byte %d\n", i);
+            //printf("sending byte %d\n", i);
             send_byte_with_handshake(colormap[i]);
         }
         
-        /*
-        for (int j = 0; j < 8000; j++)
+        //for (int j = 0; j < 8000; j++)
+        for (int j = 0; j < 7936; j++)
         {
             send_byte_with_handshake(c64_bitmap[j]);
         }
-        */
         bytesReceived += 9000;
         set_port_input();
     }
