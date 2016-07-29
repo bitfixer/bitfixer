@@ -47,6 +47,7 @@ public:
     int init();
     
     bool getFrameRGB(unsigned char *rgb, bool useFrame);
+    void incrementYaw(float yawinc);
     void projectFrame(AVFrame *frame, unsigned char *rgb, int width, int height, int srcwidth, int srcheight);
     
 private:
@@ -63,6 +64,8 @@ private:
     int frameFinished;
     AVPacket packet;
     struct SwsContext *img_convert_ctx;
+    
+    float currentYaw;
     
     Projection proj;
 };

@@ -14,6 +14,7 @@
 #define VICII 0xD011
 #define BORDER 0xD020
 #define KEYCHECK 0xDC01
+#define KEYPRESS 0x00C5
 
 void set_userport_output()
 {
@@ -372,13 +373,29 @@ int main(void)
     
     for (frame = 0; frame < 100; frame++)
     {
-        send_command(COMMAND_GET_FRAME);
+        // check for keypress
+        val = *(unsigned char *)KEYPRESS;
+        if (val == 47)
+        {
+            send_command(COMMAND_GET_FRAME_LEFT);
+        }
+        else if (val == 44)
+        {
+            send_command(COMMAND_GET_FRAME_RIGHT);
+        }
+        else
+        {
+            send_command(COMMAND_GET_FRAME);
+        }
+        
         set_userport_input();
         
         load_color_mem();
         load_image();
         
         set_userport_output();
+        
+        
     }
    
     signal_byte_not_ready();

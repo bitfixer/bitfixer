@@ -237,6 +237,8 @@ int Decoder::init()
     float fovy = (200.0 / 320.0) * fovx;
     proj.init(1.0, fovx, fovy, 320, 200, final_width, final_height);
     
+    currentYaw = 0.0;
+    
     return 1;
 }
 
@@ -287,6 +289,19 @@ void Projection::init(float distance, float fx, float fy, int width, int height,
     }
 }
 
+void Decoder::incrementYaw(float yawinc)
+{
+    currentYaw += yawinc;
+    
+    if (currentYaw < -M_PI)
+    {
+        currentYaw += 2.0 * M_PI;
+    }
+    else if (currentYaw > M_PI)
+    {
+        currentYaw -= 2.0 * M_PI;
+    }
+}
 
 
 void Decoder::projectFrame(AVFrame *frame, unsigned char *rgb, int width, int height, int srcwidth, int srcheight)
@@ -311,7 +326,7 @@ void Decoder::projectFrame(AVFrame *frame, unsigned char *rgb, int width, int he
     
     
     // project a frame!
-    float yaw_offset = 0.0;
+    float yaw_offset = currentYaw;
     float fovx = M_PI / 2.0;
     //float fovy = M_PI / 2.0;
     float fovy = ((float)height / (float)width) * fovx;

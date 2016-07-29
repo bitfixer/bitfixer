@@ -252,11 +252,12 @@ void send_byte_with_handshake(unsigned char byte)
     signal_notready();
 }
 
-void receive_command()
+unsigned char receive_command()
 {
     unsigned char cmd;
     cmd = receive_byte_with_handshake();
     printf("cmd is %d\n", cmd);
+    return cmd;
 }
 
 void read_rgb_from_ppm(unsigned char *dest, const char *fname)
@@ -686,7 +687,16 @@ int main(void)
         
         timer.start();
         // send one bitmap frame
-        receive_command();
+        unsigned char cmd = receive_command();
+        if (cmd == COMMAND_GET_FRAME_LEFT)
+        {
+            decoder.incrementYaw(-M_PI/16.0);
+        }
+        else if (cmd == COMMAND_GET_FRAME_RIGHT)
+        {
+            decoder.incrementYaw(M_PI/16.0);
+        }
+        
         if (!started)
         {
             started = true;
