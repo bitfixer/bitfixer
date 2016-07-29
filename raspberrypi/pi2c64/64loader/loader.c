@@ -375,13 +375,25 @@ int main(void)
     {
         // check for keypress
         val = *(unsigned char *)KEYPRESS;
-        if (val == 47)
+        if (val == 10)
         {
             send_command(COMMAND_GET_FRAME_LEFT);
         }
-        else if (val == 44)
+        else if (val == 18)
         {
             send_command(COMMAND_GET_FRAME_RIGHT);
+        }
+        else if (val == 9)
+        {
+            send_command(COMMAND_GET_FRAME_UP);
+        }
+        else if (val == 13)
+        {
+            send_command(COMMAND_GET_FRAME_DOWN);
+        }
+        else if (val == 60)
+        {
+            send_command(COMMAND_GET_FRAME_RESET);
         }
         else if (val == 62)
         {

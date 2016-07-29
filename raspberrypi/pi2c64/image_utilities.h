@@ -46,8 +46,10 @@ public:
     Decoder() {};
     int init(const char *fname);
     
-    bool getFrameRGB(unsigned char *rgb, bool useFrame);
+    bool getFrameRGB(unsigned char *rgb, bool useFrame, bool &done);
     void incrementYaw(float yawinc);
+    void incrementPitch(float pitchinc);
+    void resetOrientation();
     void projectFrame(AVFrame *frame, unsigned char *rgb, int width, int height, int srcwidth, int srcheight);
     
 private:
@@ -66,6 +68,7 @@ private:
     struct SwsContext *img_convert_ctx;
     
     float currentYaw;
+    float currentPitch;
     
     Projection proj;
 };

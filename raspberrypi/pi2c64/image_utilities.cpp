@@ -238,6 +238,7 @@ int Decoder::init(const char *fname)
     proj.init(1.0, fovx, fovy, 320, 200, final_width, final_height);
     
     currentYaw = 0.0;
+    currentPitch = 0.0;
     
     return 1;
 }
@@ -303,6 +304,24 @@ void Decoder::incrementYaw(float yawinc)
     }
 }
 
+void Decoder::incrementPitch(float pitchinc)
+{
+    currentPitch += pitchinc;
+    if (currentPitch < -M_PI/4.0)
+    {
+        currentPitch = -M_PI/4.0;
+    }
+    else if (currentPitch > M_PI/4.0)
+    {
+        currentPitch = M_PI/4.0;
+    }
+}
+
+void Decoder::resetOrientation()
+{
+    currentYaw = 0.0;
+    currentPitch = 0.0;
+}
 
 void Decoder::projectFrame(AVFrame *frame, unsigned char *rgb, int width, int height, int srcwidth, int srcheight)
 {
@@ -327,6 +346,7 @@ void Decoder::projectFrame(AVFrame *frame, unsigned char *rgb, int width, int he
     
     // project a frame!
     float yaw_offset = currentYaw;
+    float pitch_offset = currentPitch;
     float fovx = M_PI / 2.0;
     //float fovy = M_PI / 2.0;
     float fovy = ((float)height / (float)width) * fovx;
@@ -351,7 +371,7 @@ void Decoder::projectFrame(AVFrame *frame, unsigned char *rgb, int width, int he
             float ydist = ((float)(y - ycenter) / (float)height) * recth;
             
             float yaw = yaw_offset + atan(xdist / d);
-            float pitch = atan(ydist / d);
+            float pitch = pitch_offset + atan(ydist / d);
             
             float projx = ((yaw / (M_PI*2.0)) * (float)srcwidth) + srccenterx;
             float projy = ((pitch / (M_PI)) * (float)srcheight) + srccentery;
@@ -370,7 +390,7 @@ void Decoder::projectFrame(AVFrame *frame, unsigned char *rgb, int width, int he
     
 }
 
-bool Decoder::getFrameRGB(unsigned char *rgb, bool useFrame)
+bool Decoder::getFrameRGB(unsigned char *rgb, bool useFrame, bool &eof)
 {
     struct timeval startTime;
     struct timeval endTime;
@@ -378,6 +398,13 @@ bool Decoder::getFrameRGB(unsigned char *rgb, bool useFrame)
     
     bool gotFrame = false;
     int res = av_read_frame(pFormatCtx, &packet);
+    
+    if (res == (int)AVERROR_EOF)
+    {
+        eof = true;
+        return false;
+    }
+    
     if (res >= 0)
     {
         if (packet.stream_index == *videoStream) {

@@ -595,6 +595,7 @@ int main(int argc, char **argv)
     {
         frameSkip = atoi(argv[2]);
     }
+    printf("frameskip: %d\n", frameSkip);
     
     bool started = false;
     unsigned char rgb[320*200*3];
@@ -636,6 +637,8 @@ int main(int argc, char **argv)
     
     init();
     
+    done = false;
+    /*
     int startFrame = 0;
     int currframe = 0;
     // get a frame from decoder
@@ -648,16 +651,18 @@ int main(int argc, char **argv)
             currframe++;
         }
     }
+    */
     
-    for (int i = 0; i < 100; i++)
+    
+    while (!done)
     {
         timer.start();
         int gotFrames = 0;
         // get a frame from decoder
-        while (gotFrames < frameSkip)
+        while (gotFrames < frameSkip && !done)
         {
             bool useFrame = (gotFrames == frameSkip-1) ? true : false;
-            bool gotFrame = decoder.getFrameRGB(rgb, useFrame);
+            bool gotFrame = decoder.getFrameRGB(rgb, useFrame, done);
             if (gotFrame)
             {
                 gotFrames++;
@@ -665,6 +670,9 @@ int main(int argc, char **argv)
         }
         timer.end();
         timer.report("frame");
+        
+        if (done)
+            break;
         
         
         //generate_test_rgb(rgb, 320, 200);
@@ -718,6 +726,18 @@ int main(int argc, char **argv)
         else if (cmd == COMMAND_GET_FRAME_RIGHT)
         {
             decoder.incrementYaw(M_PI/16.0);
+        }
+        else if (cmd == COMMAND_GET_FRAME_UP)
+        {
+            decoder.incrementPitch(-M_PI/16.0);
+        }
+        else if (cmd == COMMAND_GET_FRAME_DOWN)
+        {
+            decoder.incrementPitch(M_PI/16.0);
+        }
+        else if (cmd == COMMAND_GET_FRAME_RESET)
+        {
+            decoder.resetOrientation();
         }
         
         if (!started)
