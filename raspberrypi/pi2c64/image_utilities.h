@@ -44,7 +44,7 @@ class Decoder
 {
 public:
     Decoder() {};
-    int init();
+    int init(const char *fname);
     
     bool getFrameRGB(unsigned char *rgb, bool useFrame);
     void incrementYaw(float yawinc);

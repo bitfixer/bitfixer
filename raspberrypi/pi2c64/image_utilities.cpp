@@ -208,10 +208,10 @@ int reading_loop( AVCodecContext *pCodecCtx, AVCodec *pCodec, AVFormatContext *p
 
 }
 
-int Decoder::init()
+int Decoder::init(const char *fname)
 {
     initialize_ffmpeg();
-    open_video("dirkMonoClip.mp4", pCodecCtx, pCodec, pFormatCtx, videoStream);
+    open_video(fname, pCodecCtx, pCodec, pFormatCtx, videoStream);
     pFrame = av_frame_alloc();
     pFrameRGB = av_frame_alloc();
     if (pFrameRGB == NULL) {

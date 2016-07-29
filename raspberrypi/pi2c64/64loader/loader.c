@@ -371,7 +371,7 @@ int main(void)
     return 1;
     */
     
-    for (frame = 0; frame < 100; frame++)
+    for (frame = 0; frame < 1000; frame++)
     {
         // check for keypress
         val = *(unsigned char *)KEYPRESS;
@@ -382,6 +382,11 @@ int main(void)
         else if (val == 44)
         {
             send_command(COMMAND_GET_FRAME_RIGHT);
+        }
+        else if (val == 62)
+        {
+            // quit
+            break;
         }
         else
         {
@@ -394,8 +399,6 @@ int main(void)
         load_image();
         
         set_userport_output();
-        
-        
     }
    
     signal_byte_not_ready();
@@ -406,13 +409,11 @@ int main(void)
         asm("nop");
     }
     
-    /*
     // exit bit map mode
     addr = (unsigned char *)VICII;
     val = *addr;
     val &= 0xDF;
     *addr = val;
-    */
      
     return 1;
 }

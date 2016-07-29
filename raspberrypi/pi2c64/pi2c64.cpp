@@ -577,13 +577,24 @@ void generate_test_rgb(unsigned char *rgb, int width, int height)
 }
 
 // test - watch for input
-int main(void)
+int main(int argc, char **argv)
 {
+    if (argc < 2)
+    {
+        printf("usage: pi2c64 <input.mp4>\n");
+        return 1;
+    }
+    
     struct timeval startTime;
     struct timeval endTime;
     
     Timer timer;
-    
+    const char *inputFname = argv[1];
+    int frameSkip = 10;
+    if (argc >= 3)
+    {
+        frameSkip = atoi(argv[2]);
+    }
     
     bool started = false;
     unsigned char rgb[320*200*3];
@@ -599,7 +610,7 @@ int main(void)
     
     // pre-process
     Decoder decoder;
-    decoder.init();
+    decoder.init(inputFname);
     
     /*
     for (int i = 0; i < 1; i++)
@@ -624,7 +635,19 @@ int main(void)
     
     
     init();
-    int frameSkip = 2;
+    
+    int startFrame = 0;
+    int currframe = 0;
+    // get a frame from decoder
+    while (currframe < startFrame)
+    {
+        bool useFrame = false;
+        bool gotFrame = decoder.getFrameRGB(rgb, useFrame);
+        if (gotFrame)
+        {
+            currframe++;
+        }
+    }
     
     for (int i = 0; i < 100; i++)
     {
