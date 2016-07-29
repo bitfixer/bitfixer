@@ -1,11 +1,15 @@
 #include "image_utilities.h"
 #include <stdio.h>
 #include <string>
+#include <sys/time.h>
 
 //const int final_height = 200;
 //const int final_width = 320;
-const int final_height = 1920;
-const int final_width = 1080;
+//const int final_height = 1920;
+//const int final_width = 1080;
+const int final_height = 720;
+const int final_width = 1280;
+
 
 const int num_channels = 3;
 
@@ -223,15 +227,89 @@ int Decoder::init()
                                      final_width,
                                      final_height,
                                      PIX_FMT_RGB24,
-                                     SWS_BICUBIC,
+                                     SWS_POINT, //SWS_BICUBIC,
                                      NULL,
                                      NULL,
                                      NULL);
+    
+    float fovx = M_PI / 2.0;
+    //float fovy = M_PI / 2.0;
+    float fovy = (200.0 / 320.0) * fovx;
+    proj.init(1.0, fovx, fovy, 320, 200, final_width, final_height);
+    
     return 1;
 }
 
+void Projection::init(float distance, float fx, float fy, int width, int height, int srcwidth, int srcheight)
+{
+    d = distance;
+    fovx = fx;
+    fovy = fy;
+    
+    rectw = 2.0 * d * tan(fovx / 2.0);
+    recth = 2.0 * d * tan(fovy / 2.0);
+    
+    xcenter = (float)width / 2.0;
+    ycenter = (float)height / 2.0;
+    
+    srccenterx = (float)srcwidth / 2.0;
+    srccentery = (float)srcheight / 2.0;
+    
+    projx = (int **)malloc(sizeof(int *) * width);
+    projy = (int **)malloc(sizeof(int *) * width);
+    for (int w = 0; w < width; w++)
+    {
+        projx[w] = (int *)malloc(sizeof(int) * height);
+        projy[w] = (int *)malloc(sizeof(int) * height);
+    }
+    
+    
+    for (int y = 0; y < height; y++)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            // calculate yaw and pitch
+            float xdist = ((float)(x - xcenter) / (float)width) * rectw;
+            float ydist = ((float)(y - ycenter) / (float)height) * recth;
+            
+            float yaw = atan(xdist / d);
+            float pitch = atan(ydist / d);
+            
+            float prx = ((yaw / (M_PI*2.0)) * (float)srcwidth) + srccenterx;
+            float pry = ((pitch / (M_PI)) * (float)srcheight) + srccentery;
+            
+            int px = (int)floor(prx);
+            int py = (int)floor(pry);
+            
+            projx[x][y] = px;
+            projy[x][y] = py;
+        }
+    }
+}
+
+
+
 void Decoder::projectFrame(AVFrame *frame, unsigned char *rgb, int width, int height, int srcwidth, int srcheight)
 {
+    /*
+    for (int y = 0; y < height; y++)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            int px = proj.getProjX(x,y);
+            int py = proj.getProjY(x,y);
+            
+            int srcindex = py*frame->linesize[0] + px*3;
+            int rgbindex = y*width*3 + x*3;
+            
+            rgb[rgbindex] = frame->data[0][srcindex];
+            rgb[rgbindex+1] = frame->data[0][srcindex+1];
+            rgb[rgbindex+2] = frame->data[0][srcindex+2];
+        }
+    }
+    */
+    
+    
     // project a frame!
     float yaw_offset = 0.0;
     float fovx = M_PI / 2.0;
@@ -274,10 +352,15 @@ void Decoder::projectFrame(AVFrame *frame, unsigned char *rgb, int width, int he
             rgb[rgbindex+2] = frame->data[0][srcindex+2];
         }
     }
+    
 }
 
-bool Decoder::getFrameRGB(unsigned char *rgb, int frameIndex)
+bool Decoder::getFrameRGB(unsigned char *rgb, bool useFrame)
 {
+    struct timeval startTime;
+    struct timeval endTime;
+    
+    
     bool gotFrame = false;
     int res = av_read_frame(pFormatCtx, &packet);
     if (res >= 0)
@@ -288,30 +371,37 @@ bool Decoder::getFrameRGB(unsigned char *rgb, int frameIndex)
         
         if (frameFinished) {
             
-            // Convert the image from native to RGB
-            if ( sws_scale(img_convert_ctx, pFrame->data, pFrame->linesize, 0, pCodecCtx->height, pFrameRGB->data, pFrameRGB->linesize) < 0) {
-                return false;
-            }
-            
-            //SaveFrame(pFrameRGB, final_width, final_height, frameIndex);
-            
-            // copy frame into buffer
-            // Write pixel data
-            
             printf("loading frame %d %d\n", final_width, final_height);
-            
-            /*
-            unsigned char *rgbptr = rgb;
-            for (int y = 0; y < final_height; y++) {
-                memcpy(rgbptr,
-                       pFrameRGB->data[0]+y*pFrameRGB->linesize[0],
-                       final_width*3);
-                rgbptr += final_width*3;
+            if (useFrame)
+            {
+                gettimeofday(&startTime, NULL);
+                // Convert the image from native to RGB
+                if ( sws_scale(img_convert_ctx, pFrame->data, pFrame->linesize, 0, pCodecCtx->height, pFrameRGB->data, pFrameRGB->linesize) < 0) {
+                    return false;
+                }
+                gettimeofday(&endTime, NULL);
+                
+                
+                double start = (double)startTime.tv_sec + ((double)startTime.tv_usec / 1000000.0);
+                double end = (double)endTime.tv_sec + ((double)endTime.tv_usec / 1000000.0);
+                double elapsed = end-start;
+                printf("swsscale %lf\n", elapsed);
+                
+                // copy frame into buffer
+                // Write pixel data
+                
+                
+                /*
+                unsigned char *rgbptr = rgb;
+                for (int y = 0; y < final_height; y++) {
+                    memcpy(rgbptr,
+                           pFrameRGB->data[0]+y*pFrameRGB->linesize[0],
+                           final_width*3);
+                    rgbptr += final_width*3;
+                }
+                */
+                projectFrame(pFrameRGB, rgb, 320, 200, final_width, final_height);
             }
-            */
-            
-            projectFrame(pFrameRGB, rgb, 320, 200, final_width, final_height);
-             
             gotFrame = true;
         }
         

@@ -10,13 +10,43 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
+class Projection
+{
+public:
+    void init(float distance, float fx, float fy, int width, int height, int srcwidth, int srcheight);
+    
+    int getProjX(int x, int y)
+    {
+        return projx[x][y];
+    }
+    int getProjY(int x, int y)
+    {
+        return projy[x][y];
+    }
+    
+private:
+    float d;
+    float fovx;
+    float fovy;
+    float rectw;
+    float recth;
+    float xcenter;
+    float ycenter;
+    float srccenterx;
+    float srccentery;
+    
+    int **projx;
+    int **projy;
+    
+};
+
 class Decoder
 {
 public:
     Decoder() {};
     int init();
     
-    bool getFrameRGB(unsigned char *rgb, int frameIndex);
+    bool getFrameRGB(unsigned char *rgb, bool useFrame);
     void projectFrame(AVFrame *frame, unsigned char *rgb, int width, int height, int srcwidth, int srcheight);
     
 private:
@@ -33,6 +63,8 @@ private:
     int frameFinished;
     AVPacket packet;
     struct SwsContext *img_convert_ctx;
+    
+    Projection proj;
 };
 
 void SaveFrameFromRgb(unsigned char *rgb, int width, int height, int iFrame);

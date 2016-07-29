@@ -370,7 +370,7 @@ int main(void)
     return 1;
     */
     
-    for (frame = 0; frame < 10; frame++)
+    for (frame = 0; frame < 100; frame++)
     {
         send_command(COMMAND_GET_FRAME);
         set_userport_input();

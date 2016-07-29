@@ -7,6 +7,33 @@
 #include "commands.h"
 #include "image_utilities.h"
 
+//#define TESTCOLOR 1
+
+class Timer
+{
+public:
+    void start()
+    {
+        gettimeofday(&startTime, NULL);
+    }
+    void end()
+    {
+        gettimeofday(&endTime, NULL);
+    }
+    
+    void report(const char *infostr)
+    {
+        double start = (double)startTime.tv_sec + ((double)startTime.tv_usec / 1000000.0);
+        double end = (double)endTime.tv_sec + ((double)endTime.tv_usec / 1000000.0);
+        double elapsed = end-start;
+        printf("timer %s: %lf\n", infostr, elapsed);
+    }
+    
+private:
+    struct timeval startTime;
+    struct timeval endTime;
+};
+
 typedef struct
 {
     unsigned char r;
@@ -339,6 +366,37 @@ unsigned char color_byte_for_block(unsigned char *rgb, int xstart, int ystart, i
     int ncolors = 3;
     float minerror = 999999.0;
     
+#ifdef TESTCOLOR
+    c1_min = 0;
+    c2_min = 1;
+#else
+    
+    /*
+    float rtotal;
+    float gtotal;
+    float btotal;
+    
+    // get avg color
+    for (int y = ystart; y < ystart+8; y++)
+    {
+        for (int x = xstart; x < xstart+8; x++)
+        {
+            int index = y*width*ncolors + x*ncolors;
+            unsigned char r = rgb[index];
+            unsigned char g = rgb[index+1];
+            unsigned char b = rgb[index+2];
+            
+            rtotal += (float)r;
+            gtotal += (float)g;
+            btotal += (float)b;
+        }
+    }
+    
+    rtotal /= 64.0;
+    gtotal /= 64.0;
+    btotal /= 64.0;
+    */
+    
     for (int c1 = 0; c1 < 15; c1++)
     {
         for (int c2 = c1+1; c2 < 16; c2++)
@@ -346,9 +404,14 @@ unsigned char color_byte_for_block(unsigned char *rgb, int xstart, int ystart, i
             //printf("colors %d %d\n", c1, c2);
             // get total error for this color pair
             float totalerror = 0;
-            for (int y = ystart; y < ystart+8; y++)
+            int startpixel = 2;
+            int increment = 4;
+            //int startpixel = 0;
+            //int increment = 1;
+            
+            for (int y = ystart+startpixel; y < ystart+8; y+=increment)
             {
-                for (int x = xstart; x < xstart+8; x++)
+                for (int x = xstart+startpixel; x < xstart+8; x+=increment)
                 {
                     int index = y*width*ncolors + x*ncolors;
                     unsigned char r = rgb[index];
@@ -363,8 +426,11 @@ unsigned char color_byte_for_block(unsigned char *rgb, int xstart, int ystart, i
                     float dg2 = (float)colors[c2].g-(float)g;
                     float db2 = (float)colors[c2].b-(float)b;
                     
-                    float err1 = sqrt(dr1*dr1 + dg1*dg1 + db1*db1);
-                    float err2 = sqrt(dr2*dr2 + dg2*dg2 + db2*db2);
+                    //float err1 = sqrt(dr1*dr1 + dg1*dg1 + db1*db1);
+                    //float err2 = sqrt(dr2*dr2 + dg2*dg2 + db2*db2);
+                    
+                    float err1 = dr1*dr1 + dg1*dg1 + db1*db1;
+                    float err2 = dr2*dr2 + dg2*dg2 + db2*db2;
                     
                     float minerr = (err1 < err2) ? err1 : err2;
                     totalerror += minerr;
@@ -379,6 +445,7 @@ unsigned char color_byte_for_block(unsigned char *rgb, int xstart, int ystart, i
             }
         }
     }
+#endif
     
     //printf("colors %d %d\n", c1_min, c2_min);
     
@@ -401,28 +468,7 @@ void colormap_from_rgb(unsigned char *colormap, unsigned char *rgb, int width, i
             int colormap_index = r*columns + c;
             
             unsigned char colorbyte = color_byte_for_block(rgb, x, y, width, height, colors);
-            //unsigned char colorbyte = 0x1;
             colormap[colormap_index] = colorbyte;
-            
-            /*
-            for (int yy = y; yy < y+8; y++)
-            {
-                for (int xx = x; xx < x+8; x++)
-                {
-                    int index = yy*width*ncolors + xx*ncolors;
-                    int bitmap_index = h*width + w;
-                    unsigned char r = rgb[index];
-                    unsigned char g = rgb[index+1];
-                    unsigned char b = rgb[index+2];
-                    
-                    *bl = r;
-                    bl++;
-                    *bl = g;
-                    bl++;
-                    *bl = b;
-                }
-            }
-            */
         }
     }
     printf("got colormap\n");
@@ -534,6 +580,10 @@ int main(void)
 {
     struct timeval startTime;
     struct timeval endTime;
+    
+    Timer timer;
+    
+    
     bool started = false;
     unsigned char rgb[320*200*3];
     unsigned char mod_rgb[320*200*3];
@@ -573,32 +623,56 @@ int main(void)
     
     
     init();
+    int frameSkip = 2;
     
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 100; i++)
     {
+        timer.start();
         int gotFrames = 0;
         // get a frame from decoder
-        while (gotFrames < 5)
+        while (gotFrames < frameSkip)
         {
-            bool gotFrame = decoder.getFrameRGB(rgb, 99);
+            bool useFrame = (gotFrames == frameSkip-1) ? true : false;
+            bool gotFrame = decoder.getFrameRGB(rgb, useFrame);
             if (gotFrame)
             {
                 gotFrames++;
             }
         }
-         
+        timer.end();
+        timer.report("frame");
+        
+        
         //generate_test_rgb(rgb, 320, 200);
         printf("got frame.\n");
         //read_rgb_from_ppm(rgb, (const char *)"avh.ppm");
-        colormap_from_rgb(colormap, rgb, 320, 200, c64_colors);
-        bitmap_from_rgb(bitmap, rgb, colormap, mod_rgb, 320, 200, c64_colors);
-        create_c64_bitmap(c64_bitmap, bitmap, 320, 200);
         
+        timer.start();
+        colormap_from_rgb(colormap, rgb, 320, 200, c64_colors);
+        timer.end();
+        timer.report("colormap");
+        
+        timer.start();
+        bitmap_from_rgb(bitmap, rgb, colormap, mod_rgb, 320, 200, c64_colors);
+        timer.end();
+        timer.report("bitmap");
+        
+        timer.start();
+        create_c64_bitmap(c64_bitmap, bitmap, 320, 200);
+        timer.end();
+        timer.report("c64");
+        
+        /*
+        timer.start();
         sprintf(temp, "pframe_%04d.c64", i);
         FILE *fp = fopen(temp, "wb");
         fwrite(colormap, 1, 1000, fp);
         fwrite(c64_bitmap, 1, 8000, fp);
         fclose(fp);
+        timer.end();
+        timer.report("file");
+        */
+         
         printf("ready.\n");
         
         /*
@@ -609,7 +683,8 @@ int main(void)
         fread(c64_bitmap, 1, 8000, fp);
         fclose(fp);
         */
-         
+        
+        timer.start();
         // send one bitmap frame
         receive_command();
         if (!started)
@@ -632,6 +707,8 @@ int main(void)
         }
         bytesReceived += 9000;
         set_port_input();
+        timer.end();
+        timer.report("transfer");
     }
     
     gettimeofday(&endTime, NULL);
