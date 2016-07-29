@@ -135,30 +135,48 @@ void piWriteByte(unsigned char byte)
     }
 }
 
-void wait_for_signal()
+bool wait_for_signal(int timeout_usec)
 {
     bool found = false;
-    while (!found)
+    int usec = 0;
+    while (!found && (timeout_usec == -1 || usec < timeout_usec))
     {
         int readval = fastDigitalRead(8);
         if (readval == 0)
         {
             found = true;
         }
+        else
+        {
+            delayMicroseconds(1);
+            usec++;
+        }
     }
+    
+    //printf("wait for signal timed out.\n");
+    return found;
 }
 
-void wait_for_signal_notready()
+bool wait_for_signal_notready(int timeout_usec)
 {
     bool found = false;
-    while (!found)
+    int usec = 0;
+    while (!found && (timeout_usec == -1 || usec < timeout_usec))
     {
         int readval = fastDigitalRead(8);
         if (readval == 1)
         {
             found = true;
         }
+        else
+        {
+            delayMicroseconds(1);
+            usec++;
+        }
     }
+    
+    //printf("wait for notready timed out.\n");
+    return found;
 }
 
 void signal_ready()
@@ -182,11 +200,11 @@ void signal_notready()
 unsigned char receive_byte_with_handshake()
 {
     fastDigitalWrite(9, HIGH);
-    wait_for_signal();
+    wait_for_signal(-1);
     unsigned char byte = piReadByte();
     signal_ready();
     // c64 has received our signal
-    wait_for_signal_notready();
+    wait_for_signal_notready(-1);
     signal_notready();
     return byte;
 }
@@ -194,15 +212,16 @@ unsigned char receive_byte_with_handshake()
 void send_byte_with_handshake(unsigned char byte)
 {
     fastDigitalWrite(9, HIGH);
-    //printf("1..\n");
-    wait_for_signal();
-    //printf("2..\n");
-    // put byte on bus
+    while (!wait_for_signal(10000))
+    {
+        signal_notready();
+    }
     piWriteByte(byte);
     signal_ready();
-    //printf("3..\n");
-    wait_for_signal_notready();
-   // printf("4\n");
+    while (!wait_for_signal_notready(10000))
+    {
+        signal_notready();
+    }
     signal_notready();
 }
 
@@ -522,27 +541,22 @@ int main(void)
     unsigned char colormap[1000];
     unsigned char c64_bitmap[8000];
     color c64_colors[16];
+    char temp[128];
     get_64_colors(c64_colors);
     bool done = false;
     int bytesReceived = 0;
     
     // pre-process
-    Decoder decoder;
-    decoder.init();
-    
-    
-    
-    
+    //Decoder decoder;
+    //decoder.init();
     
     init();
     
     for (int i = 0; i < 10; i++)
     {
-        
-        //bool gotFrame = false;
+        /*
         int gotFrames = 0;
         // get a frame from decoder
-        //while (!gotFrame)
         while (gotFrames < 5)
         {
             bool gotFrame = decoder.getFrameRGB(rgb, 99);
@@ -553,14 +567,27 @@ int main(void)
         }
          
         //generate_test_rgb(rgb, 320, 200);
-         
         printf("got frame.\n");
         //read_rgb_from_ppm(rgb, (const char *)"avh.ppm");
         colormap_from_rgb(colormap, rgb, 320, 200, c64_colors);
         bitmap_from_rgb(bitmap, rgb, colormap, mod_rgb, 320, 200, c64_colors);
         create_c64_bitmap(c64_bitmap, bitmap, 320, 200);
-        printf("ready.\n");
         
+        sprintf(temp, "frame_%04d.c64", i);
+        FILE *fp = fopen(temp, "wb");
+        fwrite(colormap, 1, 1000, fp);
+        fwrite(c64_bitmap, 1, 8000, fp);
+        fclose(fp);
+        printf("ready.\n");
+        */
+        
+        sprintf(temp, "frame_%04d.c64", i);
+        FILE *fp = fopen(temp, "rb");
+        fread(colormap, 1, 1000, fp);
+        fread(c64_bitmap, 1, 8000, fp);
+        fclose(fp);
+        
+         
         // send one bitmap frame
         receive_command();
         if (!started)
