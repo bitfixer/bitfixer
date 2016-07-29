@@ -1,4 +1,4 @@
-REMOTE := 10.135.3.103
+REMOTE := 10.0.0.13
 
 all:
 	g++ -o pi2c64 -lwiringPi -lavformat -lavcodec -lavutil -lswscale pi2c64.cpp image_utilities.cpp

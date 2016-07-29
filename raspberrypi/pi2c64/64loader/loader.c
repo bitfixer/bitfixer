@@ -377,21 +377,7 @@ int main(void)
         
         load_color_mem();
         load_image();
-        /*
-        for (i = 1024; i < 2024; i++)
-        {
-            val = receive_byte_with_handshake();
-            *((unsigned char *)i) = val;
-        }
-        */
         
-        /*
-        for (i = base; i < base+8000; i++)
-        {
-            val = receive_byte_with_handshake();
-            *((unsigned char *)i) = val;
-        }
-        */
         set_userport_output();
     }
    

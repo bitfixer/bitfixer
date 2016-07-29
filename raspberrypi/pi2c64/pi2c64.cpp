@@ -547,14 +547,35 @@ int main(void)
     int bytesReceived = 0;
     
     // pre-process
-    //Decoder decoder;
-    //decoder.init();
+    Decoder decoder;
+    decoder.init();
+    
+    /*
+    for (int i = 0; i < 1; i++)
+    {
+        int gotFrames = 0;
+        // get a frame from decoder
+        while (gotFrames < 5)
+        {
+            bool gotFrame = decoder.getFrameRGB(rgb, 99);
+            if (gotFrame)
+            {
+                gotFrames++;
+            }
+        }
+        
+        SaveFrameFromRgb(rgb, 320, 200, i);
+    }
+    
+    return 1;
+    */
+    
+    
     
     init();
     
     for (int i = 0; i < 10; i++)
     {
-        /*
         int gotFrames = 0;
         // get a frame from decoder
         while (gotFrames < 5)
@@ -573,20 +594,21 @@ int main(void)
         bitmap_from_rgb(bitmap, rgb, colormap, mod_rgb, 320, 200, c64_colors);
         create_c64_bitmap(c64_bitmap, bitmap, 320, 200);
         
-        sprintf(temp, "frame_%04d.c64", i);
+        sprintf(temp, "pframe_%04d.c64", i);
         FILE *fp = fopen(temp, "wb");
         fwrite(colormap, 1, 1000, fp);
         fwrite(c64_bitmap, 1, 8000, fp);
         fclose(fp);
         printf("ready.\n");
-        */
         
-        sprintf(temp, "frame_%04d.c64", i);
+        /*
+        int index = i % 10;
+        sprintf(temp, "frame_%04d.c64", index);
         FILE *fp = fopen(temp, "rb");
         fread(colormap, 1, 1000, fp);
         fread(c64_bitmap, 1, 8000, fp);
         fclose(fp);
-        
+        */
          
         // send one bitmap frame
         receive_command();

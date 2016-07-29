@@ -2,10 +2,10 @@
 #include <stdio.h>
 #include <string>
 
-const int final_height = 200;
-const int final_width = 320;
-//const int final_height = 1920;
-//const int final_width = 1080;
+//const int final_height = 200;
+//const int final_width = 320;
+const int final_height = 1920;
+const int final_width = 1080;
 
 const int num_channels = 3;
 
@@ -234,12 +234,13 @@ void Decoder::projectFrame(AVFrame *frame, unsigned char *rgb, int width, int he
 {
     // project a frame!
     float yaw_offset = 0.0;
-    float fovy = M_PI / 2.0;
     float fovx = M_PI / 2.0;
+    //float fovy = M_PI / 2.0;
+    float fovy = ((float)height / (float)width) * fovx;
     
     float d = 1.0;
-    float rectw = d * tan(fovx);
-    float recth = d * tan(fovy);
+    float rectw = 2.0 * d * tan(fovx / 2.0);
+    float recth = 2.0 * d * tan(fovy / 2.0);
     
     float xcenter = (float)width / 2.0;
     float ycenter = (float)height / 2.0;
@@ -253,8 +254,8 @@ void Decoder::projectFrame(AVFrame *frame, unsigned char *rgb, int width, int he
         for (int x = 0; x < width; x++)
         {
             // calculate yaw and pitch
-            float xdist = ((x - xcenter) / (float)width) * rectw;
-            float ydist = ((y - ycenter) / (float)height) * recth;
+            float xdist = ((float)(x - xcenter) / (float)width) * rectw;
+            float ydist = ((float)(y - ycenter) / (float)height) * recth;
             
             float yaw = yaw_offset + atan(xdist / d);
             float pitch = atan(ydist / d);
@@ -265,7 +266,7 @@ void Decoder::projectFrame(AVFrame *frame, unsigned char *rgb, int width, int he
             int px = (int)floor(projx);
             int py = (int)floor(projy);
             
-            int srcindex = y*frame->linesize[0] + px*3;
+            int srcindex = py*frame->linesize[0] + px*3;
             int rgbindex = y*width*3 + x*3;
             
             rgb[rgbindex] = frame->data[0][srcindex];
@@ -299,7 +300,7 @@ bool Decoder::getFrameRGB(unsigned char *rgb, int frameIndex)
             
             printf("loading frame %d %d\n", final_width, final_height);
             
-            
+            /*
             unsigned char *rgbptr = rgb;
             for (int y = 0; y < final_height; y++) {
                 memcpy(rgbptr,
@@ -307,8 +308,9 @@ bool Decoder::getFrameRGB(unsigned char *rgb, int frameIndex)
                        final_width*3);
                 rgbptr += final_width*3;
             }
+            */
             
-            //projectFrame(pFrameRGB, rgb, 320, 200, final_width, final_height);
+            projectFrame(pFrameRGB, rgb, 320, 200, final_width, final_height);
              
             gotFrame = true;
         }
