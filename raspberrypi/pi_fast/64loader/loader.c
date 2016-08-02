@@ -94,6 +94,16 @@ wait:
     signal_byte_not_ready();
 }
 
+void set_vic_bank(unsigned char bank)
+{
+    unsigned char val;
+    unsigned char mask = 3-bank;
+    
+    val = CIA2.pra;
+    val = (val & 0xFC) | mask;
+    CIA2.pra = val;
+}
+
 void load_mem(unsigned addr, unsigned char pages)
 {
     unsigned char lo;
@@ -196,6 +206,7 @@ int main(void)
     unsigned page = 16384;
     unsigned char val;
     unsigned char *addr;
+    unsigned char currpage;
     int i;
     int j;
     bool done = false;
@@ -214,36 +225,39 @@ int main(void)
     val |= 0x20;
     *addr = val;
     
-    memset((unsigned char *)base, 0xF0, 8000);
-    memset((unsigned char *)1024, 0, 1000);
+    memset((unsigned char *)base, 0, 8000);
+    memset((unsigned char *)SCREENRAM, 0, 1000);
+    memset((unsigned char *)base+page, 0, 8000);
+    memset((unsigned char *)SCREENRAM+page, 0, 1000);
     
-    //
-    //memset((unsigned char *)COLORRAM, 0, 1000);
+    currpage = 0;
     set_border_color(0);
+    set_vic_bank(1);
     
     // send command
-    for (i = 0; i < 256; i++)
+    for (i = 0; i < 60; i++)
     {
         send_command(0);
         set_userport_input();
-        load_mem(SCREENRAM, 4);
+        load_mem(SCREENRAM+(currpage*page), 4);
         set_userport_output();
-        
-        //send_command(1);
-        //set_userport_input();
-        //load_mem(base, 4);
-        //set_userport_output();
         
         for (j = 1; j < 9; j++)
         {
             send_command(j);
             set_userport_input();
-            load_mem(base+((j-1)*1024), 4);
+            load_mem(base+(currpage*page)+((j-1)*1024), 4);
             set_userport_output();
         }
         
-        //memcpy((unsigned char *)base, (unsigned char *)page, 8000);
+        // flip the page
+        set_vic_bank(currpage);
+        currpage++;
+        if (currpage > 1)
+            currpage = 0;
     }
+    
+    set_vic_bank(0);
     
     /*
     for (i = 0; i < 26; i++)
