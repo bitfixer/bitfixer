@@ -16,10 +16,8 @@
 
 void spi_init()
 {
-    //SPCR = 0x40 | (1<<SPIE); // slave, fosc/4 (2MHz)
-    SPCR = 0x40;
-    SPSR = (1<<SPI2X);
-    //sei();
+    SPCR = (1<<SPE); // slave, fosc/4 (2MHz)
+    SPSR = 0x00;
 }
 
 unsigned char spi_receive(void)
@@ -27,10 +25,9 @@ unsigned char spi_receive(void)
     unsigned char data;
     // Wait for reception complete
     
-    SPDR = 0x00;
+    SPDR = 0xff;
     while(!(SPSR & (1<<SPIF)));
     data = SPDR;
-    SPDR = 0x00;
     
     // Return data register
     return data;
@@ -87,7 +84,6 @@ void init()
     //set_data_output();
     set_data_input();
     uart0_init(25); // 38.4kbaud
-    
     spi_init();
 }
 
@@ -125,16 +121,13 @@ unsigned char get_command()
 
 void relay_command(unsigned char cmd)
 {
-    // wait for spi flag to clear
-    //while(!(SPSR & (1<<SPIF)));
-    // if SS' low, wait for it to deassert
-    while (!(PINB & (1<<PB4)));
-    // now wait for it to assert
-    while ((PINB & (1<<PB4)));
-    
     // set byte to send
     SPDR = cmd;
+    
+    // signal to read
+    PORTB = 0x00;
     while(!(SPSR & (1<<SPIF)));
+    PORTB = 0x01;
 }
 
 /*
@@ -149,42 +142,16 @@ int main(void)
 {
     unsigned char val;
     unsigned char cmd;
-    unsigned char buffer[1024];
+    unsigned char buffer[2048];
     PORTB = 0x01;
     
-    for (int i = 0; i < 1024; i++)
-    {
-        //int c = i % 40;
-        //int l = c % 26;
-        //buffer[i] = 'A' + l;
-        buffer[i] = 0;
-    }
-    
+    memset(buffer, 0, 2048);
     init();
-    
-    // set output byte
-    //SPDR = 0x00;
-    
-    /*
-    // SPI test
-    PORTB = 0x01;
-    val = PINB & 0x10;
-    while (val != 0)
-    {
-        val = PINB & 0x10;
-    }
-    
-    for (int i = 0; i < 256; i++)
-    {
-        buffer[i] = spi_receive();
-    }
-    */
     
     // wait for command byte
     while (1)
     {
         cmd = get_command();
-        //int offset = val;
         
         // switch to output mode
         set_data_output();
@@ -196,19 +163,13 @@ int main(void)
         
         // master has signaled for transfer
         // prepare and lower handshake line
-        
         // relay command to pi
-        //relay_command(cmd);
-        SPDR = cmd;
-        PORTB = 0x00;
-        while(!(SPSR & (1<<SPIF)));
-        //SPI_transmit(cmd);
-        
+        relay_command(cmd);
+        // receive buffer from pi
         for (int i = 0; i < 1024; i++)
         {
             buffer[i] = spi_receive();
         }
-        PORTB = 0x01;
         
         // lower flag to indicate ready
         lower_flag();
@@ -240,59 +201,4 @@ int main(void)
     
         set_data_input();
     }
-    
-    /*
-    int offset = 0;
-    output_byte('S');
-    while (1)
-    {
-        val = PINA;
-        while (val & (1<<PA0) != 0)
-        {
-            val = PINA;
-        }
-        
-        // master has signaled for transfer
-        // prepare and lower handshake line
-        // TEST: add delay
-        //_delay_loop_2(200);
-        
-        for (int i = 0; i < 1024; i++)
-        {
-            int c = i % 40;
-            int l = (c + offset) % 26;
-            buffer[i] = 'A' + l;
-        }
-        
-        PORTA = 0x00;
-        // starting transfer
-        for (int i = 0; i < 1024; i++)
-        {
-            output_byte(buffer[i]);
-            PORTB = 0x01;
-            val = PINA & (1<<PA1);
-            while (val == 0) {
-                val = PINA & (1<<PA1);
-            }
-            
-            val = PINA & (1<<PA1);
-            while (val != 0)
-            {
-                val = PINA & (1<<PA1);
-            }
-        }
-        
-        PORTA = (1<<PA2);
-        val = PINA & (1<<PA0);
-        while (val == 0)
-        {
-            val = PINA & (1<<PA0);
-        }
-        
-        offset++;
-        if (offset >= 8)
-            offset = 0;
-    }
-    */
-     
 }
