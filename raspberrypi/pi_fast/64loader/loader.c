@@ -2,6 +2,7 @@
 #include <c64.h>
 #include <peekpoke.h>
 #include <string.h>
+#include "../commands.h"
 
 #define PA2 0x04
 #define NPA2 0xFB
@@ -70,11 +71,6 @@ void init()
     // raise bit 2
     reg = reg | PA2;
     CIA2.ddra = reg;
-    
-    // lower bit 2
-    // set PA2 line to input
-    //reg = reg & NPA2;
-    //CIA2.ddra = reg;
     
     //set_userport_input(); // get ready to read bytes
     set_userport_output();
@@ -196,127 +192,66 @@ loop:
 
 int main(void)
 {
+    unsigned base = 8192;
+    unsigned page = 16384;
     unsigned char val;
+    unsigned char *addr;
     int i;
+    int j;
     bool done = false;
     
     init();
     
+    // set bitmap at 8192
+    addr = (unsigned char *)BITMAP_LOCATION_REG;
+    val = *addr;
+    val |= 0x08;
+    *addr = val;
+    
+    // enter bit map mode
+    addr = (unsigned char *)VICII;
+    val = *addr;
+    val |= 0x20;
+    *addr = val;
+    
+    memset((unsigned char *)base, 0xF0, 8000);
+    memset((unsigned char *)1024, 0, 1000);
+    
     //
-    memset((unsigned char *)COLORRAM, 0, 1000);
-    
-    /*
-    // read 2 bytes: C
-    val = CIA2.pra & PA2;
-    // wait for PA2 to go low
-    while (val != 0)
-    {
-        val = CIA2.pra & PA2;
-    }
-    
-    // read a value
-    *((unsigned char *)SCREENRAM+80) = CIA2.prb;
-    
-    val = CIA2.pra & PA2;
-    while (val == 0)
-    {
-        val = CIA2.pra & PA2;
-    }
-    
-    *((unsigned char *)SCREENRAM+81) = CIA2.prb;
-    */
-    
-    /*
-    // read 2 bytes: asm
-    asm("ldx #$00");
-wait1:
-    asm("lda %w", 0xDD00);
-    asm("and #$04");
-    asm("bne %g", wait1);       // loop if PA2 is not low
-    
-    // read one byte
-    asm("lda %w", 0xDD01);
-    asm("sta %w,x", SCREENRAM+80);
-    
-    asm("inx");
-    asm("beq %g", done);
-    
-wait2:
-    asm("lda %w", 0xDD00);
-    asm("and #$04");
-    asm("beq %g", wait2);
-    
-    asm("lda %w", 0xDd01);
-    asm("sta %w,x", SCREENRAM+80);
-    
-    asm("inx");
-    asm("bne %g", wait1);
-
-done:
-    asm("nop");
-    */
-    
-    /*
-    // read 256 bytes - speed test
-    asm("ldy #$00");
-    
-    // store destination address
-    asm("lda #$00");
-    asm("sta %w", 0x00FB);
-    asm("lda #$04");
-    asm("sta %w", 0x00FC);
-    
-    // lower PA2
-    asm("lda %w", 0xDD00);
-    asm("and #$FB");
-    asm("sta %w", 0xDD00);
-loop:
-    
-    // load byte
-    asm("lda %w", 0xDD01);
-    //asm("sta %w,x", SCREENRAM);
-    asm("sta ($FB), y");
-    asm("iny");
-    asm("bne %g", loop);
-    
-    asm("lda %w", 0xDD00);
-    asm("ora #$04");
-    asm("sta %w", 0xDD00);
-    */
+    //memset((unsigned char *)COLORRAM, 0, 1000);
+    set_border_color(0);
     
     // send command
+    for (i = 0; i < 256; i++)
+    {
+        send_command(0);
+        set_userport_input();
+        load_mem(SCREENRAM, 4);
+        set_userport_output();
+        
+        //send_command(1);
+        //set_userport_input();
+        //load_mem(base, 4);
+        //set_userport_output();
+        
+        for (j = 1; j < 9; j++)
+        {
+            send_command(j);
+            set_userport_input();
+            load_mem(base+((j-1)*1024), 4);
+            set_userport_output();
+        }
+        
+        //memcpy((unsigned char *)base, (unsigned char *)page, 8000);
+    }
     
+    /*
     for (i = 0; i < 26; i++)
     {
         send_command(i);
         load_mem(SCREENRAM, 4);
     }
-    
-    /*
-    *((unsigned char *)COLORRAM) = 0;
-    while (!done)
-    {
-        // read PA2
-        val = CIA2.pra;
-        val = val & PA2;
-        if (val == 0)
-        {
-            *((unsigned char *)SCREENRAM) = '0';
-        }
-        else
-        {
-            *((unsigned char *)SCREENRAM) = '1';
-        }
-        
-        // check for keypress
-        val = *(unsigned char *)KEYPRESS;
-        if (val == 62)
-        {
-            // quit
-            done = true;
-        }
-    }
     */
-     
+    
     return 1;
 }

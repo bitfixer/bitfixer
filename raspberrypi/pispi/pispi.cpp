@@ -24,6 +24,7 @@ int main(int argc, char **argv)
     int spi = wiringPiSPISetup(0, 2000000);
     
     printf("checking for commands..\n");
+    unsigned char mapchar = 1;
     
     while (1)
     {
@@ -31,24 +32,44 @@ int main(int argc, char **argv)
         unsigned char cmd;
         //int r = read(spi, &cmd, 1);
         
+        printf("waiting for command\n");
         while (fastDigitalRead(0) == HIGH)
         {
             delayMicroseconds(10);
         }
+        printf("reading command\n");
         
         // get byte
         int r = read(spi, &cmd, 1);
         printf("got %d %02X\n", cmd, cmd);
         
-        for (int i = 0; i < 1024; i++)
+        if (cmd == 0)
         {
-            int c = i % 40;
-            int l = (c + cmd) % 26;
-            buffer[i] = 'A' + l;
+            for (int i = 0; i < 1024; i++)
+            {
+                //int c = i % 40;
+                //int l = (c + cmd) % 26;
+                //buffer[i] = 'A' + l;
+                buffer[i] = 0x01;
+            }
+
+            mapchar <<= 1;
+            if (mapchar == 0)
+                mapchar = 1;
+        }
+        else
+        {
+            for (int i = 0; i < 1024; i++)
+            {
+                buffer[i] = mapchar;
+            }
         }
         
+        printf("sending bytes\n");
         // send bytes
         int s = write(spi, buffer, 1024);
+        printf("done sending bytes\n");
+        
         
         // wait for deassert
         while (fastDigitalRead(0) == LOW)

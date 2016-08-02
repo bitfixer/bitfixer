@@ -77,6 +77,9 @@ void init()
     PORTA = (1<<PA2);
     
     DDRB = 0x41;
+    
+    DDRD = 0x80;
+    PORTD = 0x80;
     // PA0 is PA2 from user port
     // PA1 is /PC2 handshake line
     // MISO out
@@ -127,7 +130,7 @@ void relay_command(unsigned char cmd)
     // signal to read
     PORTB = 0x00;
     while(!(SPSR & (1<<SPIF)));
-    PORTB = 0x01;
+    
 }
 
 /*
@@ -151,6 +154,7 @@ int main(void)
     // wait for command byte
     while (1)
     {
+        
         cmd = get_command();
         
         // switch to output mode
@@ -165,12 +169,15 @@ int main(void)
         // prepare and lower handshake line
         // relay command to pi
         relay_command(cmd);
+        
+        PORTD = 0x00;
         // receive buffer from pi
         for (int i = 0; i < 1024; i++)
         {
             buffer[i] = spi_receive();
         }
         
+        PORTD = 0x80;
         // lower flag to indicate ready
         lower_flag();
         
@@ -193,6 +200,7 @@ int main(void)
         
         // raise flag, done
         raise_flag();
+        PORTB = 0x01;
         
         // wait for PA0 high, master is done
         do {
