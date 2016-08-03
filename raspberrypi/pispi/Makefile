@@ -1,7 +1,7 @@
 REMOTE := 10.0.0.13
 
 all:
-	g++ -o pispi -lwiringPi -lavformat -lavcodec -lavutil -lswscale  pispi.cpp image_utilities.cpp
+	g++ -o pispi -lwiringPi -lavformat -lavcodec -lavutil -lswscale -std=c++11 pispi.cpp image_utilities.cpp
 
 transfer:
 	scp pispi.cpp pi@$(REMOTE):~/pispi/pispi.cpp
