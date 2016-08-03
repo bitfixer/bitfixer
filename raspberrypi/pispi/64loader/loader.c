@@ -235,8 +235,17 @@ int main(void)
     set_vic_bank(1);
     
     // send command
-    for (i = 0; i < 60; i++)
+    //for (i = 0; i < 60; i++)
+    while (1)
     {
+        // check for keypress
+        val = *(unsigned char *)KEYPRESS;
+        if (val == 62)
+        {
+            // quit
+            break;
+        }
+        
         send_command(0);
         set_userport_input();
         load_mem(SCREENRAM+(currpage*page), 4);

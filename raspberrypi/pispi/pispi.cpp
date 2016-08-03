@@ -27,9 +27,89 @@ public:
         printf("timer %s: %lf\n", infostr, elapsed);
     }
     
+    float getCurrentElapsedTime()
+    {
+        double start = (double)startTime.tv_sec + ((double)startTime.tv_usec / 1000000.0);
+        double end = (double)endTime.tv_sec + ((double)endTime.tv_usec / 1000000.0);
+        float elapsed = end-start;
+        return elapsed;
+    }
+    
 private:
     struct timeval startTime;
     struct timeval endTime;
+};
+
+class FrameDataSource
+{
+public:
+    virtual bool seekToTime(float pts) = 0;
+    virtual const unsigned char *getFrameChunk(int chunk) = 0;
+};
+
+class C64FrameDataSource : public FrameDataSource
+{
+public:
+    C64FrameDataSource(const char *fname)
+    {
+        fp = fopen(fname, "rb");
+    }
+    
+    ~C64FrameDataSource()
+    {
+        if (fp)
+        {
+            fclose(fp);
+            fp = NULL;
+        }
+    }
+    
+    bool seekToTime(float pts)
+    {
+        if (!fp)
+            return false;
+        
+        printf("seek to %f\n", pts);
+        //float currpts = 0.0;
+        bool newFrame = false;
+        while (currpts < pts && fp)
+        {
+            newFrame = true;
+            size_t res = fread(&currpts, 1, sizeof(float), fp);
+            printf("res %d\n", res);
+            if (res != sizeof(float))
+            {
+                printf("closing file\n");
+                // eof
+                fclose(fp);
+                fp = NULL;
+                return false;
+            }
+            else
+            {
+                printf("currpts %f pts %f\n", currpts, pts);
+                if (currpts < pts)
+                {
+                    fseek(fp, 9216, SEEK_CUR);
+                }
+            }
+        }
+        
+        if (newFrame)
+            fread(frame, 1, 9216, fp);
+        return true;
+    }
+    
+    const unsigned char *getFrameChunk(int chunk)
+    {
+        return &frame[chunk*chunksize];
+    }
+    
+private:
+    FILE *fp = NULL;
+    float currpts = -1.0;
+    int chunksize = 1024;
+    unsigned char frame[9216];
 };
 
 typedef struct
@@ -219,35 +299,52 @@ unsigned char color_byte_for_block(unsigned char *rgb, int xstart, int ystart, i
     c2_min = 1;
 #else
     
-    /*
      float rtotal;
      float gtotal;
      float btotal;
-     
+    float mincolorerror = 999999.0;
+    
      // get avg color
      for (int y = ystart; y < ystart+8; y++)
      {
-     for (int x = xstart; x < xstart+8; x++)
-     {
-     int index = y*width*ncolors + x*ncolors;
-     unsigned char r = rgb[index];
-     unsigned char g = rgb[index+1];
-     unsigned char b = rgb[index+2];
-     
-     rtotal += (float)r;
-     gtotal += (float)g;
-     btotal += (float)b;
-     }
+         for (int x = xstart; x < xstart+8; x++)
+         {
+             int index = y*width*ncolors + x*ncolors;
+             unsigned char r = rgb[index];
+             unsigned char g = rgb[index+1];
+             unsigned char b = rgb[index+2];
+             
+             rtotal += (float)r;
+             gtotal += (float)g;
+             btotal += (float)b;
+         }
      }
      
      rtotal /= 64.0;
      gtotal /= 64.0;
      btotal /= 64.0;
-     */
     
-    for (int c1 = 0; c1 < 15; c1++)
+    c1_min = 0;
+    for (int c = 0; c < 15; c++)
     {
-        for (int c2 = c1+1; c2 < 16; c2++)
+        float dr1 = (float)colors[c].r-(float)rtotal;
+        float dg1 = (float)colors[c].g-(float)gtotal;
+        float db1 = (float)colors[c].b-(float)btotal;
+        float err1 = dr1*dr1 + dg1*dg1 + db1*db1;
+        
+        if (err1 < mincolorerror)
+        {
+            mincolorerror = err1;
+            c1_min = c;
+        }
+    }
+    
+    //for (int c1 = 0; c1 < 15; c1++)
+    //{
+        //for (int c2 = c1+1; c2 < 16; c2++)
+    for (int c2 = 0; c2 < 16; c2++)
+    {
+        if (c2 != c1_min)
         {
             //printf("colors %d %d\n", c1, c2);
             // get total error for this color pair
@@ -266,9 +363,9 @@ unsigned char color_byte_for_block(unsigned char *rgb, int xstart, int ystart, i
                     unsigned char g = rgb[index+1];
                     unsigned char b = rgb[index+2];
                     
-                    float dr1 = (float)colors[c1].r-(float)r;
-                    float dg1 = (float)colors[c1].g-(float)g;
-                    float db1 = (float)colors[c1].b-(float)b;
+                    float dr1 = (float)colors[c1_min].r-(float)r;
+                    float dg1 = (float)colors[c1_min].g-(float)g;
+                    float db1 = (float)colors[c1_min].b-(float)b;
                     
                     float dr2 = (float)colors[c2].r-(float)r;
                     float dg2 = (float)colors[c2].g-(float)g;
@@ -277,19 +374,6 @@ unsigned char color_byte_for_block(unsigned char *rgb, int xstart, int ystart, i
                     float err1 = dr1*dr1 + dg1*dg1 + db1*db1;
                     float err2 = dr2*dr2 + dg2*dg2 + db2*db2;
                     
-                    /*
-                    int dr1 = (colors[c1].r > r) ? colors[c1].r : r;
-                    int dg1 = (colors[c1].g > g) ? colors[c1].g : g;
-                    int db1 = (colors[c1].b > b) ? colors[c1].b : b;
-                    
-                    int dr2 = (colors[c2].r > r) ? colors[c2].r : r;
-                    int dg2 = (colors[c2].g > g) ? colors[c2].g : g;
-                    int db2 = (colors[c2].b > b) ? colors[c2].b : b;
-                    
-                    int err1 = dr1+dg1+db1;
-                    int err2 = dr2+dg2+db2;
-                    */
-                    
                     float minerr = (err1 < err2) ? err1 : err2;
                     totalerror += minerr;
                 }
@@ -297,12 +381,13 @@ unsigned char color_byte_for_block(unsigned char *rgb, int xstart, int ystart, i
             
             if (totalerror < minerror)
             {
-                c1_min = c1;
+                //c1_min = c1;
                 c2_min = c2;
                 minerror = totalerror;
             }
         }
     }
+    //}
 #endif
     
     //printf("colors %d %d\n", c1_min, c2_min);
@@ -329,7 +414,7 @@ void colormap_from_rgb(unsigned char *colormap, unsigned char *rgb, int width, i
             colormap[colormap_index] = colorbyte;
         }
     }
-    printf("got colormap\n");
+    //printf("got colormap\n");
 }
 
 // input - pixel-addressed bitmap
@@ -365,7 +450,7 @@ void create_c64_bitmap(unsigned char *dest, unsigned char *src, int width, int h
     }
 }
 
-void mp4toc64(const char *mp4fname, const char *c64fname)
+void mp4toc64(const char *mp4fname, const char *c64fname, float framerate)
 {
     unsigned char rgb[320*200*3];
     unsigned char mod_rgb[320*200*3];
@@ -375,6 +460,7 @@ void mp4toc64(const char *mp4fname, const char *c64fname)
     color c64_colors[16];
     unsigned char temp[256];
     memset(temp, 0, 256);
+    Timer timer;
     
     get_64_colors(c64_colors);
     Decoder decoder;
@@ -382,46 +468,136 @@ void mp4toc64(const char *mp4fname, const char *c64fname)
     
     FILE *fp = fopen(c64fname, "wb");
     
+    float nextFrameTime = 0.0;
     // decode all frames
     bool done = false;
     int frame = 0;
     while (!done)
     {
+        timer.start();
         bool gotFrame = false;
+        float pts = 0.0;
         while (!gotFrame && !done)
         {
-            gotFrame = decoder.getFrameRGB(rgb, true, done);
+            gotFrame = decoder.getFrameRGB(rgb, true, done, pts);
         }
+        timer.end();
+        //timer.report("frame");
         
         if (gotFrame)
         {
-            printf("writing frame %d\n", frame++);
-            colormap_from_rgb(colormap, rgb, 320, 200, c64_colors);
-            bitmap_from_rgb(bitmap, rgb, colormap, mod_rgb, 320, 200, c64_colors);
-            create_c64_bitmap(c64_bitmap, bitmap, 320, 200);
-            
-            // write to output file
-            fwrite(colormap, 1, 1000, fp);
-            fwrite(temp, 1, 24, fp);
-            fwrite(c64_bitmap, 1, 8000, fp);
-            fwrite(temp, 1, 192, fp);
+            if (pts >= nextFrameTime)
+            {
+                nextFrameTime += (1.0/framerate);
+                printf("writing frame %d time %f next %f\n", frame++, pts, nextFrameTime);
+                
+                timer.start();
+                colormap_from_rgb(colormap, rgb, 320, 200, c64_colors);
+                timer.end();
+                //timer.report("colormap");
+                
+                timer.start();
+                bitmap_from_rgb(bitmap, rgb, colormap, mod_rgb, 320, 200, c64_colors);
+                timer.end();
+                //timer.report("bitmap");
+                
+                timer.start();
+                create_c64_bitmap(c64_bitmap, bitmap, 320, 200);
+                timer.end();
+                //timer.report("c64");
+                
+                // write to output file
+                fwrite(&pts, 1, sizeof(float), fp);
+                fwrite(colormap, 1, 1000, fp);
+                fwrite(temp, 1, 24, fp);
+                fwrite(c64_bitmap, 1, 8000, fp);
+                fwrite(temp, 1, 192, fp);
+            }
+            else
+            {
+                //printf("skipping frame time %f\n", pts);
+            }
         }
     }
     
     fclose(fp);
 }
 
+class MP4FrameDataSource : public FrameDataSource
+{
+public:
+    MP4FrameDataSource(const char *fname, float fr) :
+    framerate(fr)
+    {
+        decoder.init(fname);
+        get_64_colors(c64_colors);
+    }
+    
+    bool seekToTime(float pts)
+    {
+        if (done)
+            return false;
+        
+        // get a frame
+        float framepts = 0.0;
+        bool gotFrame = (currPts < pts) ? false : true;
+        while (!gotFrame && !done)
+        {
+            //bool gf = decoder.getFrameRGB(rgb, true, done, framepts);
+            bool gf = decoder.decodeFrame(done, framepts);
+            if (gf)
+            {
+                if (framepts >= pts)
+                {
+                    timer.start();
+                    decoder.frameToRGB(rgb);
+                    colormap_from_rgb(colormap, rgb, 320, 200, c64_colors);
+                    bitmap_from_rgb(bitmap, rgb, colormap, mod_rgb, 320, 200, c64_colors);
+                    create_c64_bitmap(c64_bitmap, bitmap, 320, 200);
+                    timer.end();
+                    timer.report("decode");
+                    gotFrame = true;
+                }
+            }
+        }
+        
+        return gotFrame;
+    }
+    
+    const unsigned char *getFrameChunk(int chunk)
+    {
+        if (chunk == 0)
+            return colormap;
+        else
+            return &c64_bitmap[1024 * (chunk-1)];
+    }
+    
+private:
+    float framerate;
+    Decoder decoder;
+    bool done = false;
+    float currPts = -1.0;
+    
+    unsigned char rgb[320*200*3];
+    unsigned char mod_rgb[320*200*3];
+    unsigned char bitmap[320*200];
+    unsigned char colormap[1024];
+    unsigned char c64_bitmap[8192];
+    color c64_colors[16];
+    
+    Timer timer;
+};
 
 // test - watch for input
 int main(int argc, char **argv)
 {
     unsigned char buffer[1024];
     char temp[256];
-    
+    Timer playbackTimer;
     
     if (argc < 2)
     {
-        printf("usage: pispi <input.mp4>\n");
+        printf("usage: pispi <input.c64>\n");
         return 1;
     }
     
@@ -430,31 +606,39 @@ int main(int argc, char **argv)
     int frameSkip = 5;
     memset(buffer, 0, 1024);
     
-    //Decoder decoder;
-    //decoder.init(fname);
-    
     // convert mp4
-    mp4toc64(fname, "out.c64");
+    //mp4toc64(fname, "out.c64", 6.0);
+    //C64FrameDataSource source("out.c64");
+    MP4FrameDataSource source(fname, 6.0);
+    
+    /*
+    float testTime = 0.0;
+    for (int i = 0; i < 100; i++)
+    {
+        bool gf = source.seekToTime((float)i / 12.0);
+    }
+    */
     
     wiringPiSetup();
     pinMode(0, INPUT);
     pullUpDnControl(0, PUD_OFF);
+    
+    pinMode(1, OUTPUT);
+    pullUpDnControl(1, PUD_OFF);
+    fastDigitalWrite(1, LOW);
     
     int spi = wiringPiSPISetup(0, 2000000);
     
     printf("checking for commands..\n");
     
     int frame = 0;
-    FILE *fp = NULL;
     unsigned char *imgptr = NULL;
-    int remBytes = 8000;
-    bool done;
-    while (1)
+    bool done = false;
+    bool started = false;
+    while (!done)
     {
         // loop - check for updates
         unsigned char cmd;
-        //int r = read(spi, &cmd, 1);
-        
         //printf("waiting for command\n");
         while (fastDigitalRead(0) == HIGH)
         {
@@ -469,92 +653,64 @@ int main(int argc, char **argv)
         // start a frame
         if (cmd == 0)
         {
-            printf("displaying frame %d\n", frame++);
-            if (!fp)
+            if (!started)
             {
-                fp = fopen("out.c64", "rb");
+                started = true;
+                playbackTimer.start();
             }
             
-            fread(buffer, 1, 1024, fp);
+            //printf("here\n");
+            fastDigitalWrite(1, HIGH);
+            playbackTimer.end();
+            
+            float curr_playback_time = playbackTimer.getCurrentElapsedTime();
+            bool gotFrame = source.seekToTime(curr_playback_time);
+            const unsigned char *frameChunk = source.getFrameChunk(cmd);
+            int s = write(spi, frameChunk, 1024);
             
             /*
-            if (fp)
+            // get the timestamp for this frame
+            float pts = 0.0;
+            float curr_playback_time = playbackTimer.getCurrentElapsedTime();
+            
+            while (pts < curr_playback_time)
             {
-                fclose(fp);
-                fp = NULL;
-            }
-            sprintf(temp, "pframe_%04d.c64", frame);
-            printf("reading %s\n", temp);
-            fp = fopen(temp, "rb");
-            
-            frame = (frame+1) % 20;
-            
-            // read first block
-            fread(buffer, 1, 1000, fp);
-            */
-            
-            /*
-            int gotFrames = 0;
-            // get a frame from decoder
-            while (gotFrames < frameSkip)
-            {
-                bool useFrame = (gotFrames == frameSkip-1) ? true : false;
-                bool gotFrame = decoder.getFrameRGB(rgb, useFrame, done);
-                if (gotFrame)
+                size_t res = fread(&pts, 1, sizeof(float), fp);
+                if (res != sizeof(float))
                 {
-                    gotFrames++;
+                    printf("end of file\n");
+                    done = true;
+                    break; // done;
+                }
+                printf("realtime %f, file pts %f\n", playbackTimer.getCurrentElapsedTime(), pts);
+                
+                if (pts < curr_playback_time)
+                {
+                    printf("skipping.\n");
+                    // skip a frame
+                    fseek(fp, 9216, SEEK_CUR);
                 }
             }
-            
-            timer.start();
-            colormap_from_rgb(colormap, rgb, 320, 200, c64_colors);
-            timer.end();
-            timer.report("colormap");
-            
-            timer.start();
-            bitmap_from_rgb(bitmap, rgb, colormap, mod_rgb, 320, 200, c64_colors);
-            timer.end();
-            timer.report("bitmap");
-            
-            timer.start();
-            create_c64_bitmap(c64_bitmap, bitmap, 320, 200);
-            timer.end();
-            timer.report("c64");
-            
-            imgptr = c64_bitmap;
-            remBytes = 8000;
-            memcpy(buffer, colormap, 1000);
+            fread(buffer, 1, 1024, fp);
             */
         }
         else
         {
-            fread(buffer, 1, 1024, fp);
-            
             /*
-            if (imgptr)
-            {
-                printf("cmd is %d rem %d\n", remBytes);
-                int size = (remBytes >= 1024) ? 1024 : remBytes;
-                memcpy(buffer, imgptr, size);
-                remBytes -= 1024;
-                
-                if (remBytes <= 0)
-                {
-                    imgptr = NULL;
-                }
-                else
-                {
-                    imgptr += 1024;
-                }
-                printf("hey\n");
-            }
+            if (fp)
+                fread(buffer, 1, 1024, fp);
             */
+            
+            const unsigned char *frameChunk = source.getFrameChunk(cmd);
+            int s = write(spi, frameChunk, 1024);
         }
         
         //printf("sending bytes\n");
         // send bytes
-        int s = write(spi, buffer, 1024);
+        //int s = write(spi, buffer, 1024);
         //printf("done sending bytes\n");
+        
+        fastDigitalWrite(1, LOW);
         
         // wait for deassert
         while (fastDigitalRead(0) == LOW)
