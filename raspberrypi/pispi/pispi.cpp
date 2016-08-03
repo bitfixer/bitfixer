@@ -45,6 +45,7 @@ class FrameDataSource
 public:
     virtual bool seekToTime(float pts) = 0;
     virtual const unsigned char *getFrameChunk(int chunk) = 0;
+    virtual void workForChunk(int chunk, float pts) {};
 };
 
 class C64FrameDataSource : public FrameDataSource
@@ -96,8 +97,18 @@ public:
         }
         
         if (newFrame)
+        {
             fread(frame, 1, 9216, fp);
+        }
         return true;
+    }
+    
+    void workForChunk(int chunk, float pts)
+    {
+        if (chunk == 8)
+        {
+            seekToTime(pts);
+        }
     }
     
     const unsigned char *getFrameChunk(int chunk)
@@ -549,6 +560,7 @@ public:
             {
                 if (framepts >= pts)
                 {
+                    /*
                     timer.start();
                     decoder.frameToRGB(rgb);
                     colormap_from_rgb(colormap, rgb, 320, 200, c64_colors);
@@ -557,6 +569,11 @@ public:
                     timer.end();
                     timer.report("decode");
                     gotFrame = true;
+                    currPts = framepts;
+                    */
+                    
+                    gotFrame = true;
+                    currPts = framepts;
                 }
             }
         }
@@ -564,18 +581,47 @@ public:
         return gotFrame;
     }
     
+    void workForChunk(int chunk, float pts)
+    {
+        if (chunk == 1)
+        {
+            bool gotFrame = seekToTime(pts);
+        }
+        if (chunk == 2)
+        {
+            decoder.frameToRGB(rgb);
+        }
+        else if (chunk == 3)
+        {
+            colormap_from_rgb(colormap, rgb, 320, 200, c64_colors);
+        }
+        else if (chunk == 4)
+        {
+            bitmap_from_rgb(bitmap, rgb, colormap, mod_rgb, 320, 200, c64_colors);
+        }
+        else if (chunk == 8)
+        {
+            create_c64_bitmap(c64_bitmap, bitmap, 320, 200);
+        }
+    }
+    
     const unsigned char *getFrameChunk(int chunk)
     {
         if (chunk == 0)
+        {
             return colormap;
+        }
         else
+        {
             return &c64_bitmap[1024 * (chunk-1)];
+        }
     }
     
 private:
     float framerate;
     Decoder decoder;
     bool done = false;
+    bool hasFrame = false;
     float currPts = -1.0;
     
     unsigned char rgb[320*200*3];
@@ -631,7 +677,7 @@ int main(int argc, char **argv)
     
     printf("checking for commands..\n");
     
-    int frame = 0;
+    int frames = 0;
     unsigned char *imgptr = NULL;
     bool done = false;
     bool started = false;
@@ -648,6 +694,7 @@ int main(int argc, char **argv)
         
         // get byte
         int r = read(spi, &cmd, 1);
+        
         //printf("got %d %02X\n", cmd, cmd);
         
         // start a frame
@@ -663,10 +710,14 @@ int main(int argc, char **argv)
             fastDigitalWrite(1, HIGH);
             playbackTimer.end();
             
-            float curr_playback_time = playbackTimer.getCurrentElapsedTime();
-            bool gotFrame = source.seekToTime(curr_playback_time);
             const unsigned char *frameChunk = source.getFrameChunk(cmd);
             int s = write(spi, frameChunk, 1024);
+            
+            float currTime = playbackTimer.getCurrentElapsedTime();
+            float currFps = (float)frames / currTime;
+            
+            printf("fps %f\n", currFps);
+            frames++;
             
             /*
             // get the timestamp for this frame
@@ -718,7 +769,8 @@ int main(int argc, char **argv)
             delayMicroseconds(10);
         }
         
-        //printf("done sending\n");
+        float curr_playback_time = playbackTimer.getCurrentElapsedTime();
+        source.workForChunk(cmd, curr_playback_time);
     }
     
     return 1;
