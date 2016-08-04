@@ -43,7 +43,7 @@ private:
 class FrameDataSource
 {
 public:
-    virtual bool seekToTime(float pts) = 0;
+    virtual bool seekToTime(float pts, bool doConvert = false) = 0;
     virtual const unsigned char *getFrameChunk(int chunk) = 0;
     virtual void workForChunk(int chunk, float pts) {};
 };
@@ -65,7 +65,7 @@ public:
         }
     }
     
-    bool seekToTime(float pts)
+    bool seekToTime(float pts, bool doConvert = false)
     {
         if (!fp)
             return false;
@@ -73,6 +73,9 @@ public:
         printf("seek to %f\n", pts);
         //float currpts = 0.0;
         bool newFrame = false;
+        
+        // TEST
+        currpts = -1.0;
         while (currpts < pts && fp)
         {
             newFrame = true;
@@ -88,6 +91,9 @@ public:
             }
             else
             {
+                // TEST
+                currpts = pts;
+                
                 printf("currpts %f pts %f\n", currpts, pts);
                 if (currpts < pts)
                 {
@@ -461,6 +467,137 @@ void create_c64_bitmap(unsigned char *dest, unsigned char *src, int width, int h
     }
 }
 
+class MP4FrameDataSource : public FrameDataSource
+{
+public:
+    MP4FrameDataSource(const char *fname, float fr) :
+    framerate(fr)
+    {
+        decoder.init(fname);
+        get_64_colors(c64_colors);
+    }
+    
+    bool seekToTime(float pts, bool doConvert = false)
+    {
+        if (done)
+            return false;
+        
+        // get a frame
+        float framepts = 0.0;
+        bool gotFrame = (currPts < pts) ? false : true;
+        while (!gotFrame && !done)
+        {
+            //bool gf = decoder.getFrameRGB(rgb, true, done, framepts);
+            bool gf = decoder.decodeFrame(done, framepts);
+            if (gf)
+            {
+                if (framepts >= pts)
+                {
+                    if (doConvert)
+                    {
+                        timer.start();
+                        decoder.frameToRGB(rgb);
+                        colormap_from_rgb(colormap, rgb, 320, 200, c64_colors);
+                        bitmap_from_rgb(bitmap, rgb, colormap, mod_rgb, 320, 200, c64_colors);
+                        create_c64_bitmap(c64_bitmap, bitmap, 320, 200);
+                        timer.end();
+                        timer.report("decode");
+                    }
+                    
+                    gotFrame = true;
+                    currPts = framepts;
+                }
+            }
+        }
+        
+        return gotFrame;
+    }
+    
+    void workForChunk(int chunk, float pts)
+    {
+        if (chunk == 1)
+        {
+            bool gotFrame = seekToTime(pts);
+        }
+        if (chunk == 2)
+        {
+            decoder.frameToRGB(rgb);
+        }
+        else if (chunk == 3)
+        {
+            colormap_from_rgb(colormap, rgb, 320, 200, c64_colors);
+        }
+        else if (chunk == 4)
+        {
+            bitmap_from_rgb(bitmap, rgb, colormap, mod_rgb, 320, 200, c64_colors);
+        }
+        else if (chunk == 8)
+        {
+            create_c64_bitmap(c64_bitmap, bitmap, 320, 200);
+        }
+    }
+    
+    const unsigned char *getFrameChunk(int chunk)
+    {
+        if (chunk == 0)
+        {
+            return colormap;
+        }
+        else
+        {
+            return &c64_bitmap[1024 * (chunk-1)];
+        }
+    }
+    
+private:
+    float framerate;
+    Decoder decoder;
+    bool done = false;
+    bool hasFrame = false;
+    float currPts = -1.0;
+    
+    unsigned char rgb[320*200*3];
+    unsigned char mod_rgb[320*200*3];
+    unsigned char bitmap[320*200];
+    unsigned char colormap[1024];
+    unsigned char c64_bitmap[8192];
+    color c64_colors[16];
+    
+    Timer timer;
+};
+
+void mp4toc64(const char *mp4fname, const char *c64fname, float framerate)
+{
+    MP4FrameDataSource source(mp4fname, framerate);
+    FILE *fp = fopen(c64fname, "wb");
+    
+    float currTime = 0.0;
+    bool done = false;
+    while (!done)
+    {
+        bool gotFrame = source.seekToTime(currTime, true);
+        if (gotFrame)
+        {
+            printf("writing frame at %f\n", currTime);
+            fwrite(&currTime, 1, sizeof(float), fp);
+            for (int i = 0; i < 9; i++)
+            {
+                const unsigned char *chunk = source.getFrameChunk(i);
+                fwrite(chunk, 1, 1024, fp);
+            }
+            
+            currTime += (1.0 / framerate);
+        }
+        else
+        {
+            done = true;
+        }
+    }
+    
+    fclose(fp);
+}
+
+/*
 void mp4toc64(const char *mp4fname, const char *c64fname, float framerate)
 {
     unsigned char rgb[320*200*3];
@@ -533,111 +670,13 @@ void mp4toc64(const char *mp4fname, const char *c64fname, float framerate)
     
     fclose(fp);
 }
-
-class MP4FrameDataSource : public FrameDataSource
-{
-public:
-    MP4FrameDataSource(const char *fname, float fr) :
-    framerate(fr)
-    {
-        decoder.init(fname);
-        get_64_colors(c64_colors);
-    }
-    
-    bool seekToTime(float pts)
-    {
-        if (done)
-            return false;
-        
-        // get a frame
-        float framepts = 0.0;
-        bool gotFrame = (currPts < pts) ? false : true;
-        while (!gotFrame && !done)
-        {
-            //bool gf = decoder.getFrameRGB(rgb, true, done, framepts);
-            bool gf = decoder.decodeFrame(done, framepts);
-            if (gf)
-            {
-                if (framepts >= pts)
-                {
-                    /*
-                    timer.start();
-                    decoder.frameToRGB(rgb);
-                    colormap_from_rgb(colormap, rgb, 320, 200, c64_colors);
-                    bitmap_from_rgb(bitmap, rgb, colormap, mod_rgb, 320, 200, c64_colors);
-                    create_c64_bitmap(c64_bitmap, bitmap, 320, 200);
-                    timer.end();
-                    timer.report("decode");
-                    gotFrame = true;
-                    currPts = framepts;
-                    */
-                    
-                    gotFrame = true;
-                    currPts = framepts;
-                }
-            }
-        }
-        
-        return gotFrame;
-    }
-    
-    void workForChunk(int chunk, float pts)
-    {
-        if (chunk == 1)
-        {
-            bool gotFrame = seekToTime(pts);
-        }
-        if (chunk == 2)
-        {
-            decoder.frameToRGB(rgb);
-        }
-        else if (chunk == 3)
-        {
-            colormap_from_rgb(colormap, rgb, 320, 200, c64_colors);
-        }
-        else if (chunk == 4)
-        {
-            bitmap_from_rgb(bitmap, rgb, colormap, mod_rgb, 320, 200, c64_colors);
-        }
-        else if (chunk == 8)
-        {
-            create_c64_bitmap(c64_bitmap, bitmap, 320, 200);
-        }
-    }
-    
-    const unsigned char *getFrameChunk(int chunk)
-    {
-        if (chunk == 0)
-        {
-            return colormap;
-        }
-        else
-        {
-            return &c64_bitmap[1024 * (chunk-1)];
-        }
-    }
-    
-private:
-    float framerate;
-    Decoder decoder;
-    bool done = false;
-    bool hasFrame = false;
-    float currPts = -1.0;
-    
-    unsigned char rgb[320*200*3];
-    unsigned char mod_rgb[320*200*3];
-    unsigned char bitmap[320*200];
-    unsigned char colormap[1024];
-    unsigned char c64_bitmap[8192];
-    color c64_colors[16];
-    
-    Timer timer;
-};
+*/
 
 // test - watch for input
 int main(int argc, char **argv)
 {
-    unsigned char buffer[1024];
+    unsigned char buffer[2048];
+    unsigned char bitmap[8192];
     char temp[256];
     Timer playbackTimer;
     
@@ -653,27 +692,22 @@ int main(int argc, char **argv)
     memset(buffer, 0, 1024);
     
     // convert mp4
-    //mp4toc64(fname, "out.c64", 6.0);
-    //C64FrameDataSource source("out.c64");
-    MP4FrameDataSource source(fname, 6.0);
-    
-    /*
-    float testTime = 0.0;
-    for (int i = 0; i < 100; i++)
-    {
-        bool gf = source.seekToTime((float)i / 12.0);
-    }
-    */
+    //mp4toc64(fname, "out2.c64", 6.0);
+    C64FrameDataSource source("out.c64");
+    //MP4FrameDataSource source(fname, 6.0);
     
     wiringPiSetup();
     pinMode(0, INPUT);
-    pullUpDnControl(0, PUD_OFF);
+    pullUpDnControl(0, PUD_UP);
     
     pinMode(1, OUTPUT);
     pullUpDnControl(1, PUD_OFF);
-    fastDigitalWrite(1, LOW);
+    fastDigitalWrite(1, LOW); // reset MCU
     
     int spi = wiringPiSPISetup(0, 2000000);
+    
+    delayMicroseconds(100000);
+    fastDigitalWrite(1, HIGH);
     
     printf("checking for commands..\n");
     
@@ -686,16 +720,30 @@ int main(int argc, char **argv)
         // loop - check for updates
         unsigned char cmd;
         //printf("waiting for command\n");
+        
+        /*
+        int count = 0;
+        while (count < 3)
+        {
+            if (fastDigitalRead(0) == LOW)
+            {
+                count++;
+            }
+            else
+            {
+                count = 0;
+            }
+        }
+        */
+        
         while (fastDigitalRead(0) == HIGH)
         {
             delayMicroseconds(10);
         }
-        //printf("reading command\n");
+        
         
         // get byte
         int r = read(spi, &cmd, 1);
-        
-        //printf("got %d %02X\n", cmd, cmd);
         
         // start a frame
         if (cmd == 0)
@@ -706,8 +754,6 @@ int main(int argc, char **argv)
                 playbackTimer.start();
             }
             
-            //printf("here\n");
-            fastDigitalWrite(1, HIGH);
             playbackTimer.end();
             
             const unsigned char *frameChunk = source.getFrameChunk(cmd);
@@ -716,52 +762,12 @@ int main(int argc, char **argv)
             float currTime = playbackTimer.getCurrentElapsedTime();
             float currFps = (float)frames / currTime;
             
-            printf("fps %f\n", currFps);
-            frames++;
-            
-            /*
-            // get the timestamp for this frame
-            float pts = 0.0;
-            float curr_playback_time = playbackTimer.getCurrentElapsedTime();
-            
-            while (pts < curr_playback_time)
-            {
-                size_t res = fread(&pts, 1, sizeof(float), fp);
-                if (res != sizeof(float))
-                {
-                    printf("end of file\n");
-                    done = true;
-                    break; // done;
-                }
-                printf("realtime %f, file pts %f\n", playbackTimer.getCurrentElapsedTime(), pts);
-                
-                if (pts < curr_playback_time)
-                {
-                    printf("skipping.\n");
-                    // skip a frame
-                    fseek(fp, 9216, SEEK_CUR);
-                }
-            }
-            fread(buffer, 1, 1024, fp);
-            */
         }
-        else
+        else if (cmd < 9)
         {
-            /*
-            if (fp)
-                fread(buffer, 1, 1024, fp);
-            */
-            
             const unsigned char *frameChunk = source.getFrameChunk(cmd);
             int s = write(spi, frameChunk, 1024);
         }
-        
-        //printf("sending bytes\n");
-        // send bytes
-        //int s = write(spi, buffer, 1024);
-        //printf("done sending bytes\n");
-        
-        fastDigitalWrite(1, LOW);
         
         // wait for deassert
         while (fastDigitalRead(0) == LOW)
