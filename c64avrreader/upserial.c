@@ -177,6 +177,7 @@ int main(void)
             buffer[i] = spi_receive();
         }
         
+        PORTB = 0x01;
         PORTD = 0x80;
         // lower flag to indicate ready
         lower_flag();
@@ -197,16 +198,15 @@ int main(void)
                 val = PINA & (1<<PA1);
             } while (val != 0);
         }
+        output_byte(0x00);
+        set_data_input();
         
         // raise flag, done
         raise_flag();
-        PORTB = 0x01;
         
         // wait for PA0 high, master is done
         do {
             val = PINA & (1<<PA0);
         } while (val == 0);
-    
-        set_data_input();
     }
 }
