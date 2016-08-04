@@ -87,9 +87,14 @@ void send_command(unsigned char cmd)
     // wait for flag
     // wait for FLAG
 wait:
+    asm("lda %w", KEYPRESS);
+    asm("cmp #$3E"); // Q
+    asm("beq %g", quit);
+    
     asm("lda %w", 0xDD0D);
     asm("and #$10");
     asm("beq %g", wait);
+quit:
     
     signal_byte_not_ready();
 }
@@ -133,6 +138,10 @@ loadpage:
     
     // wait for FLAG
 wait:
+    asm("lda %w", KEYPRESS);
+    asm("cmp #$3E"); // Q
+    asm("beq %g", quit);
+    
     asm("lda %w", 0xDD0D);
     asm("and #$10");
     asm("beq %g", wait);
@@ -198,6 +207,8 @@ loop:
     asm("lda %w", 0xDD00);
     asm("ora #$04");
     asm("sta %w", 0xDD00);
+quit:
+    return;
 }
 
 int main(void)
@@ -267,6 +278,5 @@ int main(void)
     }
     
     set_vic_bank(0);
-    
     return 1;
 }
