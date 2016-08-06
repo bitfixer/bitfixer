@@ -17,12 +17,17 @@
 #                   default_serial = "avrdoper"
 # FUSES ........ Parameters for avrdude to flash the fuses appropriately.
 
-DEVICE     = atmega168
+MASTERPORT = $(shell cat master.port)
+SPAREPORT = $(shell cat spare.port)
+
+DEVICE     = atmega644
 CLOCK      = 8000000
-PROGRAMMER = -c stk500v2 -P /dev/tty.usbserial
-OBJECTS    = PETdisk.o FAT32.o IEEE488.o SD_routines.o SPI_routines.o UART_routines.o
+PROGRAMMER = -c stk500v2 -P $(MASTERPORT)
+OBJECTS    = PETpix2.o UART_routines.o
 #FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0x24:m
-FUSES      = -U efuse:w:0x00:m -U hfuse:w:0xdf:m -U lfuse:w:0xe2:m
+FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0xe2:m
+
+PORTS = $(shell ls /dev/tty.usb*)
 
 # ATMega8 fuse bits used above (fuse bits for other devices are different!):
 # Example for 8 MHz internal oscillator
@@ -50,10 +55,10 @@ FUSES      = -U efuse:w:0x00:m -U hfuse:w:0xdf:m -U lfuse:w:0xe2:m
 # Tune the lines below only if you know what you are doing:
 
 AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
-COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
+COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE) -std=gnu99
 
 # symbolic targets:
-all:	PETdisk.hex
+all:	PETpix2.hex
 
 .c.o:
 	$(COMPILE) -c $< -o $@
@@ -69,7 +74,7 @@ all:	PETdisk.hex
 	$(COMPILE) -S $< -o $@
 
 flash:	all
-	$(AVRDUDE) -U flash:w:PETdisk.hex
+	$(AVRDUDE) -U flash:w:PETpix2.hex
 
 fuse:
 	$(AVRDUDE) $(FUSES)
@@ -79,30 +84,36 @@ install: flash fuse
 
 # if you use a bootloader, change the command below appropriately:
 load: all
-	bootloadHID PETdisk.hex
+	bootloadHID PETpix2.hex
 
 clean:
-	rm -f PETdisk.hex PETdisk.elf $(OBJECTS)
+	rm -f PETpix2.hex PETpix2.elf $(OBJECTS)
 
 # file targets:
-PETdisk.elf: $(OBJECTS)
-	$(COMPILE) -o PETdisk.elf $(OBJECTS)
+PETpix2.elf: $(OBJECTS)
+	$(COMPILE) -o PETpix2.elf $(OBJECTS)
 
-PETdisk.hex: PETdisk.elf
-	rm -f PETdisk.heximage
-	avr-objcopy -j .text -j .data -O ihex PETdisk.elf PETdisk.hex
-	avr-size --format=avr --mcu=$(DEVICE) PETdisk.elf
+PETpix2.hex: PETpix2.elf
+	rm -f PETpix2.heximage
+	avr-objcopy -j .text -j .data -O ihex PETpix2.elf PETpix2.hex
+	avr-size --format=avr --mcu=$(DEVICE) PETpix2.elf
 # If you have an EEPROM section, you must also create a hex file for the
 # EEPROM and add it to the "flash" target.
 
-PETdisk.bin: PETdisk.elf
-	rm -f PETdisk.bin
-	avr-objcopy -j .text -j .data -O binary PETdisk.elf PETdisk.bin
-	avr-size --format=avr --mcu=$(DEVICE) PETdisk.elf
+PETpix2.bin: PETpix2.elf
+	rm -f PETpix2.bin
+	avr-objcopy -j .text -j .data -O binary PETpix2.elf PETpix2.bin
+	avr-size --format=avr --mcu=$(DEVICE) PETpix2.elf
 
 # Targets for code debugging and analysis:
-disasm:	PETdisk.elf
-	avr-objdump -d PETdisk.elf
+disasm:	PETpix2.elf
+	avr-objdump -d PETpix2.elf
 
 cpp:
-	$(COMPILE) -E PETdisk.c FAT32.c IEEE488.c SD_routines.c SPI_routines.c UART_routines.c
+	$(COMPILE) -E PETpix2.c UART_routines.c
+
+ports: 
+	python ../../shared/getports.py
+
+debug:
+	minicom -D $(SPAREPORT)
