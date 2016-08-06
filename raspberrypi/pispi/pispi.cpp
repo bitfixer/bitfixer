@@ -597,81 +597,6 @@ void mp4toc64(const char *mp4fname, const char *c64fname, float framerate)
     fclose(fp);
 }
 
-/*
-void mp4toc64(const char *mp4fname, const char *c64fname, float framerate)
-{
-    unsigned char rgb[320*200*3];
-    unsigned char mod_rgb[320*200*3];
-    unsigned char bitmap[320*200];
-    unsigned char colormap[1000];
-    unsigned char c64_bitmap[8000];
-    color c64_colors[16];
-    unsigned char temp[256];
-    memset(temp, 0, 256);
-    Timer timer;
-    
-    get_64_colors(c64_colors);
-    Decoder decoder;
-    decoder.init(mp4fname);
-    
-    FILE *fp = fopen(c64fname, "wb");
-    
-    float nextFrameTime = 0.0;
-    // decode all frames
-    bool done = false;
-    int frame = 0;
-    while (!done)
-    {
-        timer.start();
-        bool gotFrame = false;
-        float pts = 0.0;
-        while (!gotFrame && !done)
-        {
-            gotFrame = decoder.getFrameRGB(rgb, true, done, pts);
-        }
-        timer.end();
-        //timer.report("frame");
-        
-        if (gotFrame)
-        {
-            if (pts >= nextFrameTime)
-            {
-                nextFrameTime += (1.0/framerate);
-                printf("writing frame %d time %f next %f\n", frame++, pts, nextFrameTime);
-                
-                timer.start();
-                colormap_from_rgb(colormap, rgb, 320, 200, c64_colors);
-                timer.end();
-                //timer.report("colormap");
-                
-                timer.start();
-                bitmap_from_rgb(bitmap, rgb, colormap, mod_rgb, 320, 200, c64_colors);
-                timer.end();
-                //timer.report("bitmap");
-                
-                timer.start();
-                create_c64_bitmap(c64_bitmap, bitmap, 320, 200);
-                timer.end();
-                //timer.report("c64");
-                
-                // write to output file
-                fwrite(&pts, 1, sizeof(float), fp);
-                fwrite(colormap, 1, 1000, fp);
-                fwrite(temp, 1, 24, fp);
-                fwrite(c64_bitmap, 1, 8000, fp);
-                fwrite(temp, 1, 192, fp);
-            }
-            else
-            {
-                //printf("skipping frame time %f\n", pts);
-            }
-        }
-    }
-    
-    fclose(fp);
-}
-*/
-
 // test - watch for input
 int main(int argc, char **argv)
 {
@@ -692,8 +617,8 @@ int main(int argc, char **argv)
     memset(buffer, 0, 1024);
     
     // convert mp4
-    //mp4toc64(fname, "out2.c64", 6.0);
-    C64FrameDataSource source("out.c64");
+    mp4toc64(fname, "out3.c64", 6.0);
+    C64FrameDataSource source("out3.c64");
     //MP4FrameDataSource source(fname, 6.0);
     
     wiringPiSetup();
@@ -719,28 +644,11 @@ int main(int argc, char **argv)
     {
         // loop - check for updates
         unsigned char cmd;
-        //printf("waiting for command\n");
-        
-        /*
-        int count = 0;
-        while (count < 3)
-        {
-            if (fastDigitalRead(0) == LOW)
-            {
-                count++;
-            }
-            else
-            {
-                count = 0;
-            }
-        }
-        */
         
         while (fastDigitalRead(0) == HIGH)
         {
             delayMicroseconds(10);
         }
-        
         
         // get byte
         int r = read(spi, &cmd, 1);
