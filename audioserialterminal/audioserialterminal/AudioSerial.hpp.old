@@ -1,0 +1,204 @@
+//
+//  AudioSerial.hpp
+//  audioserialterminal
+//
+//  Created by Michael Hill on 1/27/16.
+//  Copyright © 2016 jaunt. All rights reserved.
+//
+
+#ifndef AudioSerial_hpp
+#define AudioSerial_hpp
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <mutex>
+
+template <class t> class CircularBuffer
+{
+public:
+    CircularBuffer(int size) : maxitems(size)
+    {
+        buffer = (t*)malloc(sizeof(t) * maxitems);
+    };
+    
+    ~CircularBuffer()
+    {
+        if (buffer)
+        {
+            free(buffer);
+            buffer = NULL;
+        }
+    }
+    
+    int getsize()
+    {
+        //std::lock_guard<std::mutex> guard(mutex);
+        //return size;
+        
+        return totalWriteIndex - totalReadIndex;
+    }
+    
+    void push(t val)
+    {
+        //std::lock_guard<std::mutex> guard(mutex);
+        buffer[writeindex] = val;
+        writeindex++;
+        if (writeindex >= maxitems)
+        {
+            writeindex = 0;
+        }
+        
+        //size++;
+        totalWriteIndex++;
+    }
+    
+    t pop()
+    {
+        //std::lock_guard<std::mutex> guard(mutex);
+        t val = buffer[readindex];
+        readindex++;
+        if (readindex >= maxitems)
+        {
+            readindex = 0;
+        }
+        
+        //size--;
+        totalReadIndex++;
+        
+        return val;
+    }
+    
+private:
+    int maxitems = 0;
+    t* buffer = NULL;
+    
+    int size = 0;
+    int readindex = 0;
+    int writeindex = 0;
+    long long totalReadIndex = 0;
+    long long totalWriteIndex = 0;
+    std::mutex mutex;
+};
+
+
+class AudioSerialPort
+{
+public:
+    AudioSerialPort(float sr, float baudrate)
+    {
+        // test: do oversampling
+        //input_samplerate = sr;
+        
+        float ovr_samplerate = sr * (float)oversampling;
+        ovr_samples_per_bit = ovr_samplerate / baudrate;
+        ovr_bits_per_sample = 1.0 / ovr_samples_per_bit;
+        
+        samplerate = sr;
+        samples_per_bit = samplerate / baudrate;
+        bits_per_sample = 1.0 / samples_per_bit;
+        buffer = new CircularBuffer<unsigned char>(32768);
+        inputbuffer = new CircularBuffer<unsigned char>(32768);
+        samples_remaining_in_bit = samples_per_bit;
+        
+        oversampling_buffer = (float *)malloc(sizeof(float) * max_input_buffer_size * oversampling);
+    };
+    
+    ~AudioSerialPort()
+    {
+        if (buffer)
+        {
+            delete buffer;
+            buffer = NULL;
+        }
+        
+        if (oversampling_buffer)
+        {
+            free(oversampling_buffer);
+            oversampling_buffer = NULL;
+        }
+    }
+    
+    void send(unsigned char *data, int length);
+    int recv(unsigned char *data, int length);
+    int recv_sync(unsigned char *data, int length, int timeout_ms = 200);
+    
+    void getaudio(float *samples, int numsamples);
+    void readaudio(float *samples, int numsamples);
+    
+private:
+    
+    void readAudioInternal(float *samples, int numsamples);
+    float getResampledValue(float *original, float time);
+    
+    typedef enum
+    {
+        SEARCHING,
+        READING,
+        NEXT_START_BIT
+    } readstate;
+    
+    typedef enum
+    {
+        IDLE,
+        STARTING,
+        ENDING,
+        SENDING
+    } writestate;
+    
+    typedef struct
+    {
+        float time;
+        bool rising;
+    } edge;
+    
+    //float input_samplerate = 48000.0;
+    int oversampling = 10;
+    float samplerate = 480000.0;
+    float baudrate = 19200.0;
+    double samples_per_bit = 0;
+    double bits_per_sample = 0;
+    
+    double ovr_samples_per_bit = 0;
+    double ovr_bits_per_sample = 0;
+    
+    CircularBuffer<unsigned char> *buffer = NULL;
+    CircularBuffer<unsigned char> *inputbuffer = NULL;
+    
+    unsigned char curr_byte = 0;
+    int bits_remaining = 0;
+    double samples_remaining_in_bit = 0;
+    int burst_samples_remaining = 0;
+    float curr_burst_sample = 1.0;
+    int starting_samples_remaining = 0;
+    int ending_samples_remaining = 0;
+    
+    int start_bit_search_samples = 0;
+    float last_start_bit_search_sample = 0.0;
+    
+    readstate current_state = SEARCHING;
+    writestate current_write_state = IDLE;
+    
+    unsigned char curr_input_byte;
+    unsigned char curr_input_bit;
+    float input_bit_buckets[10];
+    float input_bit_count[10];
+    float input_midpoints[10];
+    int curr_sample_in_input_byte;
+    float curr_min_sample = 0;
+    float curr_max_sample = 0;
+    
+    float max_undecayed_sample = 0;
+    float min_undecayed_sample = 0;
+    
+    float *oversampling_buffer = NULL;
+    int max_input_buffer_size = 1024;
+    
+    int start_count_samples = -1;
+    
+    int64_t inputSample = 0;
+    
+    
+    
+};
+
+#endif /* AudioSerial_hpp */
