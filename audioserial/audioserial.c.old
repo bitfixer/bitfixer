@@ -1,0 +1,190 @@
+/*
+    audioserial.c
+    Copyright (C) 2016 Michael Hill
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    
+    Contact the author at bitfixer@bitfixer.com
+    http://bitfixer.com
+*/
+
+#define F_CPU 8000000UL		//freq 8 MHz
+#define BAUD 20000
+#define MYUBRR F_CPU/16/BAUD-1
+//#define MYUBRR 25
+
+#include <avr/io.h>
+#include <util/delay.h>
+#include "UART_routines.h"
+
+void software_uart_send(unsigned char *string)
+{
+    // send over fake uart, using CPU timing to create 9600 baud
+    
+    unsigned char byte;
+    unsigned char bit = 0x00;
+    while (*string)
+    {
+        byte = *string;
+        // start bit
+        PORTC = 0x00;
+        _delay_us(104);
+        for (int i = 0; i < 8; i++)
+        {
+            bit = byte & 0x01;
+            PORTC = bit;
+            byte >>= 1;
+            
+            _delay_us(104);
+        }
+        
+        PORTC = 0x01;
+        _delay_us(104);
+        string++;
+    }
+}
+
+int main(void)
+{
+    uart0_init(MYUBRR);
+    transmitString("Hello World! 1234567\r\n");
+    
+    
+    // wait to receive serial packet
+    
+    // set port b to input
+    DDRB = 0x00;
+    
+    // set port C to output
+    DDRC = 0x01;
+    //PORTC = 0x01;
+    
+    //_delay_us(200);
+    //software_uart_send("Hello Poop\r\n");
+    
+    
+    int bytes_read = 0;
+    unsigned char val;
+    unsigned char message[513];
+    unsigned char bits[8];
+    
+    message[512] = 0;
+    // try using serial port directly
+    for (int i = 0; i < 512; i++)
+    {
+        message[i] = receiveByte();
+    }
+    
+    //transmitString("got the message!\n");
+    
+    software_uart_send(message);
+    
+    
+    /*
+    for (int i = 0; i < 512; i++)
+    {
+        transmitByte(message[i]);
+        //transmitHex(CHAR, message[i]);
+    }
+    */
+    
+    
+    
+    /*
+    
+    while (bytes_read < 256)
+    {
+        val = PINB;
+        val = val & 0x01;
+        PORTC = val;
+        
+        if (val == 0x01)
+        {
+            // need timing for bits
+            // wait for one bit duration
+            _delay_us(41.67);
+            PORTC = 0x00;
+            // get all the bits
+            for (int bit = 0; bit < 8; bit++)
+            {
+                // sample from the center of the bit
+                
+                
+//                _delay_us(20);
+//                PORTC = 0x01;
+//                val = PINB;
+//                bits[bit] = val & 0x01;
+//                _delay_us(21.67);
+//                PORTC = 0x00;
+                
+                PORTC = 0x01;
+                _delay_us(17.655);
+                PORTC = 0x00;
+                bits[bit] = 0;
+                for (int trials = 0; trials < 4; trials++)
+                {
+                    val = PINB;
+                    bits[bit] += (val & 0x01);
+                }
+                //PORTC = 0x01;
+                _delay_us(17.655);
+                
+                
+//                bits[bit] = 0;
+//                for (int trials = 0; trials < 10; trials++)
+//                {
+//                    _delay_us(2.467);
+//                    val = PINB;
+//                    val = val & 0x01;
+//                    bits[bit] += val;
+//                }
+            }
+            
+            
+            int read_byte = 0;
+            for (int bit = 7; bit >= 0; bit--)
+            {
+                read_byte = read_byte << 1;
+                //read_byte = read_byte | bits[bit];
+                
+                if (bits[bit] >= 2)
+                {
+                    read_byte = read_byte | 0x01;
+                }
+            }
+            
+            message[bytes_read] = read_byte;
+            bytes_read = bytes_read + 1;
+            
+            PORTC = 0x00;
+            
+            // wait for a zero
+            // stop bit
+            _delay_us(20);
+        }
+    }
+    
+    transmitString("HEEHEHEHEHEH\r\n");
+    
+    int b;
+    for (b = 0; b < bytes_read; b++)
+    {
+        //transmitByte('a');
+        transmitByte(message[b]);
+        //transmitHex(CHAR, message[b]);
+        //transmitString("\n");
+    }
+    */
+    
+}
