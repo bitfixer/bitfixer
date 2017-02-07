@@ -1,0 +1,57 @@
+#charset ascii
+#charset map " !" = 0xA0
+#charset map "#$%&" = 0xA3
+#charset map "'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~" = 0xA7
+
+#target bin
+#code HEADER,0x0100
+.byte 0x53
+.byte 0x53
+.byte 0xC3
+.byte 0x00
+.byte 0x00
+.byte 0xC3
+.byte 0x00
+.byte 0x00
+.byte 0xC3
+.byte 0x00
+.byte 0x00
+.byte 0xC3
+.byte 0x00
+.byte 0x00
+.byte 0xC3
+.byte 0x00
+.byte 0x00
+.byte 0xC3
+.byte 0x00
+.byte 0x00
+.byte 0xC3
+.byte 0x00
+.byte 0x00
+.byte 0x1F
+.byte 0x00
+.byte 0x01
+.byte 0xFF
+.byte 0x05
+.byte 0x00
+.byte 0x00
+.byte 0x00
+.byte 0x00
+#code OS,0x0120
+blah:   call 0x00E6
+        call 0x00F8
+        call 0x00F8
+        call 0x00F8
+        call 0x00F8
+        call 0x00F8
+        ld a,(TEXT)
+        call 0x00FA
+        ld a,(TEXT+1)
+        call 0x00FA
+loop:   jp loop
+#code TEXT
+.text "ABC"
+.align 0x0500
+#code JUMPER,0x0500
+go:     jp blah
+.align 256
