@@ -75,11 +75,25 @@ public:
         bool newFrame = false;
         
         // TEST
-        currpts = -1.0;
+        //currpts = -1.0;
         while (currpts < pts && fp)
         {
             newFrame = true;
-            size_t res = fread(&currpts, 1, sizeof(float), fp);
+            float thispts;
+            size_t res = fread(&thispts, 1, sizeof(float), fp);
+            
+            if (thispts < lastpts)
+            {
+                currpts += thispts;
+            }
+            else
+            {
+                float diff = thispts - lastpts;
+                currpts += diff;
+            }
+            lastpts = thispts;
+            
+            
             printf("res %d\n", res);
             if (res != sizeof(float))
             {
@@ -92,11 +106,11 @@ public:
             else
             {
                 // TEST
-                currpts = pts;
-                
+                //currpts = pts;
                 printf("currpts %f pts %f\n", currpts, pts);
                 if (currpts < pts)
                 {
+                    printf("skipping\n");
                     fseek(fp, 9216, SEEK_CUR);
                 }
             }
@@ -125,6 +139,7 @@ public:
 private:
     FILE *fp = NULL;
     float currpts = -1.0;
+    float lastpts = -1.0;
     int chunksize = 1024;
     unsigned char frame[9216];
 };
@@ -616,9 +631,17 @@ int main(int argc, char **argv)
     int frameSkip = 5;
     memset(buffer, 0, 1024);
     
+    if (argc == 3)
+    {
+        const char *outfname = argv[2];
+        mp4toc64(fname, outfname, 12.0);
+        printf("done.\n");
+        exit(1);
+    }
+    
     // convert mp4
-    mp4toc64(fname, "out3.c64", 6.0);
-    C64FrameDataSource source("out3.c64");
+    
+    C64FrameDataSource source(fname);
     //MP4FrameDataSource source(fname, 6.0);
     
     wiringPiSetup();

@@ -113,7 +113,7 @@ int main(void)
             for (i = 0; i < numBytes; i++)
             {
                 buffer[i] = receiveByte();
-                byte = receiveByte();
+                //byte = receiveByte();
             }
         }
         

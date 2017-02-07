@@ -112,7 +112,7 @@ disasm:	PETpix2.elf
 cpp:
 	$(COMPILE) -E PETpix2.c UART_routines.c
 
-ports: 
+ports:
 	python ../../shared/getports.py
 
 debug:
