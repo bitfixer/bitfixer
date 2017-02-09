@@ -3,7 +3,7 @@ all: clean prog audio wav
 play: all
 	afplay out.wav
 
-dgemu:
+dgemu: all
 	../dgemu/build/Debug/dgemu
 
 wav:
@@ -13,7 +13,9 @@ audio:
 	../dgtape/build/Debug/dgtape dgprog.bin
 
 prog:
-	zasm -uwy dgprog.asm dgprog.bin
+	zasm -uwy --reqcolon dgprog.asm dgprog_1.bin
+	python dglength.py dgprog_1.bin dgprog.bin
+	rm dgprog_1.bin
 
 clean:
 	rm -f *.wav

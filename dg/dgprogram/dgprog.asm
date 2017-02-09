@@ -31,7 +31,7 @@
 .byte 0x1F
 .byte 0x00
 .byte 0x01
-.byte 0xFF  ; end addr L
+.byte 0xFF  ; end addr L. Will be replaced by dglength.py
 .byte 0x05  ; end addr H
 .byte 0x00
 .byte 0x00
@@ -44,16 +44,16 @@ blah:   call 0x00E6
         call 0x00F8
         call 0x00F8
         call 0x00F8
-        ld a,(TEXT)
-        call 0x00FA     ; print a character
-        ld a,(TEXT+1)
-        call 0x00FA
-        ld a,(TEXT+2)
-        call 0x00FA
+        ;ld a,(TEXT)
+        ;call 0x00FA     ; print a character
+        ;ld a,(TEXT+1)
+        ;call 0x00FA
+        ;ld a,(TEXT+2)
+        ;call 0x00FA
         call _bbcc
-        ld a,(0x0400)
+        ;ld a,(0x0400)
         ;ld a,(TEXT+3)
-        call 0x00FA
+        ;call 0x00FA
 loop:   jp loop
 #code TEXT
 .text "XYCD"
@@ -72,9 +72,14 @@ go:     jp blah
 #data _INITIALIZED
 #data _DABS,*,0
 
-#code PADDING
-pad:    nop
-.align 256
+;#code PADDING
+;pad:    nop
+;.align 256
 
 #CFLAGS $CFLAGS --nostdinc -I/Users/gubbish/sdcc/include
 #include "dgprog.c"
+#include "/Users/gubbish/sdcc/lib/__moduchar.s"
+#include "/Users/gubbish/sdcc/lib/__divsint.s"
+;#include "/Users/gubbish/sdcc/lib/__divu8.s"
+#include "/Users/gubbish/sdcc/lib/__divu16.s"
+#include "/Users/gubbish/sdcc/lib/__uitoa.c"
