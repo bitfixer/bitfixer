@@ -38,22 +38,7 @@
 .byte 0x00
 .byte 0x00
 #code OS,0x0120
-blah:   call 0x00E6
-        call 0x00F8     ; insert blank space
-        call 0x00F8
-        call 0x00F8
-        call 0x00F8
-        call 0x00F8
-        ;ld a,(TEXT)
-        ;call 0x00FA     ; print a character
-        ;ld a,(TEXT+1)
-        ;call 0x00FA
-        ;ld a,(TEXT+2)
-        ;call 0x00FA
-        call _bbcc
-        ;ld a,(0x0400)
-        ;ld a,(TEXT+3)
-        ;call 0x00FA
+blah:   call _main
 loop:   jp loop
 #code TEXT
 .text "XYCD"
