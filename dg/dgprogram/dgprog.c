@@ -1,8 +1,11 @@
 #include <stdlib.h>
+//#include <math.h>
 
 //void printchar(unsigned char c);
-#define LINECTR 0x0140
-#define TEMP 0x0151
+#define LINECTR         0x0140
+#define TEMP            0x0151
+
+#define SCREENMEM       0x3800
 
 void clear()
 {
@@ -98,48 +101,66 @@ void delay(int count)
     }
 }
 
+void drawToScreen(unsigned char* scrbuf)
+{
+    clear();
+    print(scrbuf);
+}
+
 void main()
 {
     unsigned char* lctr;
-    unsigned int i;
-    unsigned int j;
+    unsigned char* scrbuf;
+    char i;
+    char j;
     unsigned char str[12];
-    unsigned char num = 123;
-    unsigned char ch;
+    char x, y;
+    unsigned char tt;
+    //float radius;
+    //float x, y;
     lctr = (unsigned char*)LINECTR;
-
-    clear();
-
-/*
-    print("X");
-    print("X");
-    print("X");
-    print("X");
-
-    ch = *lctr;
-    _uitoa(ch, str, 10);
-    print(str);
-
-    newline();
-
-    print("Y");
-    ch = *lctr;
-    _uitoa(ch, str, 10);
-    print(str);
-*/
-
-/*
-    for (j = 0; j < 100; j++)
+    scrbuf = (unsigned char*)SCREENMEM;
+    tt = 0;
+    while (1)
     {
-        print("y");
+        for (i = 0; i < 16; i++)
+        {
+            for (j = 0; j < 64; j++)
+            {
+                x = j - 32;
+                y = i - 8;
+
+                if (x < 0) x = -x;
+                if (y < 0) y = -y;
+
+                if (x < 7 && y < 7 && y == tt && x == tt)
+                {
+                    *scrbuf = '*';
+                }
+                else
+                {
+                    *scrbuf = ' ';
+                }
+
+                scrbuf++;
+            }
+        }
+
+
+        *scrbuf = 0;
+        scrbuf = (unsigned char*)SCREENMEM;
+
+        tt++;
+        if (tt >= 7)
+        {
+            tt = 0;
+        }
+
+        drawToScreen(scrbuf);
     }
 
-    ch = *lctr;
-    _uitoa(ch, str, 10);
-    print(str);
-*/
-
-
+    /*
+    clear();
     newline();
     for (j = 0; j < 10; j++)
     {
@@ -149,22 +170,9 @@ void main()
             print(str);
         }
         newline();
-        //clear();
     }
 
-    /*
-    while(1)
-    {
-        print("*** ");
-        ch = readchar();
-        _uitoa(ch, str, 10);
-        print(str);
-        delay(10000);
-        newline();
-    }
-    */
-
-
+    // read and echo a string
     print("Reading.");
     newline();
     while(1)
@@ -184,55 +192,11 @@ void main()
             str[0] = ch;
             str[1] = 0;
             print(str);
-            /*
-            print(" ");
-            _uitoa(ch, str, 10);
-            print(str);
-            newline();
-            */
         }
         while (ch != 0)
         {
             ch = readchar();
         }
     }
-
-
-/*
-    while(1)
-    {
-        ch = readchar();
-        _uitoa(ch, str, 10);
-        print(str);
-        newline();
-        delay(1000);
-    }
-*/
-
-    /*
-    while(1)
-    {
-        print("Reading..");
-        newline();
-        ch = 0;
-        while(ch == 0)
-        {
-            ch = readchar();
-            delay(10000);
-            print("***");
-            newline();
-        }
-
-        newline();
-        print("What's up, you typed ");
-        str[0] = ch;
-        str[1] = 0;
-        print(str);
-        print(" ");
-        _uitoa(ch, str, 10);
-        print(str);
-        newline();
-    }
     */
-
 }
