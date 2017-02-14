@@ -57,6 +57,18 @@ go:     jp blah
 #data _INITIALIZED
 #data _DABS,*,0
 
+;#code _HEAP
+;__sdcc_heap_start::
+;.ds 1023
+;#code _HEAP_END
+;__sdcc_heap_end::
+;.ds 1
+
+#code _HEAP
+__sdcc_heap_start::
+#code _HEAP_END, _HEAP+1024
+__sdcc_heap_end::
+
 ;#code PADDING
 ;pad:    nop
 ;.align 256
@@ -82,4 +94,9 @@ go:     jp blah
 ;#include "/Users/gubbish/sdcc/lib/__divsint.s"
 ;#include "/Users/gubbish/sdcc/lib/__divu8.s"
 ;#include "/Users/gubbish/sdcc/lib/__divu16.s"
-;#include "/Users/gubbish/sdcc/lib/__uitoa.c"
+#include "/Users/gubbish/sdcc/lib/__uitoa.c"
+#include "/Users/gubbish/sdcc/lib/__moduint.s"
+#include "/Users/gubbish/sdcc/lib/__divuint.s"
+#include "/Users/gubbish/sdcc/lib/_malloc.c"
+#include "/Users/gubbish/sdcc/lib/_free.c"
+;#include "/Users/gubbish/sdcc/lib/OTHER/heap .s"

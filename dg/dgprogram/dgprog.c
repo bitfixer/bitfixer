@@ -1,10 +1,11 @@
 #include <stdlib.h>
+#include "dgprog.h"
 //#include <math.h>
 
-//void printchar(unsigned char c);
+#define PROGRAM_LOADED_ADDR     0x0100
+
 #define LINECTR         0x0140
 #define TEMP            0x0151
-
 #define SCREENMEM       0x3800
 
 void clear()
@@ -60,7 +61,51 @@ unsigned char readchar()
         return 0;
     }
 
-    return (*temp & 0x7F);
+    //return (*temp & 0x7F);
+    return *temp;
+}
+
+unsigned char readchar_blocking()
+{
+    unsigned char ch;
+    unsigned char ret;
+    ch = 0;
+    while (ch == 0)
+    {
+        ch = readchar();
+    }
+
+    ret = ch & 0x7F;
+
+    while (ch != 0)
+    {
+        ch = readchar();
+    }
+
+    return ret;
+}
+
+// read string from keyboard
+// also echo the typed characters to the screen
+void readString(unsigned char* str)
+{
+    unsigned char cc[2];
+    unsigned char ch;
+    cc[1] = 0;
+    ch = readchar_blocking();
+    while (ch != 13)
+    {
+        *str = ch;
+        str++;
+        // echo the character
+        //printchar(ch);
+        cc[0] = ch;
+        print(cc);
+        ch = readchar_blocking();
+    }
+
+    *str = 0;
+    newline();
 }
 
 void newline()
@@ -78,7 +123,6 @@ void newline()
     *lctr = 0;
 }
 
-/*
 void printchar(unsigned char c)
 {
     c;
@@ -87,9 +131,15 @@ void printchar(unsigned char c)
     add	iy,sp
     ld	a,0 (iy)
     call #0x00FA
+
+    // increment line counter
+    ld a, (#LINECTR)
+    inc a
+    and a, #0x3F        ; mod 64
+    ld (#LINECTR), a     ; store line counter value
     __endasm;
 }
-*/
+
 void delay(int count)
 {
     int i;
@@ -103,9 +153,57 @@ void delay(int count)
 
 void drawToScreen(unsigned char* scrbuf)
 {
-    clear();
+    //clear();
     print(scrbuf);
 }
+
+void enableReset()
+{
+    // clear the program loaded marker, enabling reloading on
+    // warm boot
+    unsigned char* marker = (unsigned char*)PROGRAM_LOADED_ADDR;
+    *marker = 0;
+}
+
+/*
+void memtest()
+{
+    unsigned char str[10];
+    unsigned char* addr;
+    unsigned char* top;
+    unsigned char ch;
+    unsigned char test;
+    unsigned int result;
+    print("Memory test..");
+    newline();
+
+    addr = (unsigned char*)2048;
+    top = (unsigned char*)65535;
+
+    while (addr < top)
+    {
+        ch = 170;
+        test = 0;
+        *addr = 0;
+        *addr = ch;
+        test = *addr;
+
+        if (test != ch)
+        {
+            break;
+        }
+
+        addr++;
+        print(".");
+    }
+
+    result = (int)addr;
+    print("top was: ");
+    _uitoa(result, str, 10);
+    print(str);
+    newline();
+}
+*/
 
 void main()
 {
@@ -113,7 +211,8 @@ void main()
     unsigned char* scrbuf;
     char i;
     char j;
-    unsigned char str[12];
+    unsigned char ss[12];
+    unsigned char *str;
     char x, y;
     unsigned char tt;
     //float radius;
@@ -121,6 +220,23 @@ void main()
     lctr = (unsigned char*)LINECTR;
     scrbuf = (unsigned char*)SCREENMEM;
     tt = 0;
+
+    enableReset();
+    clear();
+
+    print("alloc test: ");
+    str = malloc(12);
+    _uitoa((unsigned int)str, ss, 10);
+    print(ss);
+    newline();
+    readString(str);
+    print("got: ");
+    print(str);
+    free(str);
+
+    //memtest();
+
+    /*
     while (1)
     {
         for (i = 0; i < 16; i++)
@@ -133,7 +249,8 @@ void main()
                 if (x < 0) x = -x;
                 if (y < 0) y = -y;
 
-                if (x < 7 && y < 7 && y == tt && x == tt)
+                if (x < 7 && y < 7 && (y == tt || (x == 6 && y < tt) ))
+                // && x == tt)
                 {
                     *scrbuf = '*';
                 }
@@ -158,6 +275,23 @@ void main()
 
         drawToScreen(scrbuf);
     }
+    */
+
+    /*
+    while(1)
+    {
+        print("Type a string:");
+        newline();
+        print(">");
+        readString(str);
+        print("you typed: ");
+        print(str);
+        newline();
+    }
+    */
+
+
+
 
     /*
     clear();
