@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include "dgprog.h"
 //#include <math.h>
@@ -222,6 +223,7 @@ void main()
     tt = 0;
 
     enableReset();
+    sdcc_heap_init();
     clear();
 
     print("alloc test: ");
