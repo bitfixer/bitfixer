@@ -1,7 +1,7 @@
-#charset ascii
-#charset map " !" = 0xA0
-#charset map "#$%&" = 0xA3
-#charset map "'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~" = 0xA7
+;#charset ascii
+;#charset map " !" = 0xA0
+;#charset map "#$%&" = 0xA3
+;#charset map "'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~" = 0xA7
 
 #target bin
 #code HEADER,0x0100
@@ -74,6 +74,12 @@ __sdcc_heap_end::
 ;.align 256
 
 #CFLAGS $CFLAGS --nostdinc -I/Users/gubbish/sdcc/include
+#include "printf_dg.c"
+#include "putchar.s"
+#include "/Users/gubbish/sdcc/lib/__ltoa.c"
+#include "/Users/gubbish/sdcc/lib/__ultoa.c"
+#include "/Users/gubbish/sdcc/lib/__modulong.c"
+#include "/Users/gubbish/sdcc/lib/__divulong.c"
 #include "dgprog.c"
 ;#include "/Users/gubbish/sdcc/lib/_sqrtf.c"
 ;#include "/Users/gubbish/sdcc/lib/___fseq.c"

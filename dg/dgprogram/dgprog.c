@@ -206,6 +206,7 @@ void memtest()
 }
 */
 
+/*
 void main()
 {
     unsigned char* lctr;
@@ -235,104 +236,21 @@ void main()
     print("got: ");
     print(str);
     free(str);
-
-    //memtest();
-
-    /*
-    while (1)
-    {
-        for (i = 0; i < 16; i++)
-        {
-            for (j = 0; j < 64; j++)
-            {
-                x = j - 32;
-                y = i - 8;
-
-                if (x < 0) x = -x;
-                if (y < 0) y = -y;
-
-                if (x < 7 && y < 7 && (y == tt || (x == 6 && y < tt) ))
-                // && x == tt)
-                {
-                    *scrbuf = '*';
-                }
-                else
-                {
-                    *scrbuf = ' ';
-                }
-
-                scrbuf++;
-            }
-        }
-
-
-        *scrbuf = 0;
-        scrbuf = (unsigned char*)SCREENMEM;
-
-        tt++;
-        if (tt >= 7)
-        {
-            tt = 0;
-        }
-
-        drawToScreen(scrbuf);
-    }
-    */
-
-    /*
-    while(1)
-    {
-        print("Type a string:");
-        newline();
-        print(">");
-        readString(str);
-        print("you typed: ");
-        print(str);
-        newline();
-    }
-    */
-
-
-
-
-    /*
+}
+*/
+void main()
+{
+    int x;
+    //printf_small("Hello! %d", x);
+    enableReset();
+    //sdcc_heap_init();
     clear();
-    newline();
-    for (j = 0; j < 10; j++)
+    //print("hey there");
+    //printf_test("%d test", x);
+    //tt("%d test");
+    for (x = 0; x < 10; x++)
     {
-        for (i = 0; i < 10; i++)
-        {
-            _uitoa(i, str, 10);
-            print(str);
-        }
+        printf_small("Hello! %d", x);
         newline();
     }
-
-    // read and echo a string
-    print("Reading.");
-    newline();
-    while(1)
-    {
-        ch = 0;
-        while(ch == 0)
-        {
-            ch = readchar();
-        }
-
-        if (ch == 13)
-        {
-            newline();
-        }
-        else
-        {
-            str[0] = ch;
-            str[1] = 0;
-            print(str);
-        }
-        while (ch != 0)
-        {
-            ch = readchar();
-        }
-    }
-    */
 }
