@@ -8,6 +8,8 @@
 
 #include <iostream>
 #include <math.h>
+#include "Image.hpp"
+#include "Ditherer.hpp"
 #include "spock.c"
 
 unsigned char c64_colors[] =
@@ -31,6 +33,26 @@ unsigned char c64_colors[] =
 };
 
 int num_64_colors = 16;
+
+unsigned char cga_colors[] =
+{
+    0,      0,      0,
+    255,    255,    255,
+    0x55,   0xFF,   0xFF,
+    0xFF,   0x55,   0xFF
+};
+
+int num_cga_colors = 4;
+
+unsigned char test_colors[] =
+{
+    0,      0,      0,
+    51,     51,     51,
+    0,      204,    85,
+    0,      0,      170
+};
+
+int num_test_colors = 4;
 
 float* createGrayscaleFromRGB(unsigned char* RGB, int width, int height)
 {
@@ -348,7 +370,41 @@ void writeImage(const char* fname, unsigned char* rgb, int width, int height)
 }
 
 int main(int argc, const char * argv[]) {
-    // insert code here...
+    
+    Palette c64palette(c64_colors, num_64_colors);
+    Palette cgaPalette(cga_colors, num_cga_colors);
+    Palette testPalette(test_colors, num_test_colors);
+    
+    Image spockImage(gimp_image.width, gimp_image.height, (unsigned char*)gimp_image.pixel_data);
+    //spockImage.writePPM("spockout.ppm");
+    
+    //Ditherer* fsDitherer = Ditherer::createNearestNeighborDitherer();
+    //Ditherer* fsDitherer = Ditherer::createFloydSteinbergDitherer();
+    Ditherer* fsDitherer = Ditherer::createC64Ditherer();
+    //Image* dithered = fsDitherer->createDitheredImageFromImageWithPalette(spockImage, c64palette);
+    //dithered->colorHistogram();
+    
+    //Image* dithered = fsDitherer->createDitheredImageFromImageWithPalette(spockImage, cgaPalette);
+    Image* dithered = fsDitherer->createDitheredImageFromImageWithPalette(spockImage, c64palette);
+    //Image* dithered = fsDitherer->createDitheredImageFromImageWithPalette(spockImage, testPalette);
+    //dithered->writePPM("spock_dith2.ppm");
+    //dithered->colorHistogram();
+    
+    
+    /*
+    dithered->writePPM("s_dithered_3.ppm");
+    
+    Ditherer* nnDitherer = Ditherer::createNearestNeighborDitherer();
+    Image* nnImage = nnDitherer->createDitheredImageFromImageWithPalette(spockImage, c64palette);
+    nnImage->writePPM("s_nn.ppm");
+    
+     
+    delete fsDitherer;
+    delete nnDitherer;
+    */
+    delete dithered;
+    
+    /*
     int numBytes = gimp_image.height * gimp_image.width * gimp_image.bytes_per_pixel;
     
     float *rgbf = createFloatRGBFromUnsignedChar((unsigned char*)gimp_image.pixel_data, gimp_image.width, gimp_image.height);
@@ -367,25 +423,6 @@ int main(int argc, const char * argv[]) {
     
     free(rgbf);
     free(rgb);
-    
-    /*
-    // create B&W version
-    float* bw = createGrayscaleFromRGB((unsigned char*)gimp_image.pixel_data,
-                                       (int)gimp_image.width,
-                                       (int)gimp_image.height);
-    
-    float* dither = createDitheredBWFromGrayscale(bw, gimp_image.width, gimp_image.height);
-    
-    unsigned char* rgb = createRGBFromGrayscale(bw, gimp_image.width, gimp_image.height);
-    unsigned char* rgb_dither = createRGBFromGrayscale(dither, gimp_image.width, gimp_image.height);
-    
-    writeImage("spockbw.data", rgb, gimp_image.width, gimp_image.height);
-    writeImage("spockdither.data", rgb_dither, gimp_image.width, gimp_image.height);
-    
-    free(bw);
-    free(rgb);
-    free(dither);
-    free(rgb_dither);
     */
      
     return 0;
