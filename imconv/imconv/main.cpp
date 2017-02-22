@@ -10,7 +10,7 @@
 #include <math.h>
 #include "Image.hpp"
 #include "Ditherer.hpp"
-#include "spock.c"
+#include "spock_narrow.c"
 
 unsigned char c64_colors[] =
 {
@@ -387,7 +387,7 @@ int main(int argc, const char * argv[]) {
     //Image* dithered = fsDitherer->createDitheredImageFromImageWithPalette(spockImage, cgaPalette);
     Image* dithered = fsDitherer->createDitheredImageFromImageWithPalette(spockImage, c64palette);
     //Image* dithered = fsDitherer->createDitheredImageFromImageWithPalette(spockImage, testPalette);
-    //dithered->writePPM("spock_dith2.ppm");
+    dithered->writePPM("spock_bb.ppm");
     //dithered->colorHistogram();
     
     

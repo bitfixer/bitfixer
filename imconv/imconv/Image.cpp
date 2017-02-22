@@ -153,8 +153,33 @@ Image::Image(int w, int h, unsigned char* pixels)
             Pixel* p = pixelAt(ww, hh);
             for (int c = 0; c < 3; c++)
             {
-                p->rgb[c] = (float)(*pp / 255.0);
+                //float pxval = (float)(*pp / 255.0) * boost;
+                //if (pxval > 1.0) pxval = 1.0;
+                float pxval = (float)(*pp / 255.0);
+                p->rgb[c] = pxval;
                 pp++;
+            }
+            
+            // apply boost to color portion
+            // find min rgb val
+            float min = 999.0;
+            for (int c = 0; c < 3; c++)
+            {
+                if (p->rgb[c] < min)
+                {
+                    min = p->rgb[c];
+                }
+            }
+            
+            // remove gray portion and boost color
+            for (int c = 0; c < 3; c++)
+            {
+                p->rgb[c] -= min;
+                p->rgb[c] *= boost;
+                p->rgb[c] += (min / boost);
+                
+                if (p->rgb[c] > 1.0)
+                    p->rgb[c] = 1.0;
             }
         }
     }
@@ -325,6 +350,20 @@ Pixel* Image::pixelAt(int w, int h) const
         return &pixels[h*width + w];
     else
         return NULL;
+}
+
+void Image::copyFromImageAtPosition(const Image& im, int xOffset, int yOffset)
+{
+    for (int y = 0; y < im.getHeight(); y++)
+    {
+        for (int x = 0; x < im.getWidth(); x++)
+        {
+            Pixel *dstPix = pixelAt(xOffset + x, yOffset + y);
+            Pixel *srcPix = im.pixelAt(x, y);
+            
+            dstPix->fromPixel(*srcPix);
+        }
+    }
 }
 
 void Image::writePPM(const char *fname)

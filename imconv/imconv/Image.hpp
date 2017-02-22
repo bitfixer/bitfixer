@@ -21,6 +21,13 @@ class Pixel
 {
 public:
     Pixel();
+    void fromPixel(const Pixel& pixel)
+    {
+        for (int c = 0; c < 3; c++)
+        {
+            rgb[c] = pixel.rgb[c];
+        }
+    }
     float rgb[3];
     int palette_index = -1;
 };
@@ -79,9 +86,11 @@ public:
     void getAvgColor(Color& color);
     void colorHistogram();
     float getErrorFromImage(const Image& im);
+    void copyFromImageAtPosition(const Image& im, int xOffset, int yOffset);
     
     ~Image();
 private:
+    float boost = 0.5;
     int width;
     int height;
     Pixel* pixels = NULL;
