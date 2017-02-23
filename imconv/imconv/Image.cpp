@@ -51,6 +51,21 @@ void Color::fromColor(const Color &color)
     }
 }
 
+void Color::getGrayAndColorComponents(Color &gray, Color &col)
+{
+    float minVal = 999.9;
+    for (int i = 0; i < 3; i++)
+    {
+        if (rgb[i] < minVal)
+        {
+            minVal = rgb[i];
+        }
+    }
+    
+    gray.set(minVal, minVal, minVal);
+    col.set(rgb[0]-minVal, rgb[1]-minVal, rgb[2]-minVal);
+}
+
 Palette::Palette()
 : Palette(NULL, 0)
 {
@@ -326,20 +341,50 @@ void Image::colorHistogram()
 
 float Image::getErrorFromImage(const Image &im)
 {
+    float grayError = 0.0;
+    float colorError = 0.0;
+    
     float err = 0.0;
+    Color pixColor[2];
+    Color gray[2];
+    Color col[2];
     for (int h = 0; h < height; h++)
     {
         for (int w = 0; w < width; w++)
         {
-            Pixel* p1 = pixelAt(w, h);
-            Pixel* p2 = im.pixelAt(w, h);
+            //Pixel* p1 = pixelAt(w, h);
+            //Pixel* p2 = im.pixelAt(w, h);
             
+            /*
             for (int c = 0; c < 3; c++)
             {
                 err += p1->rgb[c] * p2->rgb[c];
             }
+            */
+            
+            Pixel* p[2];
+            p[0] = pixelAt(w, h);
+            p[1] = im.pixelAt(w, h);
+            
+            for (int i = 0; i < 2; i++)
+            {
+                pixColor[i].fromPixel(*p[i]);
+                pixColor[i].getGrayAndColorComponents(gray[i], col[i]);
+            }
+            
+            float cdiff;
+            for (int c = 0; c < 3; c++)
+            {
+                cdiff = col[0].rgb[c] - col[1].rgb[c];
+                colorError += cdiff*cdiff;
+            }
+            
+            cdiff = gray[0].rgb[0] - gray[1].rgb[0];
+            grayError += 3.0 * (cdiff*cdiff);
         }
     }
+    
+    err = (1.4 * colorError) + (0.6 * grayError);
     return err;
 }
 

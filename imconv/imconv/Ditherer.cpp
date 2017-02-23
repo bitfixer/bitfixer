@@ -147,12 +147,16 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
                     if (useColors)
                     {
                         Image* ii = fsDitherer->createDitheredImageFromImageWithPalette(subImage, p);
+                        //ii->colorHistogram();
                         //Image* ii = ditherer->createDitheredImageFromImageWithPalette(subImage, p);
                         float err = ii->getErrorFromImage(subImage);
+                        
+                        /*
                         printf("testing with colors: %d: %f %f %f and %d: %f %f %f err: %f\n",
                                c1, pc1->rgb[0], pc1->rgb[1], pc1->rgb[2],
                                c2, pc2->rgb[0], pc2->rgb[1], pc2->rgb[2],
                                err);
+                        */
                         if (err < minError)
                         {
                             minError = err;
@@ -165,14 +169,14 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
                 }
             }
             
-            printf("block %d %d: min error %f: %d %d\n", xb, yb, minError, minErrorIndex[0], minErrorIndex[1]);
+            //printf("block %d %d: min error %f: %d %d\n", xb, yb, minError, minErrorIndex[0], minErrorIndex[1]);
             
             Color* pc;
             pc = palette.colorAtIndex(minErrorIndex[0]);
-            printf("color %d is %f %f %f\n", minErrorIndex[0], pc->rgb[0], pc->rgb[1], pc->rgb[2]);
+            //printf("color %d is %f %f %f\n", minErrorIndex[0], pc->rgb[0], pc->rgb[1], pc->rgb[2]);
             p.setColorAtIndex(*pc, 2);
             pc = palette.colorAtIndex(minErrorIndex[1]);
-            printf("color %d is %f %f %f\n", minErrorIndex[1], pc->rgb[0], pc->rgb[1], pc->rgb[2]);
+            //printf("color %d is %f %f %f\n", minErrorIndex[1], pc->rgb[0], pc->rgb[1], pc->rgb[2]);
             p.setColorAtIndex(*pc, 3);
             
             Image* ii = fsDitherer->createDitheredImageFromImageWithPalette(subImage, p);

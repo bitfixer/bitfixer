@@ -28,6 +28,7 @@ public:
             rgb[c] = pixel.rgb[c];
         }
     }
+    
     float rgb[3];
     int palette_index = -1;
 };
@@ -45,6 +46,8 @@ public:
         rgb[1] = g;
         rgb[2] = b;
     }
+    
+    void getGrayAndColorComponents(Color& gray, Color& col);
     
     float rgb[3];
 };
@@ -90,7 +93,7 @@ public:
     
     ~Image();
 private:
-    float boost = 0.5;
+    float boost = 1.0;
     int width;
     int height;
     Pixel* pixels = NULL;

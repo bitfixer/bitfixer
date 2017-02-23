@@ -10,7 +10,7 @@
 #include <math.h>
 #include "Image.hpp"
 #include "Ditherer.hpp"
-#include "spock_narrow.c"
+#include "spock_160x200.c"
 
 unsigned char c64_colors[] =
 {
