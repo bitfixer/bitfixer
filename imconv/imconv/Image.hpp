@@ -60,7 +60,7 @@ public:
     Palette(unsigned char* colorValues, int numColors);
     
     void setNumColors(int numColors);
-    void getClosestColorTo(const Color& inColor, Color& outColor, int& index) const;
+    void getClosestColorTo(const Color& inColor, Color& outColor, int& index, bool includeGrayscale = true) const;
     Color* colorAtIndex(int index) const;
     void setColorAtIndex(const Color& color, int index) const;
     int getNumColors() const
@@ -80,6 +80,7 @@ public:
     Image(int w, int h);
     Image(int w, int h, unsigned char* pixels);
     Image(const Image& im);
+    Image(const char* fname);
     
     void fromSubImage(const Image& im, int xOffset, int width, int yOffset, int height);
     Pixel* pixelAt (int w, int h) const;
@@ -97,6 +98,8 @@ private:
     int width;
     int height;
     Pixel* pixels = NULL;
+    
+    void initWithData(unsigned char* pixels);
 };
 
 #endif /* Image_hpp */

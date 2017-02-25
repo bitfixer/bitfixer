@@ -6,6 +6,8 @@
 //  Copyright © 2017 Michael Hill. All rights reserved.
 //
 
+#include <stdio.h>
+#include <stdlib.h>
 #include "Image.hpp"
 #include <map>
 #include <string>
@@ -114,19 +116,32 @@ void Palette::setNumColors(int numColors)
     colors = new Color[this->numColors];
 }
 
-void Palette::getClosestColorTo(const Color& inColor, Color& outColor, int& index) const
+void Palette::getClosestColorTo(const Color& inColor, Color& outColor, int& index, bool includeGrayscale) const
 {
     float lowestError = 999999.9;
     int lowestErrorIndex = -1;
     
     for (int i = 0; i < numColors; i++)
     {
+        bool useColor = true;
         Color* c = colorAtIndex(i);
-        float error = c->distanceFromColor(inColor);
-        if (error < lowestError)
+        
+        if (!includeGrayscale)
         {
-            lowestError = error;
-            lowestErrorIndex = i;
+            if (c->rgb[0] == c->rgb[1] && c->rgb[0] == c->rgb[2])
+            {
+                useColor = false;
+            }
+        }
+        
+        if (useColor)
+        {
+            float error = c->distanceFromColor(inColor);
+            if (error < lowestError)
+            {
+                lowestError = error;
+                lowestErrorIndex = i;
+            }
         }
     }
     
@@ -159,6 +174,11 @@ Pixel::Pixel() {}
 
 Image::Image(int w, int h, unsigned char* pixels)
 : Image(w,h)
+{
+    initWithData(pixels);
+}
+
+void Image::initWithData(unsigned char *pixels)
 {
     unsigned char* pp = pixels;
     for (int hh = 0; hh < height; hh++)
@@ -215,6 +235,91 @@ Image::Image(const Image& im)
             }
         }
     }
+}
+
+Image::Image(const char* fname)
+{
+    unsigned char temp[256];
+    FILE* fp = fopen(fname, "rb");
+    
+    fread(temp, 1, 2, fp);
+    if (temp[0] == 'P' && temp[1] == '6')
+    {
+        unsigned char ch = ' ';
+        unsigned char* strptr;
+        while (isspace(ch))
+        {
+            fread(&ch, 1, 1, fp);
+        }
+        
+        // check for comment
+        strptr = temp;
+        //fread(strptr, 1, 1, fp);
+        temp[0] = ch;
+        if (*strptr == '#')
+        {
+            // skip until newline
+            while (*strptr != '\n')
+            {
+                fread(strptr, 1, 1, fp);
+            }
+            
+            // read one more character
+            fread(strptr, 1, 1, fp);
+        }
+        
+        // read width, until whitespace
+        while (!isspace(*strptr))
+        {
+            strptr++;
+            fread(strptr, 1, 1, fp);
+        }
+        // terminate string
+        *strptr = 0;
+        
+        int ww = atoi((const char*)temp);
+        
+        // read height
+        strptr = temp;
+        memset(temp, 0, 256);
+        
+        fread(strptr, 1, 1, fp);
+        while (!isspace(*strptr))
+        {
+            strptr++;
+            fread(strptr, 1, 1, fp);
+        }
+        *strptr = 0;
+        
+        int hh = atoi((const char*)temp);
+        
+        // read maxval
+        strptr = temp;
+        memset(temp, 0, 256);
+        
+        fread(strptr, 1, 1, fp);
+        while (!isspace(*strptr))
+        {
+            strptr++;
+            fread(strptr, 1, 1, fp);
+        }
+        *strptr = 0;
+        
+        int maxval = atoi((const char*)temp);
+        
+        width = ww;
+        height = hh;
+        // allocate pixels
+        pixels = new Pixel[width*height];
+        
+        unsigned char* pixels = (unsigned char*)malloc(sizeof(unsigned char) * width * height * 3);
+        fread(pixels, 1, width * height * 3, fp);
+        
+        initWithData(pixels);
+        free(pixels);
+    }
+    
+    fclose(fp);
 }
 
 Image::Image(int w, int h)
