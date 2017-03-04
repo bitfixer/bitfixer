@@ -1,0 +1,93 @@
+This is libaudiotap (the Audiotap library). This provides a handy interface to
+* read TAP files (as specified in http://computerbrains.com/tapformat.html)
+* read DMP files produced by a DC2N
+  (http://www.luigidifraia.com/c64/dc2n/tech.html)
+* convert an audio signal to pulses, as a Commodore computer does when it
+  loads data from a Datassette tape deck
+* write TAP files
+* convert pulses to an audio signal, as a Commodore computer does when it
+  saves data to a Datassette tape deck
+
+In order to process audio signals, libaudiotap is able to dynamically load the
+following external libraries:
+* audiofile (http://www.68k.org/~michael/audiofile/) to read and write audio
+  files, including WAV
+* portaudio (http://www.portaudio.com/) to play and record from the sound card
+* libtapencoder, to detect pulses from audio signals
+* libtapdecoder, to create audio signals from pulses
+
+In order to build it from sources, you need a development environment
+including GNU make and a compiler. Unix systems typically have that, while, on
+Windows, it might be necessary to install MinGW (http://www.mingw.org/). If
+your development environment is set up, from a command prompt or terminal,
+type
+>make audiotap.dll
+or just
+>make
+to build the Windows DLL, or
+>make libaudiotap.so
+to build the Unix shared library.
+
+Modifiers can (and sometimes have to) be added to make's command line. Here
+are some:
+* CC: changes the compiler. Examples:
+  >make CC=gcc
+   needed if your installation does not provide cc.
+  >make CC=clang
+   if you want to use LLVM instead of gcc (and LLVM is installed).
+  >make CC=i586-mingw32msvc-gcc
+   if you are running Linux and you want to produce Windows DLLs (and you have
+   the MinGW cross-compiler installed)
+* DEBUG: set to 1 to create a debug build. Examples:
+  >make libaudiotap.so DEBUG=1
+* OPTIMISE: set to 1 to create an optimised build. Examples:
+  >make libaudiotap.so OPTIMISE=1
+* USE_RPATH: On Unix, dynamic libraries are searched in the
+  libraries' installation path. However, it is also possible to add a
+  search path at link time: this comes handy if you want the Audiotap library
+  to be able to find libtapencoder.so and libtapdecoder.so even if they are
+  not installed. In order to do so, set USE_RPATH to the directory where
+  libtapencoder.so and libtapdecoder.so are (absolute path recommended). This
+  is recommended for the development phase, the best way to deploy it is to
+  properly install libtapencoder.so and libtapdecoder.so in /usr/lib or
+  equivalent locations. Note: this is not necessary on Windows, because
+  Windows will find the DLL files if they are in the same directory as the
+  executable.
+  Example:
+  >make libaudiotap.so USE_RPATH=/path/to/libs
+* LINUX64BIT: set to 1 if you get the error 'relocation R_X86_64_32S against
+  `.rodata' can not be used when making a shared object; recompile with
+  -fPIC'. This may happen when building for Linux 64-bit. Example:
+   >make libaudiotap.so LINUX64BIT=1
+
+Overview of the architecture
+
+Read
+      +--------+                                                  +----------+
+      |        |<-------------------------------------------------| TAP file |
+      |        |                                                  +----------+
+      |        |
+      |        |                                                  +----------+
+      |        |<-------------------------------------------------| DMP file |
+      |Audiotap|                                                  +----------+
+      |        |
+      |library |                +-------------+    +---------+    +----------+
+      |        |                |             |<---|Audiofile|<---| WAV file |
+      |        |                |             |    +---------+    +----------+
+      |        |<---------------|libtapencoder|
+      |        |                |             |    +---------+    +----------+
+      |        |                |             |<---|Portaudio|<---|Sound card|
+      +--------+                +-------------+    +---------+    +----------+
+Write
+      +--------+                                                  +----------+
+      |        |------------------------------------------------->| TAP file |
+      |        |                                                  +----------+
+      |        |
+      |Audiotap|                +-------------+    +---------+    +----------+
+      |        |                |             |--->|Audiofile|--->| WAV file |
+      |library |                |             |    +---------+    +----------+
+      |        |--------------->|libtapdecoder|
+      |        |                |             |    +---------+    +----------+
+      |        |                |             |--->|Portaudio|--->|Sound card|
+      +--------+                +-------------+    +---------+    +----------+
+

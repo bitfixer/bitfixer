@@ -1,0 +1,26 @@
+LIBRARY      AUDIOTAP.DLL
+
+EXPORTS
+audiotap_initialize2
+audio2tap_open_from_file3
+audio2tap_from_soundcard4
+audio2tap_get_pulses
+audio2tap_get_total_len
+audio2tap_get_current_pos
+audio2tap_get_current_sound_level
+audio2tap_seek_to_beginning
+audio2tap_enable_disable_halfwaves
+audio2tap_is_eof
+audiotap_terminate
+audiotap_terminate_lib
+audiotap_is_terminated
+audio2tap_invert
+audio2tap_close
+tap2audio_open_to_soundcard4
+tap2audio_open_to_wavfile4
+tap2audio_open_to_tapfile3
+tap2audio_set_pulse
+tap2audio_enable_halfwaves
+tap2audio_pause
+tap2audio_resume
+tap2audio_close
