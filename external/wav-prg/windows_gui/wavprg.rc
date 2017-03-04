@@ -1,0 +1,251 @@
+/* WAV-PRG: a program for converting C64 tapes into files suitable
+ * for emulators and back.
+ *
+ * Copyright (c) Fabrizio Gennari, 2003-2012
+ *
+ * The program is distributed under the GNU General Public License.
+ * See file LICENSE.TXT for details.
+ *
+ * wavprg.rc : Windows resource file
+ */
+#include "resource.h"
+#include "version.h"
+#include <windows.h>
+
+VS_VERSION_INFO		VERSIONINFO
+  FILEVERSION		WAVPRG_MAJOR,WAVPRG_MINOR,WAVPRG_REV,0
+  PRODUCTVERSION	WAVPRG_MAJOR,WAVPRG_MINOR,WAVPRG_REV,0
+  FILEFLAGSMASK		VS_FFI_FILEFLAGSMASK
+#ifdef _DEBUG
+  FILEFLAGS		VS_FF_DEBUG | VS_FF_PRERELEASE
+#else
+  FILEFLAGS		VS_FF_PRERELEASE
+#endif
+  FILEOS		VOS__WINDOWS32
+  FILETYPE		VFT_APP
+  FILESUBTYPE		0
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904E4"
+    BEGIN
+      VALUE "CompanyName", "Fabrizio Gennari\0"
+      VALUE "FileDescription", "WAV-PRG, a program to read and write Commodore tapes\0"
+      VALUE "FileVersion", WAVPRG_VERSION "\0"
+      VALUE "InternalName", "wavprg\0"
+	  VALUE "LegalCopyright", "Copyright (C) 2003-2015 Fabrizio Gennari"
+      VALUE "OriginalFilename",	"wavprg.exe\0"
+      VALUE "ProductName",	"WAV-PRG\0"
+      VALUE "ProductVersion", WAVPRG_VERSION "\0"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x0809, 1252
+  END
+END
+
+IDD_ADVANCED DIALOG DISCARDABLE  0, 0, 201, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Advanced options"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,7,74,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,144,74,50,14
+    CONTROL         "A pulse is accepted if its distance from the closest measured pulse is less or equal than the given distance",
+                    IDC_LIMITED_INCREMENT,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,7,7,187,21
+    CONTROL         "A pulse is accepted if its distance from the average is less or equal than the given distance",
+                    IDC_LIMITED_DIST_FROM_AVG,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,7,30,187,21
+    EDITTEXT        IDC_DISTANCE,63,54,31,13,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Given distance",IDC_STATIC,7,54,50,13
+    CONTROL         "Spin1",IDC_CHANGE_DISTANCE,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_ARROWKEYS,98,54,
+                    13,13
+END
+
+IDD_STATUS DIALOG DISCARDABLE  0, 0, 185, 183
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Conversion status"
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Cancel",IDCANCEL,69,162,50,14
+    CONTROL         "Progress1",IDC_FILE_PROGRESS,"msctls_progress32",
+                    WS_BORDER,7,107,171,14
+    CONTROL         "Progress1",IDC_ENTRY_PROGRESS,"msctls_progress32",
+                    WS_BORDER,7,143,171,14
+    LTEXT           "Static",IDC_FILE_TEXT,7,94,171,8
+    LTEXT           "This entry's progress",IDC_ENTRY_TEXT,7,126,171,8
+    CONTROL         "Tree2",IDC_FOUND,"SysTreeView32",TVS_HASBUTTONS |
+                    TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP,
+                    10,10,166,81
+END
+
+IDD_T64_NAME DIALOG DISCARDABLE  0, 0, 186, 26
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "T64 internal name",IDC_STATIC,7,7,60,12,SS_CENTERIMAGE
+    EDITTEXT        IDC_T64_NAME,71,7,108,12,ES_AUTOHSCROLL
+END
+
+IDD_WAV2PRG DIALOGEX 0, 0, 229, 244
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+EXSTYLE WS_EX_ACCEPTFILES
+CAPTION "Conversion to PRG, P00 or T64"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,7,221,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,172,221,50,14
+    LTEXT           "F1: help",IDC_STATIC,100,225,30,12
+    COMBOBOX        IDC_PLUGINS,61,7,114,150,CBS_DROPDOWNLIST | WS_VSCROLL |
+                    WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "Advanced",IDC_ADVANCED_OPTIONS,184,7,37,12,WS_GROUP
+    PUSHBUTTON      "Change",IDC_CHANGE_PLUGIN_DIR,184,25,37,12,WS_GROUP
+    CONTROL         "File",IDC_FROM_FILE,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,13,57,95,9
+    CONTROL         "Sound card",IDC_FROM_SOUND,"Button",BS_AUTORADIOBUTTON,
+                    121,57,95,9
+    CONTROL         "Inverted waveform",IDC_INVERTED,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,13,88,75,11
+    EDITTEXT        IDC_MIN_HEIGHT,182,88,37,13,ES_AUTOHSCROLL | ES_NUMBER |
+                    WS_GROUP
+    COMBOBOX        IDC_CLOCK,49,110,59,83,CBS_DROPDOWNLIST | WS_VSCROLL |
+                    WS_GROUP | WS_TABSTOP
+    EDITTEXT        IDC_FREQ,182,104,37,13,ES_AUTOHSCROLL | ES_NUMBER |
+                    WS_DISABLED | WS_GROUP
+    CONTROL         "Test only",IDC_DO_NOT_SAVE,"Button",BS_AUTORADIOBUTTON |
+                    WS_GROUP | WS_TABSTOP,13,152,45,8
+    CONTROL         "Clean TAP",IDC_TO_TAP,"Button",BS_AUTORADIOBUTTON,13,
+                    163,50,8
+    CONTROL         "T64",IDC_TO_T64,"Button",BS_AUTORADIOBUTTON,13,174,29,8
+    CONTROL         "PRG",IDC_TO_PRG,"Button",BS_AUTORADIOBUTTON,13,185,31,8
+    CONTROL         "P00",IDC_TO_P00,"Button",BS_AUTORADIOBUTTON,13,196,29,8
+    CONTROL         "Include broken and incomplete files",IDC_BROKEN,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_GROUP | WS_TABSTOP,93,
+                    153,124,10
+    CONTROL         "Include all slow-loading blocks",IDC_INCLUDE_ALL,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_GROUP | WS_TABSTOP,93,
+                    165,124,10
+    PUSHBUTTON      "Change",IDC_CHANGE_CONVERSION_DIR,181,188,37,12,
+                    WS_DISABLED | WS_GROUP
+    EDITTEXT        IDC_CONVERSION_DIR,117,188,62,12,ES_AUTOHSCROLL |
+                    ES_READONLY | WS_DISABLED | WS_GROUP | NOT WS_TABSTOP
+    EDITTEXT        IDC_PLUGIN_DIR,61,25,114,12,ES_AUTOHSCROLL | ES_READONLY |
+                    NOT WS_TABSTOP
+    LTEXT           "Use loader",IDC_STATIC,7,7,50,9
+    LTEXT           "Plug-in directory",IDC_STATIC,7,26,50,9
+    GROUPBOX        "Origin",IDC_STATIC,7,44,214,25
+    GROUPBOX        "Advanced options (ignored if origin is a TAP file)",
+                    IDC_STATIC,7,74,214,63
+    LTEXT           "Sensitivity (0-100)",IDC_STATIC,111,88,57,15
+    LTEXT           "Input frequency (Hz) (only if origin is sound card)",
+                    IDC_STATIC,111,104,57,25
+    LTEXT           "Use clock",IDC_STATIC,13,110,36,10
+    GROUPBOX        "Destination",IDC_STATIC,7,143,214,71
+    LTEXT           "Folder for PRG/P00",IDC_STATIC,51,192,64,12
+END
+
+IDD_PRG2WAV DIALOGEX 60, 11, 189, 195
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+EXSTYLE WS_EX_ACCEPTFILES
+CAPTION "Conversion from PRG, P00 or T64"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "Output format",IDC_STATIC,6,6,177,80
+    CONTROL         "Fast",IDC_FAST,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,9,19,46,10
+    CONTROL         "Slow",IDC_SLOW,"Button",BS_AUTORADIOBUTTON,9,31,46,10
+    CONTROL         "Raw mode",IDC_RAW_MODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,48,50,10
+    EDITTEXT        IDC_THRESHOLD,137,25,39,14,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "",IDC_THRESHOLD_SPIN,"msctls_updown32",UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_NOTHOUSANDS,167,25,11,14
+    COMBOBOX        IDC_MACHINE_TO,45,69,133,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Machine",IDC_STATIC,9,71,32,8
+    LTEXT           "Average bit duration (clock cycles, 102-1600, 263: standard Turbo Tape)",IDC_STATIC,61,22,75,33
+    GROUPBOX        "Output to",IDC_STATIC,6,94,177,27
+    CONTROL         "TAP file",IDC_TO_TAP,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,11,105,54,10
+    CONTROL         "WAV file",IDC_TO_WAV,"Button",BS_AUTORADIOBUTTON,63,105,54,10
+    CONTROL         "Sound card",IDC_TO_SOUND,"Button",BS_AUTORADIOBUTTON,123,105,54,10
+    GROUPBOX        "Advanced options (ignored if output is TAP file)",IDC_STATIC,6,125,177,46
+    CONTROL         "Inverted waveform",IDC_INVERTED,"Button",BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,9,135,76,12
+    LTEXT           "Waveform",IDC_STATIC,85,135,44,12,0,WS_EX_RIGHT
+    COMBOBOX        IDC_WAVEFORM,133,135,48,45,CBS_DROPDOWNLIST | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Frequency (Hz)",IDC_STATIC,9,153,53,12
+    EDITTEXT        IDC_FREQ,58,152,32,12,ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT           "Volume (1-255)",IDC_STATIC,93,153,51,12
+    EDITTEXT        IDC_VOL,145,153,32,12,ES_AUTOHSCROLL | ES_NUMBER | WS_DISABLED
+    LTEXT           "F1: help",IDC_STATIC,80,179,30,12
+    PUSHBUTTON      "Cancel",IDCANCEL,134,175,49,15
+    PUSHBUTTON      "OK",IDOK,6,175,49,15
+END
+
+IDD_ABOUT DIALOGEX 0, 0, 155, 174
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "About WAV-PRG"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,52,153,50,14
+    CTEXT           "WAV-PRG 4.2.1",IDC_STATIC,0,7,155,8
+    CTEXT           "Copyright (C) Fabrizio Gennari 1998-2015",IDC_STATIC,0,
+                    18,155,8
+    CTEXT           "Distributed under the GNU General Public License: see file LICENSE.TXT",
+                    IDC_STATIC,0,28,155,21
+    RTEXT           "tapencoder.dll status",IDC_STATIC,4,50,70,19
+    RTEXT           "tapdecoder.dll status",IDC_STATIC,4,76,70,19
+    RTEXT           "portaudio.dll status",IDC_STATIC,3,102,70,19
+    RTEXT           "audiofile.dll status",IDC_STATIC,3,128,70,19
+    LTEXT           "",IDC_TAPENCODER_STATUS,81,50,70,19
+    LTEXT           "",IDC_TAPDECODER_STATUS,81,76,70,19
+    LTEXT           "",IDC_PABLIO_STATUS,81,102,70,19
+    LTEXT           "",IDC_AUDIOFILE_STATUS,81,128,70,19
+END
+
+IDD_CONTENTS DIALOG  0, 0, 285, 172
+STYLE DS_SETFONT | DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Image Contents ",IDC_STATIC,7,7,271,136
+    CONTROL         "List1",IDC_PREVIEW,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | LVS_AUTOARRANGE | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,15,37,257,97
+    LTEXT           "",IDC_FILE_TYPE,15,18,255,8
+    EDITTEXT        IDC_C64_NAME,113,150,158,13,ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT           "C64 name",IDC_STATIC,11,153,93,8
+END
+
+IDD_CHOOSE_TAP_VERSION DIALOG  0, 0, 177, 33
+STYLE DS_SETFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "TAP version",IDC_STATIC,7,11,42,8
+    COMBOBOX        IDC_CHOOSE_TAP_VERSION,63,7,107,32,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_PRG2WAV_STATUS DIALOG  0, 0, 180, 48
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Progress"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "",IDC_PRG2WAV_CURRENT,5,7,170,11
+    PUSHBUTTON      "Cancel",IDCANCEL,65,30,50,13
+    CONTROL         "Progress1",IDC_ENTRY_PROGRESS,"msctls_progress32",WS_BORDER,5,18,170,11
+    PUSHBUTTON      "Button1",IDC_PLAYPAUSE,7,30,18,18,BS_BITMAP | NOT WS_VISIBLE
+END
+
+IDD_MAIN DIALOG  0, 0, 210, 58
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "WAV-PRG"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,153,37,50,14,WS_GROUP
+    DEFPUSHBUTTON   "About",IDC_ABOUT,7,37,50,14,WS_GROUP
+    LTEXT           "F1: help",IDC_STATIC,90,41,30,12
+    CONTROL         "Convert a sound or a TAP or WAV file to PRG, P00 or T64",IDC_WAV2PRG,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,7,199,9
+    CONTROL         "Convert a PRG, P00 or T64 file to a sound or TAP or WAV",IDC_PRG2WAV,
+                    "Button",BS_AUTORADIOBUTTON,7,23,199,10
+END
+
+IDI_ICON                ICON    DISCARDABLE     "wavprg.ico"
+
+IDB_STOP                BITMAP                  "stop.bmp"
+IDB_PLAY                BITMAP                  "play.bmp"
+IDB_PAUSE               BITMAP                  "pause.bmp"
