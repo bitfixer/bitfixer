@@ -51,14 +51,20 @@ int main(int argc, const char * argv[]) {
     Timer timer;
     Palette c64palette(c64_colors, num_64_colors);
     Image inputImage(argv[1]);
+    int imWidth = inputImage.getWidth();
+    int imHeight = inputImage.getHeight();
+    Image halfImage(inputImage, imWidth / 2, imHeight);
     Ditherer* ditherer = Ditherer::createC64Ditherer();
     
     timer.start();
-    Image* dithered = ditherer->createDitheredImageFromImageWithPalette(inputImage, c64palette);
+    Image* dithered = ditherer->createDitheredImageFromImageWithPalette(halfImage, c64palette);
     double time = timer.getTime();
     
+    Image fullImage(*dithered, imWidth, imHeight);
     printf("Completed in %lf seconds.\n", time);
-    dithered->writePPM(argv[2]);
+    //fullImage.writePPM(argv[2]);
+    fullImage.writePPM(argv[2]);
+    
     delete ditherer;
     delete dithered;
     return 0;

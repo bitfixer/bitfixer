@@ -99,7 +99,8 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
     int yBlocks = image.getHeight() / 8;
     
     Image subImage(8,8);
-    Image* newImage = new Image(image.getWidth(), image.getHeight());
+    Image diffImage(8,8);
+    Image* newImage = new Image(image);
     Palette p(4);
     
     Color black;
@@ -111,7 +112,12 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
     p.setColorAtIndex(white, 1);
     
     Color avgColor;
+    Color nextColor;
     Color pColor;
+    Color pColor2;
+    Pixel diffPix;
+    
+    int* blockColors = (int*)calloc(sizeof(int), 2*yBlocks*xBlocks);
     
     for (int yb = 0; yb < yBlocks; yb++)
     {
@@ -119,6 +125,7 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
         {
             subImage.fromSubImage(image, xb * 8, 8, yb * 8, 8);
             /*
+            // METHOD 1 - full search
             float minError = 9999999.9;
             int minErrorIndex[2];
             for (int c1 = 2; c1 < palette.getNumColors(); c1++)
@@ -163,6 +170,7 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
             //*/
             
             /*
+            // Method 2 - find best color if that is the only color in the block
             // find first color
             int bestError = 99999999.9;
             int bestColor = -1;
@@ -193,6 +201,8 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
                 }
             }
             //*/
+            
+            // METHOD 3 - find first color by matching block's avg color
             subImage.getAvgColor(avgColor);
             int bestColor;
             palette.getClosestColorTo(avgColor, pColor, bestColor, false);
@@ -203,7 +213,7 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
             int minErrorIndex[2];
             int c1 = bestColor;
             Image** testImages;
-            testImages = (Image**)malloc(sizeof(Image*) * palette.getNumColors());
+            testImages = (Image**)calloc(sizeof(Image*), palette.getNumColors());
             
             for (int c2 = 2; c2 < palette.getNumColors(); c2++)
             {
@@ -225,8 +235,8 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
                 // TEST - disqualify grayscale
                 if (useColors)
                 {
-                    Image* ii = fsDitherer->createDitheredImageFromImageWithPalette(subImage, p);
-                    float err = ii->getErrorFromImage(subImage);
+                    testImages[c2] = fsDitherer->createDitheredImageFromImageWithPalette(subImage, p);
+                    float err = testImages[c2]->getErrorFromImage(subImage);
                     
                     if (err < minError)
                     {
@@ -234,11 +244,10 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
                         minErrorIndex[0] = c1;
                         minErrorIndex[1] = c2;
                     }
-                    
-                    delete ii;
                 }
             }
             //*/
+            
             
             Color* pc;
             pc = palette.colorAtIndex(minErrorIndex[0]);
@@ -246,14 +255,22 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
             pc = palette.colorAtIndex(minErrorIndex[1]);
             p.setColorAtIndex(*pc, 3);
             
-            Image* ii = fsDitherer->createDitheredImageFromImageWithPalette(subImage, p);
+            Image* ii = testImages[minErrorIndex[1]];
             
             // copy subimage into destination image
             newImage->copyFromImageAtPosition(*ii, xb*8, yb*8);
-            delete ii;
+            
+            for (int c = 0; c < palette.getNumColors(); c++)
+            {
+                if (testImages[c])
+                {
+                    delete testImages[c];
+                }
+            }
+            free(testImages);
         }
     }
-    
+     
     delete fsDitherer;
     return newImage;
 }

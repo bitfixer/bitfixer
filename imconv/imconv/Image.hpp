@@ -80,6 +80,7 @@ public:
     Image(int w, int h);
     Image(int w, int h, unsigned char* pixels);
     Image(const Image& im);
+    Image(const Image& im, int w, int h);
     Image(const char* fname);
     
     void fromSubImage(const Image& im, int xOffset, int width, int yOffset, int height);

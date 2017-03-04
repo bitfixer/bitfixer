@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		65ED46D61E5B8CBD00DEF53D /* Image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65ED46D41E5B8CBD00DEF53D /* Image.cpp */; };
 		65ED46D91E5BCE1F00DEF53D /* Ditherer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65ED46D71E5BCE1F00DEF53D /* Ditherer.cpp */; };
+		65ED46DC1E611DDA00DEF53D /* timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65ED46DB1E611DDA00DEF53D /* timer.cpp */; };
 		F9244E9E1E57AEAE00E87351 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9244E9D1E57AEAE00E87351 /* main.cpp */; };
 /* End PBXBuildFile section */
 
@@ -29,6 +30,7 @@
 		65ED46D51E5B8CBD00DEF53D /* Image.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Image.hpp; sourceTree = "<group>"; };
 		65ED46D71E5BCE1F00DEF53D /* Ditherer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Ditherer.cpp; sourceTree = "<group>"; };
 		65ED46D81E5BCE1F00DEF53D /* Ditherer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Ditherer.hpp; sourceTree = "<group>"; };
+		65ED46DB1E611DDA00DEF53D /* timer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = timer.cpp; path = ../../shared/timer.cpp; sourceTree = "<group>"; };
 		F9244E9A1E57AEAE00E87351 /* imconv */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = imconv; sourceTree = BUILT_PRODUCTS_DIR; };
 		F9244E9D1E57AEAE00E87351 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -44,6 +46,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		65ED46DA1E611DC800DEF53D /* shared */ = {
+			isa = PBXGroup;
+			children = (
+				65ED46DB1E611DDA00DEF53D /* timer.cpp */,
+			);
+			name = shared;
+			sourceTree = "<group>";
+		};
 		F9244E911E57AEAE00E87351 = {
 			isa = PBXGroup;
 			children = (
@@ -63,6 +73,7 @@
 		F9244E9C1E57AEAE00E87351 /* imconv */ = {
 			isa = PBXGroup;
 			children = (
+				65ED46DA1E611DC800DEF53D /* shared */,
 				F9244E9D1E57AEAE00E87351 /* main.cpp */,
 				65ED46D41E5B8CBD00DEF53D /* Image.cpp */,
 				65ED46D51E5B8CBD00DEF53D /* Image.hpp */,
@@ -132,6 +143,7 @@
 				F9244E9E1E57AEAE00E87351 /* main.cpp in Sources */,
 				65ED46D91E5BCE1F00DEF53D /* Ditherer.cpp in Sources */,
 				65ED46D61E5B8CBD00DEF53D /* Image.cpp in Sources */,
+				65ED46DC1E611DDA00DEF53D /* timer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -228,6 +240,7 @@
 		F9244EA21E57AEAE00E87351 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = ../shared;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -235,6 +248,7 @@
 		F9244EA31E57AEAE00E87351 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = ../shared;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

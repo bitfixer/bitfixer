@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "Image.hpp"
+#include "math.h"
 #include <map>
 #include <string>
 #include <list>
@@ -233,6 +234,28 @@ Image::Image(const Image& im)
             {
                 p->rgb[c] = in_p->rgb[c];
             }
+        }
+    }
+}
+
+Image::Image(const Image& im, int w, int h)
+: Image(w, h)
+{
+    // stretch / shrink input image to fit this image
+    float xscale = (float)im.getWidth() / (float)w;
+    float yscale = (float)im.getHeight() / (float)h;
+    
+    for (int y = 0; y < height; y++)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            int xcoord = floor((float)x * xscale);
+            int ycoord = floor((float)y * yscale);
+            
+            Pixel* p = pixelAt(x, y);
+            Pixel* srcp = im.pixelAt(xcoord, ycoord);
+            
+            p->fromPixel(*srcp);
         }
     }
 }
