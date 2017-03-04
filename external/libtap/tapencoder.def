@@ -1,0 +1,11 @@
+LIBRARY	"tapencoder"
+EXPORTS
+tapenc_init2
+tapenc_get_pulse
+tapenc_flush
+tapenc_get_max
+tapenc_get_last_trigger
+tapenc_invert
+tapenc_toggle_trigger_on_both_edges
+tapenc_set_silence_threshold
+tapenc_exit

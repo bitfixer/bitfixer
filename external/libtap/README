@@ -1,0 +1,53 @@
+This is libtap, a a suite consisting of:
+* tapencoder, a library for detection of zero-crossings of an audio signal
+* tapdecoder, a generator of variable-length waves
+
+Those libraries are distributed under the GNU Lesser General Public License.
+
+It is possible to build it using GNU make and a compiler such as gcc.
+Possible make targets are:
+* tapencoder.dll (Windows version of tapencoder)
+* tapdecoder.dll (Windows version of tapdecoder)
+* libtapencoder.so (Unix version of tapencoder)
+* libtapdecoder.so (Unix version of tapdecoder)
+
+On Windows, MinGW (http://mingw.org) provides the tools necessary to build it.
+On a command prompt which can access the MinGW tools, type
+
+make
+
+to build the default target, consisting of tapencoder.dll and tapdecoder.dll.
+On all platforms, you can explicitly state the targets on make's command line.
+
+Some modifiers:
+* CC: changes the compiler. Examples:
+  >make CC=gcc
+   needed if your installation does not provide cc.
+  >make CC=clang
+   if you want to use LLVM instead of gcc (and LLVM is installed).
+  >make CC=i586-mingw32msvc-gcc
+   if you are running Linux and you want to produce Windows DLLs (and you have
+   the MinGW cross-compiler installed)
+* WITH_SINE: set to 1 to build sine waves into tapdecoder, when using
+  glibc. Generation of sine waves requires a mathematical function whcih glibc
+  only provides in a separate library. If your platform does not use glibc
+  (e.g. Windows or Mac), this is not needed. Examples:
+  >make libtapdecoder.so WITH_SINE=1
+* CFLAGS: compiler flags
+  For example, gcc and LLVM accept -g to build debug versions, which can be
+  debugged using gdb. Examples:
+  >make libtapencoder.so libtapdecoder.so CFLAGS=-g
+   build debug versions of tapencoder and tapdecoder
+  >make libtapencoder.so CFLAGS='-g -fPIC'
+   When building for Linux 64-bit, the error
+   'relocation R_X86_64_PC32 against undefined symbol `free@@GLIBC_2.2.5' can
+   not be used when making a shared object; recompile with -fPIC' might
+   occur. You need to add -fPIC to the compiler flags to avoid that.
+* WITH_VERSION: set to 1 when creating Windows DLLs and want to add additional
+  metadata to the file, such as version number and description, that can be
+  seen by right-clicking on the file and choosing Properties, then Summary.
+  This needs the windres tool: if it has a non-standard name, the modifier
+  WINDRES can be used to specify the tool. Examples:
+  >make tapdecoder.dll WITH_VERSION=1
+  >make tapdecoder.dll CC=i586-mingw32msvc-gcc WINDRES=i586-mingw32msvc-windres WITH_VERSION=1
+  (the latter on Unix using the MinGW cross-compiler)

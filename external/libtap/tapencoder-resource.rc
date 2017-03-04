@@ -1,0 +1,32 @@
+#include <windows.h>
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 2,2,0,0
+ PRODUCTVERSION 2,2,0,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x0L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080904b0"
+        BEGIN
+            VALUE "CompanyName", "Fabrizio Gennari\0"
+            VALUE "FileDescription", "A library for detection of zero-crossings of an audio signal\0"
+            VALUE "InternalName", "tapencoder.dll"
+            VALUE "LegalCopyright", "Copyright (C) 2015 Fabrizio Gennari"
+            VALUE "OriginalFilename", "tapencoder.dll"
+            VALUE "ProductName", "tapencoder"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x809, 1200
+    END
+END
