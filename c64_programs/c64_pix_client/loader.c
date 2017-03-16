@@ -269,8 +269,8 @@ int main(void)
     val |= 0x08;
     *addr = val;
 
-    standardBitmapMode();
-    //multicolorBitmapMode();
+    //standardBitmapMode();
+    multicolorBitmapMode();
 
     memset((unsigned char *)base, 0, 8000);
     memset((unsigned char *)SCREENRAM, 0, 1000);
@@ -279,22 +279,37 @@ int main(void)
 
     currpage = 0;
     set_border_color(0);
-    //set_background_color(2);
+    set_background_color(0);
     set_vic_bank(1);
     //set_vic_bank(0);
 
-    /*
-    memset((unsigned char*)SCREENRAM, 0x0F, 1000);
+    
+    memset((unsigned char*)SCREENRAM, 0xFF, 1000);
 
+    /*
     for (i = 0; i < 128; i++)
     {
         addr = (unsigned char *)(base + i);
-        *addr = 0x06;
+        *addr = 0xC6;
     }
     */
-
+    
+    /*
+    for (i = 0; i < 8000; i++)
+    {
+        addr = (unsigned char *)(base + i);
+        *addr = 0xFF;
+    }
+    */
+    
+    val = 0;
+    for (i = 0; i < 1000; i++)
+    {
+        addr = (unsigned char*)(COLORRAM + i);
+        *addr = 0x11;
+    }
+    
     // send command
-    //for (i = 0; i < 60; i++)
     while (1)
     {
         // check for keypress

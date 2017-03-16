@@ -27,6 +27,7 @@ public:
         {
             rgb[c] = pixel.rgb[c];
         }
+        palette_index = pixel.palette_index;
     }
     
     float rgb[3];

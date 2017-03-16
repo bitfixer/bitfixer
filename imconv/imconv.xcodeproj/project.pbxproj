@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		65B43C931E7A178F0087A520 /* C64Image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65B43C911E7A178F0087A520 /* C64Image.cpp */; };
 		65ED46D61E5B8CBD00DEF53D /* Image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65ED46D41E5B8CBD00DEF53D /* Image.cpp */; };
 		65ED46D91E5BCE1F00DEF53D /* Ditherer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65ED46D71E5BCE1F00DEF53D /* Ditherer.cpp */; };
 		65ED46DC1E611DDA00DEF53D /* timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65ED46DB1E611DDA00DEF53D /* timer.cpp */; };
@@ -26,6 +27,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		65B43C911E7A178F0087A520 /* C64Image.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = C64Image.cpp; sourceTree = "<group>"; };
+		65B43C921E7A178F0087A520 /* C64Image.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = C64Image.hpp; sourceTree = "<group>"; };
 		65ED46D41E5B8CBD00DEF53D /* Image.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Image.cpp; sourceTree = "<group>"; };
 		65ED46D51E5B8CBD00DEF53D /* Image.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Image.hpp; sourceTree = "<group>"; };
 		65ED46D71E5BCE1F00DEF53D /* Ditherer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Ditherer.cpp; sourceTree = "<group>"; };
@@ -79,6 +82,8 @@
 				65ED46D51E5B8CBD00DEF53D /* Image.hpp */,
 				65ED46D71E5BCE1F00DEF53D /* Ditherer.cpp */,
 				65ED46D81E5BCE1F00DEF53D /* Ditherer.hpp */,
+				65B43C911E7A178F0087A520 /* C64Image.cpp */,
+				65B43C921E7A178F0087A520 /* C64Image.hpp */,
 			);
 			path = imconv;
 			sourceTree = "<group>";
@@ -143,6 +148,7 @@
 				F9244E9E1E57AEAE00E87351 /* main.cpp in Sources */,
 				65ED46D91E5BCE1F00DEF53D /* Ditherer.cpp in Sources */,
 				65ED46D61E5B8CBD00DEF53D /* Image.cpp in Sources */,
+				65B43C931E7A178F0087A520 /* C64Image.cpp in Sources */,
 				65ED46DC1E611DDA00DEF53D /* timer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

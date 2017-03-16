@@ -12,6 +12,7 @@
 #include "Ditherer.hpp"
 #include "spock.c"
 #include "timer.hpp"
+#include "C64Image.cpp"
 
 unsigned char c64_colors[] =
 {
@@ -58,11 +59,53 @@ int main(int argc, const char * argv[]) {
     
     timer.start();
     Image* dithered = ditherer->createDitheredImageFromImageWithPalette(halfImage, c64palette);
+    C64Image* c64im = (C64Image*)dithered;
+    
+    /*
+    for (int y = 0; y < c64im->getYBlocks(); y++)
+    {
+        for (int x = 0; x < c64im->getXBlocks(); x++)
+        {
+            int c1 = c64im->getBlockColor(x, y, 0);
+            int c2 = c64im->getBlockColor(x, y, 1);
+            
+            printf("block %d %d: colors %d %d\n", x, y, c1, c2);
+        }
+    }
+    printf("bgcolor %d fgcolor %d\n", c64im->bgcolor, c64im->fgcolor);
+    */
+    
+    int sbsize = c64im->getScreenBytesSize();
+    unsigned char* sb = (unsigned char*)malloc(sizeof(unsigned char) * sbsize);
+    c64im->getScreenBytes(sb);
+    
+    FILE *fp = fopen("screenbytes.c64", "wb");
+    
+    for (int i = 0; i < 30; i++)
+    {
+        float time = (float)i * 1.0/4.0;
+        unsigned char f = 0x00;
+        int rem = 8192 - sbsize;
+        fwrite(&time, 1, sizeof(float), fp);
+        for (int j = 0; j < 1024; j++)
+        {
+            fwrite(&f, 1, 1, fp);
+        }
+        fwrite(sb, 1, sbsize, fp);
+        
+        for (int j = 0; j < rem; j++)
+        {
+            fwrite(&f, 1, 1, fp);
+        }
+    }
+    
+    fclose(fp);
+    
+    
     double time = timer.getTime();
     
     Image fullImage(*dithered, imWidth, imHeight);
     printf("Completed in %lf seconds.\n", time);
-    //fullImage.writePPM(argv[2]);
     fullImage.writePPM(argv[2]);
     
     delete ditherer;

@@ -7,6 +7,7 @@
 //
 
 #include "Ditherer.hpp"
+#include "C64Image.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -98,9 +99,12 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
     int xBlocks = image.getWidth() / 8;
     int yBlocks = image.getHeight() / 8;
     
+    printf("xblocks %d yblocks %d\n", xBlocks, yBlocks);
+    
     Image subImage(8,8);
     Image diffImage(8,8);
-    Image* newImage = new Image(image);
+    //Image* newImage = new Image(image);
+    C64Image* newImage = new C64Image(image);
     Palette p(4);
     
     Color black;
@@ -110,6 +114,9 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
     
     p.setColorAtIndex(black, 0);
     p.setColorAtIndex(white, 1);
+    
+    newImage->bgcolor = 0;
+    newImage->fgcolor = 1;
     
     Color avgColor;
     Color nextColor;
@@ -246,8 +253,14 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
                     }
                 }
             }
-            //*/
             
+            // remember color selections
+            // TEMP
+            minErrorIndex[0] = 0;
+            minErrorIndex[1] = 0;
+            
+            newImage->setBlockColor(xb, yb, 0, minErrorIndex[0]);
+            newImage->setBlockColor(xb, yb, 1, minErrorIndex[1]);
             
             Color* pc;
             pc = palette.colorAtIndex(minErrorIndex[0]);
@@ -255,7 +268,9 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
             pc = palette.colorAtIndex(minErrorIndex[1]);
             p.setColorAtIndex(*pc, 3);
             
-            Image* ii = testImages[minErrorIndex[1]];
+            //Image* ii = testImages[minErrorIndex[1]];
+            Image* ii = fsDitherer->createDitheredImageFromImageWithPalette(subImage, p);
+            
             
             // copy subimage into destination image
             newImage->copyFromImageAtPosition(*ii, xb*8, yb*8);
@@ -268,6 +283,9 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
                 }
             }
             free(testImages);
+            
+            // temp
+            free(ii);
         }
     }
      
