@@ -19,10 +19,11 @@ class C64Image : public Image
 public:
     C64Image(const Image& im)
     : Image(im)
+    , xBlockSize(4)
+    , yBlockSize(8)
     {
-        //xBlocks = getWidth() / 8;
-        xBlocks = (getWidth()*2) / 8;
-        yBlocks = getHeight() / 8;
+        xBlocks = getWidth() / xBlockSize;
+        yBlocks = getHeight() / yBlockSize;
         blockColors = (int*)malloc(sizeof(int) * 2 * xBlocks * yBlocks);
     };
     
@@ -62,9 +63,26 @@ public:
         
     }
     
+    int getColorBytesSize()
+    {
+        return xBlocks * yBlocks;
+    }
+    
     void getColorBytes(unsigned char* bytes)
     {
-        
+        // 1000 byte color map
+        unsigned char* bptr = bytes;
+        for (int yb = 0; yb < yBlocks; yb++)
+        {
+            for (int xb = 0; xb < xBlocks; xb++)
+            {
+                unsigned char c1 = getBlockColor(xb, yb, 0);
+                unsigned char c2 = getBlockColor(xb, yb, 1);
+                unsigned char colorbyte = (c1 << 4) | c2;
+                *bptr = colorbyte;
+                bptr++;
+            }
+        }
     }
     
     /*
@@ -140,7 +158,60 @@ public:
             {
                 //printf("src %d = %d\n", h*width+w, src[h*width+w]);
                 
+                int xblock = w / xBlockSize;
+                int yblock = h / yBlockSize;
+                
                 Pixel* p = pixelAt(w, h);
+                
+                // determine bitmask based on the palette index
+                // bgcolor = 0x00
+                // fgcolor = 0x03
+                // block color 0 = 0x01
+                // block color 1 = 0x02
+                unsigned char mask = 0;
+                
+                if (p->palette_index == bgcolor)
+                {
+                    mask = 0x00;
+                }
+                else if (p->palette_index == fgcolor)
+                {
+                    mask = 0x03;
+                }
+                else if (p->palette_index == getBlockColor(xblock, yblock, 0))
+                {
+                    mask = 0x01;
+                }
+                else if (p->palette_index == getBlockColor(xblock, yblock, 1))
+                {
+                    mask = 0x02;
+                }
+                else
+                {
+                    printf("this should not happen.");
+                }
+                
+                // set bits in bitmap byte
+                int screen_width = w*2;
+                
+                int row = h / 8;
+                int c = screen_width / 8;
+                int line = h & 7;
+                int bit = 7 - (screen_width & 7);
+                int byte = row*320 + c*8 + line;
+                
+                unsigned char b = bytes[byte];
+                
+                // raise 2 bits (fg color)
+                bit--;
+                if (bit < 0)
+                    bit = 0;
+                
+                unsigned char shifted_mask = mask << bit;
+                b = b | shifted_mask;
+                bytes[byte] = b;
+                
+                /*
                 if (p->palette_index == 1)
                 {
                     int screen_width = w*2;
@@ -163,7 +234,7 @@ public:
                     b = b | mask;
                     bytes[byte] = b;
                 }
-                
+                */
                 
                 /*
                 if (src[h*width + w] == 1)
@@ -190,6 +261,9 @@ public:
     int bgcolor;
     int fgcolor;
 private:
+    int xBlockSize;
+    int yBlockSize;
+    
     int xBlocks;
     int yBlocks;
     int* blockColors;

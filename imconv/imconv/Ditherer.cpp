@@ -96,13 +96,16 @@ public:
 Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, const Palette &palette)
 {
     Ditherer* fsDitherer = createFloydSteinbergDitherer();
-    int xBlocks = image.getWidth() / 8;
-    int yBlocks = image.getHeight() / 8;
+    int blockWidth = 4;
+    int blockHeight = 8;
+    
+    int xBlocks = image.getWidth() / blockWidth;
+    int yBlocks = image.getHeight() / blockHeight;
     
     printf("xblocks %d yblocks %d\n", xBlocks, yBlocks);
     
-    Image subImage(8,8);
-    Image diffImage(8,8);
+    Image subImage(blockWidth,blockHeight);
+    Image diffImage(blockWidth,blockHeight);
     //Image* newImage = new Image(image);
     C64Image* newImage = new C64Image(image);
     Palette p(4);
@@ -123,6 +126,10 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
     Color pColor;
     Color pColor2;
     Pixel diffPix;
+    int pcolors[4];
+    
+    pcolors[0] = 0;
+    pcolors[1] = 1;
     
     int* blockColors = (int*)calloc(sizeof(int), 2*yBlocks*xBlocks);
     
@@ -130,7 +137,7 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
     {
         for (int xb = 0; xb < xBlocks; xb++)
         {
-            subImage.fromSubImage(image, xb * 8, 8, yb * 8, 8);
+            subImage.fromSubImage(image, xb * blockWidth, blockWidth, yb * blockHeight, blockHeight);
             /*
             // METHOD 1 - full search
             float minError = 9999999.9;
@@ -239,6 +246,7 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
                     p.setColorAtIndex(*pc2, 3);
                 }
                 
+                //printf("c2 %d\n", c2);
                 // TEST - disqualify grayscale
                 if (useColors)
                 {
@@ -256,8 +264,10 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
             
             // remember color selections
             // TEMP
-            minErrorIndex[0] = 0;
-            minErrorIndex[1] = 0;
+            //minErrorIndex[0] = 0;
+            //minErrorIndex[1] = 0;
+            
+            //printf("c1 %d c2 %d\n", minErrorIndex[0], minErrorIndex[1]);
             
             newImage->setBlockColor(xb, yb, 0, minErrorIndex[0]);
             newImage->setBlockColor(xb, yb, 1, minErrorIndex[1]);
@@ -268,12 +278,25 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
             pc = palette.colorAtIndex(minErrorIndex[1]);
             p.setColorAtIndex(*pc, 3);
             
-            //Image* ii = testImages[minErrorIndex[1]];
-            Image* ii = fsDitherer->createDitheredImageFromImageWithPalette(subImage, p);
+            pcolors[2] = minErrorIndex[0];
+            pcolors[3] = minErrorIndex[1];
             
+            Image* ii = testImages[minErrorIndex[1]];
+            //Image* ii = fsDitherer->createDitheredImageFromImageWithPalette(subImage, p);
+            
+            // map to full c64 palette
+            for (int y = 0; y < ii->getHeight(); y++)
+            {
+                for (int x = 0; x < ii->getWidth(); x++)
+                {
+                    Pixel* p = ii->pixelAt(x, y);
+                    int c64_palette_color = pcolors[p->palette_index];
+                    p->palette_index = c64_palette_color;
+                }
+            }
             
             // copy subimage into destination image
-            newImage->copyFromImageAtPosition(*ii, xb*8, yb*8);
+            newImage->copyFromImageAtPosition(*ii, xb*blockWidth, yb*blockHeight);
             
             for (int c = 0; c < palette.getNumColors(); c++)
             {
@@ -285,7 +308,7 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
             free(testImages);
             
             // temp
-            free(ii);
+            //free(ii);
         }
     }
      

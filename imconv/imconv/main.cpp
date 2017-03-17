@@ -79,6 +79,15 @@ int main(int argc, const char * argv[]) {
     unsigned char* sb = (unsigned char*)malloc(sizeof(unsigned char) * sbsize);
     c64im->getScreenBytes(sb);
     
+    unsigned char* cb = (unsigned char*)malloc(sizeof(unsigned char) * 1024);
+    c64im->getColorBytes(cb);
+    
+    /*
+    FILE* fp = fopen("screenbytes.bin", "wb");
+    fwrite(sb, 1, sbsize, fp);
+    fclose(fp);
+    */
+    
     FILE *fp = fopen("screenbytes.c64", "wb");
     
     for (int i = 0; i < 30; i++)
@@ -87,10 +96,17 @@ int main(int argc, const char * argv[]) {
         unsigned char f = 0x00;
         int rem = 8192 - sbsize;
         fwrite(&time, 1, sizeof(float), fp);
+        
+        /*
         for (int j = 0; j < 1024; j++)
         {
             fwrite(&f, 1, 1, fp);
         }
+        */
+        
+        // color bytes
+        fwrite(cb, 1, 1024, fp);
+        
         fwrite(sb, 1, sbsize, fp);
         
         for (int j = 0; j < rem; j++)
@@ -98,9 +114,7 @@ int main(int argc, const char * argv[]) {
             fwrite(&f, 1, 1, fp);
         }
     }
-    
     fclose(fp);
-    
     
     double time = timer.getTime();
     
