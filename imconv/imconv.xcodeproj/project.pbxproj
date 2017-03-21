@@ -27,6 +27,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		659F22ED1E7F259D000F8FCB /* StringTools.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = StringTools.h; path = ../../shared/StringTools.h; sourceTree = "<group>"; };
 		65B43C911E7A178F0087A520 /* C64Image.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = C64Image.cpp; sourceTree = "<group>"; };
 		65B43C921E7A178F0087A520 /* C64Image.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = C64Image.hpp; sourceTree = "<group>"; };
 		65ED46D41E5B8CBD00DEF53D /* Image.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Image.cpp; sourceTree = "<group>"; };
@@ -53,6 +54,7 @@
 			isa = PBXGroup;
 			children = (
 				65ED46DB1E611DDA00DEF53D /* timer.cpp */,
+				659F22ED1E7F259D000F8FCB /* StringTools.h */,
 			);
 			name = shared;
 			sourceTree = "<group>";

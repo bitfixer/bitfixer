@@ -63,6 +63,27 @@ public:
         
     }
     
+    int getC64FrameSize()
+    {
+        int c64FrameSize = sizeof(float) + 1024 + 8192;
+        return c64FrameSize;
+    }
+    
+    void getC64Frame(void *bytes, float pts)
+    {
+        memset(bytes, 0, getC64FrameSize());
+        
+        unsigned char* byteptr = (unsigned char*)bytes;
+        float* timestamp = (float*)byteptr;
+        printf("pts is %f\n", pts);
+        *timestamp = pts;
+        byteptr += sizeof(float);
+        
+        getColorBytes(byteptr);
+        byteptr += 1024;
+        getScreenBytes(byteptr);
+    }
+    
     int getColorBytesSize()
     {
         return xBlocks * yBlocks;
@@ -84,61 +105,6 @@ public:
             }
         }
     }
-    
-    /*
-     void create_c64_bitmap(unsigned char *dest, unsigned char *src, int width, int height)
-     {
-     int c64bytes = (width/8) * (height/8) * 8;
-     // clear
-     memset(dest, 0, c64bytes);
-     
-     for (int h = 0; h < height; h++)
-     {
-     for (int w = 0; w < width; w++)
-     {
-     //printf("src %d = %d\n", h*width+w, src[h*width+w]);
-     if (src[h*width + w] == 1)
-     {
-     int row = h/8;
-     int c = w/8;
-     int line = h & 7;
-     int bit = 7 - (w & 7);
-     int byte = row*320 + c*8 + line;
-     
-     //printf("h %d w %d: row %d col %d line %d bit %d byte %d\n",
-     //       h,w,row,c,line,bit,byte);
-     
-     unsigned char b = dest[byte];
-     unsigned char mask = 1 << bit;
-     b = b | mask;
-     dest[byte] = b;
-     }
-     }
-     }
-     }
-    */
-    
-    /*
-    void colormap_from_rgb(unsigned char *colormap, unsigned char *rgb, int width, int height, color *colors)
-    {
-        int rows = height/8;
-        int columns = width/8;
-        
-        for (int r = 0; r < rows; r++)
-        {
-            for (int c = 0; c < columns; c++)
-            {
-                int x = c*8;
-                int y = r*8;
-                int colormap_index = r*columns + c;
-                
-                unsigned char colorbyte = color_byte_for_block(rgb, x, y, width, height, colors);
-                colormap[colormap_index] = colorbyte;
-            }
-        }
-        //printf("got colormap\n");
-    }
-    */
     
     int getScreenBytesSize()
     {
@@ -210,50 +176,6 @@ public:
                 unsigned char shifted_mask = mask << bit;
                 b = b | shifted_mask;
                 bytes[byte] = b;
-                
-                /*
-                if (p->palette_index == 1)
-                {
-                    int screen_width = w*2;
-                    //int screen_width = w;
-                    
-                    int row = h / 8;
-                    int c = screen_width / 8;
-                    int line = h & 7;
-                    int bit = 7 - (screen_width & 7);
-                    int byte = row*320 + c*8 + line;
-                    
-                    unsigned char b = bytes[byte];
-                    
-                    // raise 2 bits (fg color)
-                    bit--;
-                    if (bit < 0)
-                        bit = 0;
-                    
-                    unsigned char mask = 0x03 << bit;
-                    b = b | mask;
-                    bytes[byte] = b;
-                }
-                */
-                
-                /*
-                if (src[h*width + w] == 1)
-                {
-                    int row = h/8;
-                    int c = w/8;
-                    int line = h & 7;
-                    int bit = 7 - (w & 7);
-                    int byte = row*320 + c*8 + line;
-                    
-                    //printf("h %d w %d: row %d col %d line %d bit %d byte %d\n",
-                    //       h,w,row,c,line,bit,byte);
-                    
-                    unsigned char b = dest[byte];
-                    unsigned char mask = 1 << bit;
-                    b = b | mask;
-                    dest[byte] = b;
-                }
-                */
             }
         }
     }

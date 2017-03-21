@@ -545,7 +545,6 @@ void Image::writePPM(const char *fname)
     
     // write ppm header
     fprintf(fp, "P6 %d %d 255\n", width, height);
-    
     for (int hh = 0; hh < height; hh++)
     {
         for (int ww = 0; ww < width; ww++)
