@@ -7,9 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		65B43C931E7A178F0087A520 /* C64Image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65B43C911E7A178F0087A520 /* C64Image.cpp */; };
-		65ED46D61E5B8CBD00DEF53D /* Image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65ED46D41E5B8CBD00DEF53D /* Image.cpp */; };
-		65ED46D91E5BCE1F00DEF53D /* Ditherer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65ED46D71E5BCE1F00DEF53D /* Ditherer.cpp */; };
+		65B871961E824649008DA500 /* Image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65B871911E824649008DA500 /* Image.cpp */; };
+		65B871971E824649008DA500 /* Ditherer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65B871931E824649008DA500 /* Ditherer.cpp */; };
+		65B871981E824649008DA500 /* C64Image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65B871951E824649008DA500 /* C64Image.cpp */; };
 		65ED46DC1E611DDA00DEF53D /* timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65ED46DB1E611DDA00DEF53D /* timer.cpp */; };
 		F9244E9E1E57AEAE00E87351 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9244E9D1E57AEAE00E87351 /* main.cpp */; };
 /* End PBXBuildFile section */
@@ -28,12 +28,13 @@
 
 /* Begin PBXFileReference section */
 		659F22ED1E7F259D000F8FCB /* StringTools.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = StringTools.h; path = ../../shared/StringTools.h; sourceTree = "<group>"; };
-		65B43C911E7A178F0087A520 /* C64Image.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = C64Image.cpp; sourceTree = "<group>"; };
-		65B43C921E7A178F0087A520 /* C64Image.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = C64Image.hpp; sourceTree = "<group>"; };
-		65ED46D41E5B8CBD00DEF53D /* Image.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Image.cpp; sourceTree = "<group>"; };
-		65ED46D51E5B8CBD00DEF53D /* Image.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Image.hpp; sourceTree = "<group>"; };
-		65ED46D71E5BCE1F00DEF53D /* Ditherer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Ditherer.cpp; sourceTree = "<group>"; };
-		65ED46D81E5BCE1F00DEF53D /* Ditherer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Ditherer.hpp; sourceTree = "<group>"; };
+		65B8718F1E8245C2008DA500 /* c64_colors.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = c64_colors.h; path = ../../shared/c64_colors.h; sourceTree = "<group>"; };
+		65B871901E824649008DA500 /* Image.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Image.hpp; path = ../../shared/Image.hpp; sourceTree = "<group>"; };
+		65B871911E824649008DA500 /* Image.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Image.cpp; path = ../../shared/Image.cpp; sourceTree = "<group>"; };
+		65B871921E824649008DA500 /* Ditherer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Ditherer.hpp; path = ../../shared/Ditherer.hpp; sourceTree = "<group>"; };
+		65B871931E824649008DA500 /* Ditherer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Ditherer.cpp; path = ../../shared/Ditherer.cpp; sourceTree = "<group>"; };
+		65B871941E824649008DA500 /* C64Image.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = C64Image.hpp; path = ../../shared/C64Image.hpp; sourceTree = "<group>"; };
+		65B871951E824649008DA500 /* C64Image.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = C64Image.cpp; path = ../../shared/C64Image.cpp; sourceTree = "<group>"; };
 		65ED46DB1E611DDA00DEF53D /* timer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = timer.cpp; path = ../../shared/timer.cpp; sourceTree = "<group>"; };
 		F9244E9A1E57AEAE00E87351 /* imconv */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = imconv; sourceTree = BUILT_PRODUCTS_DIR; };
 		F9244E9D1E57AEAE00E87351 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -53,8 +54,15 @@
 		65ED46DA1E611DC800DEF53D /* shared */ = {
 			isa = PBXGroup;
 			children = (
+				65B871901E824649008DA500 /* Image.hpp */,
+				65B871911E824649008DA500 /* Image.cpp */,
+				65B871921E824649008DA500 /* Ditherer.hpp */,
+				65B871931E824649008DA500 /* Ditherer.cpp */,
+				65B871941E824649008DA500 /* C64Image.hpp */,
+				65B871951E824649008DA500 /* C64Image.cpp */,
 				65ED46DB1E611DDA00DEF53D /* timer.cpp */,
 				659F22ED1E7F259D000F8FCB /* StringTools.h */,
+				65B8718F1E8245C2008DA500 /* c64_colors.h */,
 			);
 			name = shared;
 			sourceTree = "<group>";
@@ -80,12 +88,6 @@
 			children = (
 				65ED46DA1E611DC800DEF53D /* shared */,
 				F9244E9D1E57AEAE00E87351 /* main.cpp */,
-				65ED46D41E5B8CBD00DEF53D /* Image.cpp */,
-				65ED46D51E5B8CBD00DEF53D /* Image.hpp */,
-				65ED46D71E5BCE1F00DEF53D /* Ditherer.cpp */,
-				65ED46D81E5BCE1F00DEF53D /* Ditherer.hpp */,
-				65B43C911E7A178F0087A520 /* C64Image.cpp */,
-				65B43C921E7A178F0087A520 /* C64Image.hpp */,
 			);
 			path = imconv;
 			sourceTree = "<group>";
@@ -148,9 +150,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				F9244E9E1E57AEAE00E87351 /* main.cpp in Sources */,
-				65ED46D91E5BCE1F00DEF53D /* Ditherer.cpp in Sources */,
-				65ED46D61E5B8CBD00DEF53D /* Image.cpp in Sources */,
-				65B43C931E7A178F0087A520 /* C64Image.cpp in Sources */,
+				65B871961E824649008DA500 /* Image.cpp in Sources */,
+				65B871981E824649008DA500 /* C64Image.cpp in Sources */,
+				65B871971E824649008DA500 /* Ditherer.cpp in Sources */,
 				65ED46DC1E611DDA00DEF53D /* timer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
