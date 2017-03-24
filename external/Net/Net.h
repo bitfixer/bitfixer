@@ -32,6 +32,7 @@
 	#include <netinet/in.h>
 	#include <fcntl.h>
     #include <stdio.h>
+    #include <unistd.h>
 
 #else
 
@@ -44,20 +45,21 @@
 namespace net
 {
 	// platform independent wait for n seconds
-
+    class Tools
+    {
+    public:
 #if PLATFORM == PLATFORM_WINDOWS
-
-	void wait( float seconds )
-	{
-		Sleep( (int) ( seconds * 1000.0f ) );
-	}
-
+        static void waitSeconds(float seconds)
+        {
+            Sleep( (int) ( seconds * 1000.0f ) );
+        }
 #else
-
-	#include <unistd.h>
-	void wait( float seconds ) { usleep( (int) ( seconds * 1000000.0f ) ); }
-
+        static void waitSeconds(float seconds)
+        {
+            usleep( (int) ( seconds * 1000000.0f ) );
+        }
 #endif
+    };
 
 	// internet address
 
