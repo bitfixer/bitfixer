@@ -15,8 +15,8 @@ public:
     CommPort() {};
     virtual ~CommPort() {};
     virtual int send(unsigned char *data, int length) = 0;
-    //int recv(unsigned char *data, int length);
-    //int recv_sync(unsigned char *data, int length, int timeout_ms = 200);
+    virtual int recv(unsigned char *data, int length) = 0;
+    virtual int recv_sync(unsigned char *data, int length, int timeout_ms = 200) = 0;
 };
 
 #endif /* defined(__serialtest__CommPort__) */

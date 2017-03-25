@@ -24,9 +24,11 @@ public:
         unsigned char buffer[256];
     } TimedPacket;
     
-    NetPort(unsigned char a, unsigned char b, unsigned char c, unsigned char d, int port);
+    NetPort(unsigned char a, unsigned char b, unsigned char c, unsigned char d, int inport, int output);
     ~NetPort();
-    int send(unsigned char *data, int length);
+    int send(unsigned char* data, int length);
+    int recv(unsigned char* data, int length);
+    int recv_sync(unsigned char *data, int length, int timeout_ms = 200);
     double getTime();
     
     double delay = 0.0;
