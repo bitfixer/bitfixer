@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include "Image.hpp"
 #include "math.h"
+#include <string.h>
 #include <map>
 #include <string>
 #include <list>

@@ -1,4 +1,4 @@
-REMOTE := 10.0.0.13
+REMOTE := 192.168.1.25
 
 all:
 	g++ -o pispi -lwiringPi -lavformat -lavcodec -lavutil -lswscale -std=c++11 pispi.cpp image_utilities.cpp
