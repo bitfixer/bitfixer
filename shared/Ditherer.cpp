@@ -102,7 +102,7 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
     int xBlocks = image.getWidth() / blockWidth;
     int yBlocks = image.getHeight() / blockHeight;
     
-    printf("xblocks %d yblocks %d\n", xBlocks, yBlocks);
+    //printf("xblocks %d yblocks %d\n", xBlocks, yBlocks);
     
     Image subImage(blockWidth,blockHeight);
     Image diffImage(blockWidth,blockHeight);

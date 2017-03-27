@@ -80,6 +80,7 @@ class Image
 public:
     Image(int w, int h);
     Image(int w, int h, unsigned char* pixels);
+    Image(int w, int h, int bytesPerRow, int bytesPerPixel, unsigned char* pixels);
     Image(const Image& im);
     Image(const Image& im, int w, int h);
     Image(const char* fname);
@@ -101,7 +102,7 @@ private:
     int height;
     Pixel* pixels = NULL;
     
-    void initWithData(unsigned char* pixels);
+    void initWithData(unsigned char* pixels, int bytesPerRow, int bytesPerPixel, int redIndex, int greenIndex, int blueIndex);
 };
 
 #endif /* Image_hpp */

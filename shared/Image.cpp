@@ -177,25 +177,40 @@ Pixel::Pixel() {}
 Image::Image(int w, int h, unsigned char* pixels)
 : Image(w,h)
 {
-    initWithData(pixels);
+    initWithData(pixels, w*3, 3, 0, 1, 2);
 }
 
-void Image::initWithData(unsigned char *pixels)
+Image::Image(int w, int h, int bytesPerRow, int bytesPerPixel, unsigned char* pixels)
+: Image(w,h)
+{
+    initWithData(pixels, bytesPerRow, bytesPerPixel, 2, 1, 0);
+}
+
+void Image::initWithData(unsigned char *pixels, int bytesPerRow, int bytesPerPixel, int redIndex, int greenIndex, int blueIndex)
 {
     unsigned char* pp = pixels;
+    int rgbindices[3];
+    rgbindices[0] = redIndex;
+    rgbindices[1] = greenIndex;
+    rgbindices[2] = blueIndex;
+    
     for (int hh = 0; hh < height; hh++)
     {
+        pp = pixels + (hh * bytesPerRow);
         for (int ww = 0; ww < width; ww++)
         {
             Pixel* p = pixelAt(ww, hh);
             for (int c = 0; c < 3; c++)
             {
-                //float pxval = (float)(*pp / 255.0) * boost;
-                //if (pxval > 1.0) pxval = 1.0;
-                float pxval = (float)(*pp / 255.0);
+                //float pxval = (float)(*pp / 255.0);
+                //p->rgb[c] = pxval;
+                //pp++;
+                
+                float pxval = (float)(pp[rgbindices[c]]) / 255.0;
                 p->rgb[c] = pxval;
-                pp++;
             }
+            
+            pp += bytesPerPixel;
             
             // apply boost to color portion
             // find min rgb val
@@ -339,7 +354,7 @@ Image::Image(const char* fname)
         unsigned char* pixels = (unsigned char*)malloc(sizeof(unsigned char) * width * height * 3);
         fread(pixels, 1, width * height * 3, fp);
         
-        initWithData(pixels);
+        initWithData(pixels, width*3, 3, 0, 1, 2);
         free(pixels);
     }
     

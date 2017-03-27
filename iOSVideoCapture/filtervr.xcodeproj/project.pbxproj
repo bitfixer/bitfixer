@@ -7,15 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		650E71A61E88E98800AA61AF /* C64Filter.mm in Sources */ = {isa = PBXBuildFile; fileRef = 650E71A51E88E98800AA61AF /* C64Filter.mm */; };
+		650E71B21E88EC3F00AA61AF /* Image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 650E71AC1E88EC3F00AA61AF /* Image.cpp */; };
+		650E71B31E88EC3F00AA61AF /* Ditherer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 650E71AE1E88EC3F00AA61AF /* Ditherer.cpp */; };
+		650E71B41E88EC3F00AA61AF /* C64Image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 650E71B01E88EC3F00AA61AF /* C64Image.cpp */; };
 		653FDD541AE078D6002C0E07 /* ScaleFilter.m in Sources */ = {isa = PBXBuildFile; fileRef = 653FDD531AE078D6002C0E07 /* ScaleFilter.m */; };
+		656FA26F1E88AF5900D48D84 /* libGPUImage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 656FA26A1E88AF2200D48D84 /* libGPUImage.a */; };
 		65ED23671AD1224F00D5A38E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 65ED23661AD1224F00D5A38E /* main.m */; };
 		65ED236A1AD1224F00D5A38E /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 65ED23691AD1224F00D5A38E /* AppDelegate.m */; };
 		65ED236D1AD1224F00D5A38E /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 65ED236C1AD1224F00D5A38E /* ViewController.m */; };
 		65ED23701AD1224F00D5A38E /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 65ED236E1AD1224F00D5A38E /* Main.storyboard */; };
 		65ED23721AD1224F00D5A38E /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 65ED23711AD1224F00D5A38E /* Images.xcassets */; };
 		65ED23751AD1224F00D5A38E /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 65ED23731AD1224F00D5A38E /* LaunchScreen.xib */; };
-		65ED23811AD1224F00D5A38E /* filtervrTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 65ED23801AD1224F00D5A38E /* filtervrTests.m */; };
-		65ED239D1AD124A500D5A38E /* libGPUImage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 65ED23931AD122F600D5A38E /* libGPUImage.a */; };
 		65ED23A01AD191A800D5A38E /* AsciiFilter.m in Sources */ = {isa = PBXBuildFile; fileRef = 65ED239F1AD191A800D5A38E /* AsciiFilter.m */; };
 		65ED23A31AD19FF200D5A38E /* DCTMatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 65ED23A11AD19FF200D5A38E /* DCTMatcher.m */; };
 		65ED24A61AD1A40D00D5A38E /* 3.txt in Resources */ = {isa = PBXBuildFile; fileRef = 65ED23A61AD1A40C00D5A38E /* 3.txt */; };
@@ -277,30 +280,23 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		65ED237B1AD1224F00D5A38E /* PBXContainerItemProxy */ = {
+		656FA2691E88AF2200D48D84 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 65ED23591AD1224F00D5A38E /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 65ED23601AD1224F00D5A38E;
-			remoteInfo = filtervr;
-		};
-		65ED23921AD122F600D5A38E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 65ED238C1AD122F600D5A38E /* GPUImage.xcodeproj */;
+			containerPortal = 656FA2631E88AF2100D48D84 /* GPUImage.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = BCF1A33414DDB1EC00852800;
 			remoteInfo = GPUImage;
 		};
-		65ED23941AD122F600D5A38E /* PBXContainerItemProxy */ = {
+		656FA26B1E88AF2200D48D84 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 65ED238C1AD122F600D5A38E /* GPUImage.xcodeproj */;
+			containerPortal = 656FA2631E88AF2100D48D84 /* GPUImage.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = BCE209E51943F20C002FEED8;
 			remoteInfo = GPUImageFramework;
 		};
-		65ED239B1AD1248D00D5A38E /* PBXContainerItemProxy */ = {
+		656FA26D1E88AF5400D48D84 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 65ED238C1AD122F600D5A38E /* GPUImage.xcodeproj */;
+			containerPortal = 656FA2631E88AF2100D48D84 /* GPUImage.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = BCF1A33314DDB1EC00852800;
 			remoteInfo = GPUImage;
@@ -308,8 +304,18 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		650E71A51E88E98800AA61AF /* C64Filter.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = C64Filter.mm; sourceTree = "<group>"; };
+		650E71A91E88E99800AA61AF /* C64Filter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = C64Filter.h; sourceTree = "<group>"; };
+		650E71AB1E88EC3F00AA61AF /* Image.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Image.hpp; path = ../shared/Image.hpp; sourceTree = "<group>"; };
+		650E71AC1E88EC3F00AA61AF /* Image.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Image.cpp; path = ../shared/Image.cpp; sourceTree = "<group>"; };
+		650E71AD1E88EC3F00AA61AF /* Ditherer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Ditherer.hpp; path = ../shared/Ditherer.hpp; sourceTree = "<group>"; };
+		650E71AE1E88EC3F00AA61AF /* Ditherer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Ditherer.cpp; path = ../shared/Ditherer.cpp; sourceTree = "<group>"; };
+		650E71AF1E88EC3F00AA61AF /* C64Image.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = C64Image.hpp; path = ../shared/C64Image.hpp; sourceTree = "<group>"; };
+		650E71B01E88EC3F00AA61AF /* C64Image.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = C64Image.cpp; path = ../shared/C64Image.cpp; sourceTree = "<group>"; };
+		650E71B11E88EC3F00AA61AF /* c64_colors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = c64_colors.h; path = ../shared/c64_colors.h; sourceTree = "<group>"; };
 		653FDD521AE078D6002C0E07 /* ScaleFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScaleFilter.h; sourceTree = "<group>"; };
 		653FDD531AE078D6002C0E07 /* ScaleFilter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ScaleFilter.m; sourceTree = "<group>"; };
+		656FA2631E88AF2100D48D84 /* GPUImage.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = GPUImage.xcodeproj; path = ../external/GPUImage/framework/GPUImage.xcodeproj; sourceTree = "<group>"; };
 		65ED23611AD1224F00D5A38E /* filtervr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = filtervr.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		65ED23651AD1224F00D5A38E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		65ED23661AD1224F00D5A38E /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -320,10 +326,6 @@
 		65ED236F1AD1224F00D5A38E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		65ED23711AD1224F00D5A38E /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		65ED23741AD1224F00D5A38E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
-		65ED237A1AD1224F00D5A38E /* filtervrTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = filtervrTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		65ED237F1AD1224F00D5A38E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		65ED23801AD1224F00D5A38E /* filtervrTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = filtervrTests.m; sourceTree = "<group>"; };
-		65ED238C1AD122F600D5A38E /* GPUImage.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = GPUImage.xcodeproj; path = ../../GPUImage/framework/GPUImage.xcodeproj; sourceTree = "<group>"; };
 		65ED239E1AD191A800D5A38E /* AsciiFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AsciiFilter.h; sourceTree = "<group>"; };
 		65ED239F1AD191A800D5A38E /* AsciiFilter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AsciiFilter.m; sourceTree = "<group>"; };
 		65ED23A11AD19FF200D5A38E /* DCTMatcher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DCTMatcher.m; sourceTree = "<group>"; };
@@ -591,27 +593,43 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				65ED239D1AD124A500D5A38E /* libGPUImage.a in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		65ED23771AD1224F00D5A38E /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
+				656FA26F1E88AF5900D48D84 /* libGPUImage.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		650E71AA1E88EBE800AA61AF /* shared */ = {
+			isa = PBXGroup;
+			children = (
+				650E71AB1E88EC3F00AA61AF /* Image.hpp */,
+				650E71AC1E88EC3F00AA61AF /* Image.cpp */,
+				650E71AD1E88EC3F00AA61AF /* Ditherer.hpp */,
+				650E71AE1E88EC3F00AA61AF /* Ditherer.cpp */,
+				650E71AF1E88EC3F00AA61AF /* C64Image.hpp */,
+				650E71B01E88EC3F00AA61AF /* C64Image.cpp */,
+				650E71B11E88EC3F00AA61AF /* c64_colors.h */,
+			);
+			name = shared;
+			sourceTree = "<group>";
+		};
+		656FA2641E88AF2100D48D84 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				656FA26A1E88AF2200D48D84 /* libGPUImage.a */,
+				656FA26C1E88AF2200D48D84 /* GPUImage.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		65ED23581AD1224F00D5A38E = {
 			isa = PBXGroup;
 			children = (
+				650E71AA1E88EBE800AA61AF /* shared */,
 				65ED23A41AD1A3F600D5A38E /* Resources */,
 				65ED238B1AD122DB00D5A38E /* Frameworks */,
 				65ED23631AD1224F00D5A38E /* filtervr */,
-				65ED237D1AD1224F00D5A38E /* filtervrTests */,
 				65ED23621AD1224F00D5A38E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -620,7 +638,6 @@
 			isa = PBXGroup;
 			children = (
 				65ED23611AD1224F00D5A38E /* filtervr.app */,
-				65ED237A1AD1224F00D5A38E /* filtervrTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -642,6 +659,8 @@
 				65ED239F1AD191A800D5A38E /* AsciiFilter.m */,
 				653FDD521AE078D6002C0E07 /* ScaleFilter.h */,
 				653FDD531AE078D6002C0E07 /* ScaleFilter.m */,
+				650E71A51E88E98800AA61AF /* C64Filter.mm */,
+				650E71A91E88E99800AA61AF /* C64Filter.h */,
 			);
 			path = filtervr;
 			sourceTree = "<group>";
@@ -655,38 +674,12 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
-		65ED237D1AD1224F00D5A38E /* filtervrTests */ = {
-			isa = PBXGroup;
-			children = (
-				65ED23801AD1224F00D5A38E /* filtervrTests.m */,
-				65ED237E1AD1224F00D5A38E /* Supporting Files */,
-			);
-			path = filtervrTests;
-			sourceTree = "<group>";
-		};
-		65ED237E1AD1224F00D5A38E /* Supporting Files */ = {
-			isa = PBXGroup;
-			children = (
-				65ED237F1AD1224F00D5A38E /* Info.plist */,
-			);
-			name = "Supporting Files";
-			sourceTree = "<group>";
-		};
 		65ED238B1AD122DB00D5A38E /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				65ED238C1AD122F600D5A38E /* GPUImage.xcodeproj */,
+				656FA2631E88AF2100D48D84 /* GPUImage.xcodeproj */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		65ED238D1AD122F600D5A38E /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				65ED23931AD122F600D5A38E /* libGPUImage.a */,
-				65ED23951AD122F600D5A38E /* GPUImage.framework */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 		65ED23A41AD1A3F600D5A38E /* Resources */ = {
@@ -974,30 +967,12 @@
 			buildRules = (
 			);
 			dependencies = (
-				65ED239C1AD1248D00D5A38E /* PBXTargetDependency */,
+				656FA26E1E88AF5400D48D84 /* PBXTargetDependency */,
 			);
 			name = filtervr;
 			productName = filtervr;
 			productReference = 65ED23611AD1224F00D5A38E /* filtervr.app */;
 			productType = "com.apple.product-type.application";
-		};
-		65ED23791AD1224F00D5A38E /* filtervrTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 65ED23871AD1224F00D5A38E /* Build configuration list for PBXNativeTarget "filtervrTests" */;
-			buildPhases = (
-				65ED23761AD1224F00D5A38E /* Sources */,
-				65ED23771AD1224F00D5A38E /* Frameworks */,
-				65ED23781AD1224F00D5A38E /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				65ED237C1AD1224F00D5A38E /* PBXTargetDependency */,
-			);
-			name = filtervrTests;
-			productName = filtervrTests;
-			productReference = 65ED237A1AD1224F00D5A38E /* filtervrTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -1011,10 +986,6 @@
 					65ED23601AD1224F00D5A38E = {
 						CreatedOnToolsVersion = 6.1;
 						DevelopmentTeam = EMN4A538Y8;
-					};
-					65ED23791AD1224F00D5A38E = {
-						CreatedOnToolsVersion = 6.1;
-						TestTargetID = 65ED23601AD1224F00D5A38E;
 					};
 				};
 			};
@@ -1031,31 +1002,30 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 65ED238D1AD122F600D5A38E /* Products */;
-					ProjectRef = 65ED238C1AD122F600D5A38E /* GPUImage.xcodeproj */;
+					ProductGroup = 656FA2641E88AF2100D48D84 /* Products */;
+					ProjectRef = 656FA2631E88AF2100D48D84 /* GPUImage.xcodeproj */;
 				},
 			);
 			projectRoot = "";
 			targets = (
 				65ED23601AD1224F00D5A38E /* filtervr */,
-				65ED23791AD1224F00D5A38E /* filtervrTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		65ED23931AD122F600D5A38E /* libGPUImage.a */ = {
+		656FA26A1E88AF2200D48D84 /* libGPUImage.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libGPUImage.a;
-			remoteRef = 65ED23921AD122F600D5A38E /* PBXContainerItemProxy */;
+			remoteRef = 656FA2691E88AF2200D48D84 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		65ED23951AD122F600D5A38E /* GPUImage.framework */ = {
+		656FA26C1E88AF2200D48D84 /* GPUImage.framework */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.framework;
 			path = GPUImage.framework;
-			remoteRef = 65ED23941AD122F600D5A38E /* PBXContainerItemProxy */;
+			remoteRef = 656FA26B1E88AF2200D48D84 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -1327,13 +1297,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		65ED23781AD1224F00D5A38E /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -1342,34 +1305,25 @@
 			buildActionMask = 2147483647;
 			files = (
 				653FDD541AE078D6002C0E07 /* ScaleFilter.m in Sources */,
+				650E71B31E88EC3F00AA61AF /* Ditherer.cpp in Sources */,
+				650E71A61E88E98800AA61AF /* C64Filter.mm in Sources */,
+				650E71B41E88EC3F00AA61AF /* C64Image.cpp in Sources */,
 				65ED236D1AD1224F00D5A38E /* ViewController.m in Sources */,
 				65ED23A31AD19FF200D5A38E /* DCTMatcher.m in Sources */,
 				65ED236A1AD1224F00D5A38E /* AppDelegate.m in Sources */,
+				650E71B21E88EC3F00AA61AF /* Image.cpp in Sources */,
 				65ED23671AD1224F00D5A38E /* main.m in Sources */,
 				65ED23A01AD191A800D5A38E /* AsciiFilter.m in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		65ED23761AD1224F00D5A38E /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				65ED23811AD1224F00D5A38E /* filtervrTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		65ED237C1AD1224F00D5A38E /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 65ED23601AD1224F00D5A38E /* filtervr */;
-			targetProxy = 65ED237B1AD1224F00D5A38E /* PBXContainerItemProxy */;
-		};
-		65ED239C1AD1248D00D5A38E /* PBXTargetDependency */ = {
+		656FA26E1E88AF5400D48D84 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = GPUImage;
-			targetProxy = 65ED239B1AD1248D00D5A38E /* PBXContainerItemProxy */;
+			targetProxy = 656FA26D1E88AF5400D48D84 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1507,40 +1461,6 @@
 			};
 			name = Release;
 		};
-		65ED23881AD1224F00D5A38E /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(SDKROOT)/Developer/Library/Frameworks",
-					"$(inherited)",
-				);
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = filtervrTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/filtervr.app/filtervr";
-			};
-			name = Debug;
-		};
-		65ED23891AD1224F00D5A38E /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(SDKROOT)/Developer/Library/Frameworks",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = filtervrTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/filtervr.app/filtervr";
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1558,15 +1478,6 @@
 			buildConfigurations = (
 				65ED23851AD1224F00D5A38E /* Debug */,
 				65ED23861AD1224F00D5A38E /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		65ED23871AD1224F00D5A38E /* Build configuration list for PBXNativeTarget "filtervrTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				65ED23881AD1224F00D5A38E /* Debug */,
-				65ED23891AD1224F00D5A38E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

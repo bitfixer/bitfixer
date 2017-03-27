@@ -9,6 +9,7 @@
 #import "ViewController.h"
 #import "AsciiFilter.h"
 #import "ScaleFilter.h"
+#import "C64Filter.h"
 
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -41,13 +42,12 @@
     
     //GPUImageCropFilter *crop = [[GPUImageCropFilter alloc] initWithCropRegion:CGRectMake(0, 0, 256.0/480.0, 256.0/640.0)];
     //ScaleFilter *crop = [[ScaleFilter alloc] initWithOutputSize:CGSizeMake(320.0, 320.0)];
-    ScaleFilter *crop = [[ScaleFilter alloc] initWithOutputSize:CGSizeMake(320.0, 320.0)];
-    crop.cropRegion = CGRectMake(0, 0, 1.0, 480.0/640.0);
-    
-    
-    
-    //GPUImageCropFilter *crop = [[GPUImageCropFilter alloc] initWithCropRegion:CGRectMake(0, 0, 320.0/480.0, 200.0/640.0)];
+    //ScaleFilter *crop = [[ScaleFilter alloc] initWithOutputSize:CGSizeMake(320.0, 320.0)];
+    ScaleFilter *crop = [[ScaleFilter alloc] initWithOutputSize:CGSizeMake(320.0, 200.0)];
+    //crop.cropRegion = CGRectMake(0, 0, 1.0, 480.0/640.0);
+    crop.cropRegion = CGRectMake(0, 0, 1.0, 0.5);
     [videoCamera addTarget:crop];
+    /*
     
     GPUImageContrastFilter *contrast = [[GPUImageContrastFilter alloc] init];
     contrast.contrast = 0.75;
@@ -57,16 +57,16 @@
     f.radius = 6;
     filter = f;
     
-    //[scale addTarget:filter];
-    //[crop addTarget:filter];
     [contrast addTarget:filter];
     
     GPUImageToonFilter *toonFilter = [[GPUImageToonFilter alloc] init];
     [filter addTarget:toonFilter];
-    
-    AsciiFilter *asciifilter = [[AsciiFilter alloc] init];
-    asciifilter.delegate = self;
-    [toonFilter addTarget:asciifilter];
+    */
+     
+    // remove ascii filter
+    //AsciiFilter *asciifilter = [[AsciiFilter alloc] init];
+    //asciifilter.delegate = self;
+    //[toonFilter addTarget:asciifilter];
     
     //GPUImageView *filterView = [[GPUImageView alloc] initWithFrame:self.view.frame];
     
@@ -74,6 +74,11 @@
     // center of image is 33.0mm from eye center, should be 30.0mm for cardboard ipd
     // screen width
     
+    C64Filter* c64Filter = [[C64Filter alloc] init];
+    c64Filter.delegate = self;
+    [crop addTarget:c64Filter];
+    
+    /*
     CGFloat screenWidth = self.view.frame.size.width;
     CGFloat horizCenterOffset = (3.0 / 59.0) * screenWidth;
     CGFloat newWidth = screenWidth * 0.75;
@@ -86,17 +91,38 @@
     CGFloat xDiff = screenWidth-newWidth;
     CGFloat yDiff = screenHeight-newHeight;
     
-    //CGFloat yCenterOffset = (screenHeight-newHeight)*(480.0/640.0);
-    
-    //CGRect viewFrame = CGRectMake(-horizCenterOffset + xDiff, vertOffset + yDiff, newWidth, newHeight);
     CGRect viewFrame = CGRectMake(-horizCenterOffset + xDiff/2, yDiff+vertOffset, newWidth, newHeight);
-    //CGRect viewFrame = self.view.frame;
+    */
+     
+    CGFloat screenWidth = self.view.frame.size.width;
+    CGFloat horizCenterOffset = (3.0 / 59.0) * screenWidth;
+    CGFloat newWidth = screenWidth * 0.75;
+    
+    CGFloat screenHeight = self.view.frame.size.height;
+    
+    CGFloat newHeight = screenHeight * 0.75;
+    CGFloat vertOffset = newHeight - (newHeight*(480.0/640.0));
+    
+    CGFloat xDiff = screenWidth-newWidth;
+    CGFloat yDiff = screenHeight-newHeight;
+    
+    CGRect viewFrame = CGRectMake(xDiff/2, 0, newWidth, newHeight);
+    
+    
+    
+    //CGFloat screenWidth = self.view.frame.size.width;
+    //CGFloat screenHeight = self.view.frame.size.height;
+    //CGRect viewFrame = CGRectMake(0, 0, screenHeight*1.5, screenWidth);
+    //CGRect viewFrame = CGRectMake(0, 0, screenHeight, 320.0);
+     
     GPUImageView *filterView = [[GPUImageView alloc] initWithFrame:viewFrame];
     [self.view addSubview:filterView];
     
     framesToSend = [[NSMutableArray alloc] initWithCapacity:10];
     
-    [asciifilter addTarget:filterView];
+    [crop addTarget:filterView];
+    //[toonFilter addTarget:filterView];
+    //[asciifilter addTarget:filterView];
     //[contrast addTarget:filterView];
     [videoCamera startCameraCapture];
     
@@ -118,7 +144,8 @@
                 
                 if (data)
                 {
-                    //[self sendPacket:data];
+                    //NSLog(@"sending! %d", (int)[data length]);
+                    [self sendPacket:data];
                 }
             }
             else
@@ -182,8 +209,8 @@
          
         memset(&_broadcastAddr, 0, sizeof _broadcastAddr);
         _broadcastAddr.sin_family = AF_INET;
-        inet_pton(AF_INET, "10.0.0.9", &_broadcastAddr.sin_addr); // Set the broadcast IP address
-        _broadcastAddr.sin_port = htons(9999);
+        inet_pton(AF_INET, "192.168.1.25", &_broadcastAddr.sin_addr); // Set the broadcast IP address
+        _broadcastAddr.sin_port = htons(99999);
     }
     
     printf("sending %d bytes\n", [data length]);
