@@ -12,6 +12,7 @@
 #include "Ditherer.hpp"
 #include "C64Image.hpp"
 #include "c64_colors.h"
+#include "timer.hpp"
 
 @implementation C64Filter
 {
@@ -20,6 +21,7 @@
     Palette* c64palette;
     Ditherer* ditherer;
     unsigned char* c64frame;
+    Tools::Timer timer;
 }
 
 - (id) init
@@ -75,6 +77,8 @@
     
     // create c64 image
     CGSize fbSize = firstInputFramebuffer.size;
+    
+    timer.start();
     Image inputImage((int)fbSize.width, (int)fbSize.height, (int)[firstInputFramebuffer bytesPerRow], 4, inputBytes);
     NSURL* docsDir = [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
     NSURL* ppmurl = [docsDir URLByAppendingPathComponent:@"output.ppm"];
@@ -84,6 +88,8 @@
     Image halfImage(inputImage, 160, 200);
     Image* dithered = ditherer->createDitheredImageFromImageWithPalette(halfImage, *c64palette);
     C64Image* c64im = (C64Image*)dithered;
+    double t = timer.getTime();
+    NSLog(@"Image converted in %lf seconds", t);
     
     int c64FrameSize = c64im->getC64FrameSize();
     if (!c64frame)

@@ -12,6 +12,7 @@
 		650E71B31E88EC3F00AA61AF /* Ditherer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 650E71AE1E88EC3F00AA61AF /* Ditherer.cpp */; };
 		650E71B41E88EC3F00AA61AF /* C64Image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 650E71B01E88EC3F00AA61AF /* C64Image.cpp */; };
 		653FDD541AE078D6002C0E07 /* ScaleFilter.m in Sources */ = {isa = PBXBuildFile; fileRef = 653FDD531AE078D6002C0E07 /* ScaleFilter.m */; };
+		6545D30C1E8971FF000361B4 /* timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6545D30B1E8971FF000361B4 /* timer.cpp */; };
 		656FA26F1E88AF5900D48D84 /* libGPUImage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 656FA26A1E88AF2200D48D84 /* libGPUImage.a */; };
 		65ED23671AD1224F00D5A38E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 65ED23661AD1224F00D5A38E /* main.m */; };
 		65ED236A1AD1224F00D5A38E /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 65ED23691AD1224F00D5A38E /* AppDelegate.m */; };
@@ -315,6 +316,8 @@
 		650E71B11E88EC3F00AA61AF /* c64_colors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = c64_colors.h; path = ../shared/c64_colors.h; sourceTree = "<group>"; };
 		653FDD521AE078D6002C0E07 /* ScaleFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScaleFilter.h; sourceTree = "<group>"; };
 		653FDD531AE078D6002C0E07 /* ScaleFilter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ScaleFilter.m; sourceTree = "<group>"; };
+		6545D30A1E8971FF000361B4 /* timer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = timer.hpp; path = ../shared/timer.hpp; sourceTree = "<group>"; };
+		6545D30B1E8971FF000361B4 /* timer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = timer.cpp; path = ../shared/timer.cpp; sourceTree = "<group>"; };
 		656FA2631E88AF2100D48D84 /* GPUImage.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = GPUImage.xcodeproj; path = ../external/GPUImage/framework/GPUImage.xcodeproj; sourceTree = "<group>"; };
 		65ED23611AD1224F00D5A38E /* filtervr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = filtervr.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		65ED23651AD1224F00D5A38E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -603,6 +606,8 @@
 		650E71AA1E88EBE800AA61AF /* shared */ = {
 			isa = PBXGroup;
 			children = (
+				6545D30A1E8971FF000361B4 /* timer.hpp */,
+				6545D30B1E8971FF000361B4 /* timer.cpp */,
 				650E71AB1E88EC3F00AA61AF /* Image.hpp */,
 				650E71AC1E88EC3F00AA61AF /* Image.cpp */,
 				650E71AD1E88EC3F00AA61AF /* Ditherer.hpp */,
@@ -1307,6 +1312,7 @@
 				653FDD541AE078D6002C0E07 /* ScaleFilter.m in Sources */,
 				650E71B31E88EC3F00AA61AF /* Ditherer.cpp in Sources */,
 				650E71A61E88E98800AA61AF /* C64Filter.mm in Sources */,
+				6545D30C1E8971FF000361B4 /* timer.cpp in Sources */,
 				650E71B41E88EC3F00AA61AF /* C64Image.cpp in Sources */,
 				65ED236D1AD1224F00D5A38E /* ViewController.m in Sources */,
 				65ED23A31AD19FF200D5A38E /* DCTMatcher.m in Sources */,
