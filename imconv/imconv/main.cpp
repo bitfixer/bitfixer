@@ -40,7 +40,7 @@ int main(int argc, const char * argv[]) {
     printf("converting: %s", fname);
     printf("\n");
     
-    Timer timer;
+    Tools::Timer timer;
     Palette c64palette(c64_colors, num_64_colors);
     Image inputImage(fname);
     int imWidth = inputImage.getWidth();
