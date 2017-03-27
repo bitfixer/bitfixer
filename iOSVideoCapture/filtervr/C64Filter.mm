@@ -80,6 +80,7 @@
     
     timer.start();
     Image inputImage((int)fbSize.width, (int)fbSize.height, (int)[firstInputFramebuffer bytesPerRow], 4, inputBytes);
+    double t1 = timer.getTime();
     NSURL* docsDir = [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
     NSURL* ppmurl = [docsDir URLByAppendingPathComponent:@"output.ppm"];
     
@@ -89,7 +90,7 @@
     Image* dithered = ditherer->createDitheredImageFromImageWithPalette(halfImage, *c64palette);
     C64Image* c64im = (C64Image*)dithered;
     double t = timer.getTime();
-    NSLog(@"Image converted in %lf seconds", t);
+    NSLog(@"Image converted %lf %lf",t1, t);
     
     int c64FrameSize = c64im->getC64FrameSize();
     if (!c64frame)
