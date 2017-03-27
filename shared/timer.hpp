@@ -12,17 +12,19 @@
 #include <iostream>
 #include <chrono>
 
-class Timer
+namespace Tools
 {
-public:
-    Timer() {};
-    
-    void start();
-    double getTime();
-    
-private:
-    std::chrono::high_resolution_clock::time_point startTime;
-};
-
+    class Timer
+    {
+    public:
+        Timer() {};
+        
+        void start();
+        double getTime();
+        
+    private:
+        std::chrono::high_resolution_clock::time_point startTime;
+    };
+}
 
 #endif /* timer_hpp */

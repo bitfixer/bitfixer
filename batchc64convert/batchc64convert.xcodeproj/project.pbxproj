@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		656FA24C1E88540700D48D84 /* timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 656FA2471E88540700D48D84 /* timer.cpp */; };
+		656FA24D1E88540700D48D84 /* NetPort.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 656FA2491E88540700D48D84 /* NetPort.cpp */; };
+		656FA24E1E88540700D48D84 /* CommPort.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 656FA24B1E88540700D48D84 /* CommPort.cpp */; };
 		65B871A61E82473F008DA500 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65B871A51E82473F008DA500 /* main.cpp */; };
 		65B871B41E82476B008DA500 /* Image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65B871AE1E82476B008DA500 /* Image.cpp */; };
 		65B871B51E82476B008DA500 /* Ditherer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65B871B01E82476B008DA500 /* Ditherer.cpp */; };
@@ -26,6 +29,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		656FA2461E88540700D48D84 /* timer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = timer.hpp; path = ../shared/timer.hpp; sourceTree = "<group>"; };
+		656FA2471E88540700D48D84 /* timer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = timer.cpp; path = ../shared/timer.cpp; sourceTree = "<group>"; };
+		656FA2481E88540700D48D84 /* NetPort.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NetPort.h; path = ../shared/NetPort.h; sourceTree = "<group>"; };
+		656FA2491E88540700D48D84 /* NetPort.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NetPort.cpp; path = ../shared/NetPort.cpp; sourceTree = "<group>"; };
+		656FA24A1E88540700D48D84 /* CommPort.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommPort.h; path = ../shared/CommPort.h; sourceTree = "<group>"; };
+		656FA24B1E88540700D48D84 /* CommPort.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CommPort.cpp; path = ../shared/CommPort.cpp; sourceTree = "<group>"; };
+		656FA2501E88556800D48D84 /* Net.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Net.h; path = ../external/Net/Net.h; sourceTree = "<group>"; };
 		65B871A21E82473F008DA500 /* batchc64convert */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = batchc64convert; sourceTree = BUILT_PRODUCTS_DIR; };
 		65B871A51E82473F008DA500 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		65B871AD1E82476B008DA500 /* Image.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Image.hpp; path = ../shared/Image.hpp; sourceTree = "<group>"; };
@@ -48,9 +58,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		656FA24F1E88555A00D48D84 /* external */ = {
+			isa = PBXGroup;
+			children = (
+				656FA2501E88556800D48D84 /* Net.h */,
+			);
+			name = external;
+			sourceTree = "<group>";
+		};
 		65B871991E82473F008DA500 = {
 			isa = PBXGroup;
 			children = (
+				656FA24F1E88555A00D48D84 /* external */,
 				65B871AC1E824752008DA500 /* shared */,
 				65B871A41E82473F008DA500 /* batchc64convert */,
 				65B871A31E82473F008DA500 /* Products */,
@@ -76,6 +95,12 @@
 		65B871AC1E824752008DA500 /* shared */ = {
 			isa = PBXGroup;
 			children = (
+				656FA2461E88540700D48D84 /* timer.hpp */,
+				656FA2471E88540700D48D84 /* timer.cpp */,
+				656FA2481E88540700D48D84 /* NetPort.h */,
+				656FA2491E88540700D48D84 /* NetPort.cpp */,
+				656FA24A1E88540700D48D84 /* CommPort.h */,
+				656FA24B1E88540700D48D84 /* CommPort.cpp */,
 				65B871AD1E82476B008DA500 /* Image.hpp */,
 				65B871AE1E82476B008DA500 /* Image.cpp */,
 				65B871AF1E82476B008DA500 /* Ditherer.hpp */,
@@ -143,7 +168,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				656FA24D1E88540700D48D84 /* NetPort.cpp in Sources */,
 				65B871A61E82473F008DA500 /* main.cpp in Sources */,
+				656FA24C1E88540700D48D84 /* timer.cpp in Sources */,
+				656FA24E1E88540700D48D84 /* CommPort.cpp in Sources */,
 				65B871B61E82476B008DA500 /* C64Image.cpp in Sources */,
 				65B871B51E82476B008DA500 /* Ditherer.cpp in Sources */,
 				65B871B41E82476B008DA500 /* Image.cpp in Sources */,
@@ -265,6 +293,7 @@
 				65B871AB1E82473F008DA500 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

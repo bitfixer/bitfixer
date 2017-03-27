@@ -11,6 +11,7 @@
 #include "Ditherer.hpp"
 #include "C64Image.hpp"
 #include "c64_colors.h"
+#include "NetPort.h"
 #include <unistd.h>
 
 void wait_for_file(const char* fname)
@@ -47,8 +48,11 @@ int main(int argc, const char * argv[]) {
     unsigned char* c64frame = NULL;
     
     FILE* fp = fopen(out64fname, "wb");
+    NetPort port(192,168,1,25,99998,99999);
+    Tools::Timer frameTimer;
     
-    for (index = 1; index < 100; index++)
+    frameTimer.start();
+    for (index = 1; index < 9999; index++)
     {
         // check if file can be opened
         sprintf(thisfname, "%s/%04d.ppm", dirname, index);
@@ -78,9 +82,22 @@ int main(int argc, const char * argv[]) {
         {
             c64frame = (unsigned char*)malloc(sizeof(unsigned char) * c64FrameSize);
         }
-        float time = (float)index / 4.0;
+        float time = (float)index / 8.0;
         c64im->getC64Frame(c64frame, time);
         fwrite(c64frame, 1, c64FrameSize, fp);
+        
+        float thisTime = frameTimer.getTime();
+        printf("pts %f, time %f\n", time, thisTime);
+        while (thisTime < time)
+        {
+            float diff = time - thisTime;
+            float usec = diff * 1000000.0;
+            usleep(usec);
+            thisTime = frameTimer.getTime();
+        }
+        // send bytes to port
+        port.send(&c64frame[4], 9216);
+        
         delete dithered;
     }
     fclose(fp);

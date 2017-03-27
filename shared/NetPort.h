@@ -9,9 +9,9 @@
 #ifndef __NetPort__
 #define __NetPort__
 
+#include "timer.hpp"
 #include "CommPort.h"
 #include "Net.h"
-#include "timer.hpp"
 
 class NetPort : public CommPort
 {
@@ -36,7 +36,7 @@ private:
     net::Socket socket;
     net::Address destination;
     unsigned char addr[4];
-    Timer timer;
+    Tools::Timer timer;
     TimedPacket pkt;
     int port_id = -1;
     int port;

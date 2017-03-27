@@ -35,7 +35,7 @@ int main(int argc, const char * argv[]) {
     printf("file: %s index %d\n", s.c_str(), index);
     
     char outfname[256];
-    sprintf(outfname, "%s/%s ", outdir, s.c_str());
+    sprintf(outfname, "%s/%s", outdir, s.c_str());
     
     printf("converting: %s", fname);
     printf("\n");

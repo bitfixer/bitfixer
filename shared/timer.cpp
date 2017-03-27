@@ -8,6 +8,7 @@
 
 #include "timer.hpp"
 using namespace std::chrono;
+using namespace Tools;
 
 void Timer::start()
 {
