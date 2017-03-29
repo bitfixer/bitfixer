@@ -10,6 +10,12 @@
 #include "C64Image.hpp"
 #include <stdio.h>
 #include <stdlib.h>
+#include <vector>
+#include <mutex>
+#include <thread>
+
+using std::vector;
+using std::mutex;
 
 class FloydSteinbergDitherer : public Ditherer
 {
@@ -91,11 +97,21 @@ class C64Ditherer : public Ditherer
 {
 public:
     Image* createDitheredImageFromImageWithPalette(const Image& image, const Palette& palette);
+    static void threadFunc(C64Ditherer* ref, C64Image* image, int blockWidth, int blockHeight, int yBlock, int xBlocks, const Palette& palette);
+    void processRow(C64Image* image, int blockWidth, int blockHeight, int yBlock, int xBlocks, const Palette& palette);
+private:
+    std::mutex process_mutex;
 };
+
+void C64Ditherer::threadFunc(C64Ditherer* ref, C64Image* image, int blockWidth, int blockHeight, int yBlock, int xBlocks, const Palette& palette)
+{
+    ref->processRow(image, blockWidth, blockHeight, yBlock, xBlocks, palette);
+}
 
 Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, const Palette &palette)
 {
     Ditherer* fsDitherer = createFloydSteinbergDitherer();
+    Ditherer* nnDitherer = createNearestNeighborDitherer();
     int blockWidth = 4;
     int blockHeight = 8;
     
@@ -131,113 +147,303 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
     pcolors[0] = 0;
     pcolors[1] = 1;
     
+    typedef struct
+    {
+        int index;
+        int votes;
+    } ColorRank;
+    
     int* blockColors = (int*)calloc(sizeof(int), 2*yBlocks*xBlocks);
     
-    for (int yb = 0; yb < yBlocks; yb++)
+    bool useThreads = false;
+    if (useThreads)
     {
-        for (int xb = 0; xb < xBlocks; xb++)
+        //mutex process_mutex;
+        std::vector<std::thread> threads;
+        for (int yb = 0; yb < yBlocks; yb++)
         {
-            subImage.fromSubImage(image, xb * blockWidth, blockWidth, yb * blockHeight, blockHeight);
-            /*
-            // METHOD 1 - full search
-            float minError = 9999999.9;
-            int minErrorIndex[2];
-            for (int c1 = 2; c1 < palette.getNumColors(); c1++)
+            // create and run thread
             {
-                for (int c2 = c1+1; c2 < palette.getNumColors(); c2++)
+                std::lock_guard<std::mutex> guard(process_mutex);
+                threads.push_back(std::thread(C64Ditherer::threadFunc, this, newImage, blockWidth, blockHeight, yb, xBlocks, palette));
+            }
+            //processRow(newImage, blockWidth, blockHeight, yb, xBlocks, palette);
+        }
+        
+        // join all threads
+        for (auto& th : threads) th.join();
+    }
+    else
+    {
+        for (int yb = 0; yb < yBlocks; yb++)
+        {
+            for (int xb = 0; xb < xBlocks; xb++)
+            {
+                subImage.fromSubImage(image, xb * blockWidth, blockWidth, yb * blockHeight, blockHeight);
+                
+                // METHOD 3 - find first color by matching block's avg color
+                subImage.getAvgColor(avgColor);
+                int bestColor;
+                palette.getClosestColorTo(avgColor, pColor, bestColor, false);
+                
+                //*
+                // find second color
+                float minError = 9999999.9;
+                int minErrorIndex[2];
+                int c1 = bestColor;
+                Image** testImages;
+                testImages = (Image**)calloc(sizeof(Image*), palette.getNumColors());
+                
+                int method = 2;
+                
+                if (method == 0)
                 {
-                    bool useColors = true;
-                    Color* pc1 = palette.colorAtIndex(c1);
-                    
-                    if (pc1->rgb[0] == pc1->rgb[1] && pc1->rgb[0] == pc1->rgb[2])
+                    for (int c2 = 2; c2 < palette.getNumColors(); c2++)
                     {
-                        useColors = false;
-                    }
-                    
-                    p.setColorAtIndex(*pc1, 2);
-                    Color* pc2 = palette.colorAtIndex(c2);
-                    
-                    if (pc2->rgb[0] == pc2->rgb[1] && pc2->rgb[0] == pc2->rgb[2])
-                    {
-                        useColors = false;
-                    }
-                    
-                    p.setColorAtIndex(*pc2, 3);
-                    
-                    // TEST - disqualify grayscale
-                    if (useColors)
-                    {
-                        Image* ii = fsDitherer->createDitheredImageFromImageWithPalette(subImage, p);
-                        float err = ii->getErrorFromImage(subImage);
-                        
-                        if (err < minError)
+                        bool useColors = c1 != c2;
+                        if (useColors)
                         {
-                            minError = err;
-                            minErrorIndex[0] = c1;
-                            minErrorIndex[1] = c2;
+                            Color* pc1 = palette.colorAtIndex(c1);
+                            p.setColorAtIndex(*pc1, 2);
+                            
+                            Color* pc2 = palette.colorAtIndex(c2);
+                            if (pc2->rgb[0] == pc2->rgb[1] && pc2->rgb[0] == pc2->rgb[2])
+                            {
+                                useColors = false;
+                            }
+                            
+                            p.setColorAtIndex(*pc2, 3);
                         }
                         
-                        delete ii;
+                        if (useColors)
+                        {
+                            testImages[c2] = fsDitherer->createDitheredImageFromImageWithPalette(subImage, p);
+                            float err = testImages[c2]->getErrorFromImage(subImage);
+                            
+                            if (err < minError)
+                            {
+                                minError = err;
+                                minErrorIndex[0] = c1;
+                                minErrorIndex[1] = c2;
+                            }
+                        }
                     }
                 }
-            }
-            //*/
-            
-            /*
-            // Method 2 - find best color if that is the only color in the block
-            // find first color
-            int bestError = 99999999.9;
-            int bestColor = -1;
-            for (int c = 2; c < palette.getNumColors(); c++)
-            {
-                bool useColor = true;
-                Color* pc1 = palette.colorAtIndex(c);
-                if (pc1->rgb[0] == pc1->rgb[1] && pc1->rgb[0] == pc1->rgb[2])
+                else if (method == 1)
                 {
-                    useColor = false;
+                    // TEST: minimum time test
+                    // get secondary color from subimage
+                    // this gets difference from first palette color, then finds
+                    // color closest to avg of high error pixels
+                    //subImage.getSecondaryColor(pColor, nextColor);
+                    //int c2;
+                    //palette.getClosestColorTo(nextColor, pColor2, c2, false, c1);
+                    
+                    int colorVotes[256];
+                    vector<ColorRank> ranks;
+                    for (int i = 0; i < palette.getNumColors(); i++)
+                    {
+                        colorVotes[i] = 0;
+                    }
+                    
+                    Image* im = fsDitherer->createDitheredImageFromImageWithPalette(subImage, palette);
+                    for (int y = 0; y < im->getHeight(); y++)
+                    {
+                        for (int x = 0; x < im->getWidth(); x++)
+                        {
+                            Pixel* p = im->pixelAt(x, y);
+                            colorVotes[p->palette_index]++;
+                        }
+                    }
+                    delete im;
+                    
+                    for (int i = 0; i < palette.getNumColors(); i++)
+                    {
+                        //printf("color %d: %d votes\n", i, colorVotes[i]);
+                        // insert into list
+                        ColorRank rank;
+                        rank.index = i;
+                        rank.votes = colorVotes[i];
+                        bool found = false;
+                        for (vector<ColorRank>::iterator it = ranks.begin();
+                             it != ranks.end();
+                             it++)
+                        {
+                            if (it->votes < colorVotes[i])
+                            {
+                                ranks.insert(it, rank);
+                                found = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!found)
+                        {
+                            ranks.push_back(rank);
+                        }
+                    }
+                    
+                    int rankIndex = 0;
+                    for (int i = 0; i < 2; i++)
+                    {
+                        bool useColor = false;
+                        while (!useColor)
+                        {
+                            useColor = true;
+                            int c = ranks.at(rankIndex++).index;
+                            Color* pc1 = palette.colorAtIndex(c);
+                            if (pc1->rgb[0] == pc1->rgb[1] && pc1->rgb[1] == pc1->rgb[2])
+                            {
+                                useColor = false;
+                            }
+                            
+                            if (useColor)
+                            {
+                                p.setColorAtIndex(*pc1, i+2);
+                                minErrorIndex[i] = c;
+                            }
+                        }
+                    }
+                    
+                    testImages[minErrorIndex[1]] = fsDitherer->createDitheredImageFromImageWithPalette(subImage, p);
+                }
+                else if (method == 2)
+                {
+                    subImage.getSecondaryColor(pColor, nextColor, false);
+                    int c2;
+                    palette.getClosestColorTo(nextColor, pColor2, c2, false, c1);
+                    minErrorIndex[0] = c1;
+                    minErrorIndex[1] = c2;
+                    Color* col1 = palette.colorAtIndex(c1);
+                    Color* col2 = palette.colorAtIndex(c2);
+                    p.setColorAtIndex(*col1, 2);
+                    p.setColorAtIndex(*col2, 3);
+                    testImages[minErrorIndex[1]] = fsDitherer->createDitheredImageFromImageWithPalette(subImage, p);
+                }
+                else if (method == 3)
+                {
+                    subImage.getSecondaryColor(pColor, nextColor, true);
+                    int c2;
+                    palette.getClosestColorTo(nextColor, pColor2, c2, false, c1);
+                    minErrorIndex[0] = c1;
+                    minErrorIndex[1] = c2;
+                    Color* col1 = palette.colorAtIndex(c1);
+                    Color* col2 = palette.colorAtIndex(c2);
+                    p.setColorAtIndex(*col1, 2);
+                    p.setColorAtIndex(*col2, 3);
+                    testImages[minErrorIndex[1]] = fsDitherer->createDitheredImageFromImageWithPalette(subImage, p);
                 }
                 
-                if (useColor)
+                // remember color selections
+                // TEMP
+                //minErrorIndex[0] = 0;
+                //minErrorIndex[1] = 0;
+                
+                //printf("c1 %d c2 %d\n", minErrorIndex[0], minErrorIndex[1]);
+                
+                newImage->setBlockColor(xb, yb, 0, minErrorIndex[0]);
+                newImage->setBlockColor(xb, yb, 1, minErrorIndex[1]);
+                
+                Color* pc;
+                pc = palette.colorAtIndex(minErrorIndex[0]);
+                p.setColorAtIndex(*pc, 2);
+                pc = palette.colorAtIndex(minErrorIndex[1]);
+                p.setColorAtIndex(*pc, 3);
+                
+                pcolors[2] = minErrorIndex[0];
+                pcolors[3] = minErrorIndex[1];
+                
+                Image* ii = testImages[minErrorIndex[1]];
+                //Image* ii = fsDitherer->createDitheredImageFromImageWithPalette(subImage, p);
+                
+                // map to full c64 palette
+                for (int y = 0; y < ii->getHeight(); y++)
                 {
-                    p.setColorAtIndex(*pc1, 2);
-                    p.setColorAtIndex(*pc1, 3);
-                    
-                    Image* ii = fsDitherer->createDitheredImageFromImageWithPalette(subImage, p);
-                    float err = ii->getErrorFromImage(subImage);
-                    
-                    if (err < bestError)
+                    for (int x = 0; x < ii->getWidth(); x++)
                     {
-                        bestError = err;
-                        bestColor = c;
+                        Pixel* p = ii->pixelAt(x, y);
+                        int c64_palette_color = pcolors[p->palette_index];
+                        p->palette_index = c64_palette_color;
                     }
-                    
-                    delete ii;
                 }
+                
+                // copy subimage into destination image
+                newImage->copyFromImageAtPosition(*ii, xb*blockWidth, yb*blockHeight);
+                
+                for (int c = 0; c < palette.getNumColors(); c++)
+                {
+                    if (testImages[c])
+                    {
+                        delete testImages[c];
+                    }
+                }
+                free(testImages);
+                
+                // temp
+                //free(ii);
             }
-            //*/
-            
-            // METHOD 3 - find first color by matching block's avg color
-            subImage.getAvgColor(avgColor);
-            int bestColor;
-            palette.getClosestColorTo(avgColor, pColor, bestColor, false);
-            
-            //*
-            // find second color
-            float minError = 9999999.9;
-            int minErrorIndex[2];
-            int c1 = bestColor;
-            Image** testImages;
-            testImages = (Image**)calloc(sizeof(Image*), palette.getNumColors());
-            
-            for (int c2 = 2; c2 < palette.getNumColors(); c2++)
+        }
+    }
+    
+    delete fsDitherer;
+    return newImage;
+}
+
+void C64Ditherer::processRow(C64Image* image, int blockWidth, int blockHeight, int yBlock, int xBlocks, const Palette& inpalette)
+{
+    Image subImage(blockWidth, blockHeight);
+    Ditherer* fsDitherer = createFloydSteinbergDitherer();
+    Color avgColor;
+    Color pColor;
+    Palette* palette = NULL;
+    Palette p(4);
+    
+    Color black;
+    black.set(0, 0, 0);
+    Color white;
+    white.set(1, 1, 1);
+    
+    p.setColorAtIndex(black, 0);
+    p.setColorAtIndex(white, 1);
+    int pcolors[4];
+    pcolors[0] = 0;
+    pcolors[1] = 1;
+    
+    {
+        std::lock_guard<std::mutex> guard(process_mutex);
+        palette = new Palette(inpalette);
+    }
+    
+    for (int xb = 0; xb < xBlocks; xb++)
+    {
+        {
+            std::lock_guard<std::mutex> guard(process_mutex);
+            subImage.fromSubImage(*image, xb * blockWidth, blockWidth, yBlock * blockHeight, blockHeight);
+        }
+        
+        subImage.getAvgColor(avgColor);
+        int bestColor;
+        palette->getClosestColorTo(avgColor, pColor, bestColor, false);
+        
+        float minError = 9999999.9;
+        int minErrorIndex[2];
+        int c1 = bestColor;
+        Image** testImages;
+        testImages = (Image**)calloc(sizeof(Image*), palette->getNumColors());
+        
+        int method = 0;
+        
+        if (method == 0)
+        {
+            for (int c2 = 2; c2 < palette->getNumColors(); c2++)
             {
                 bool useColors = c1 != c2;
                 if (useColors)
                 {
-                    Color* pc1 = palette.colorAtIndex(c1);
+                    Color* pc1 = palette->colorAtIndex(c1);
                     p.setColorAtIndex(*pc1, 2);
                     
-                    Color* pc2 = palette.colorAtIndex(c2);
+                    Color* pc2 = palette->colorAtIndex(c2);
                     if (pc2->rgb[0] == pc2->rgb[1] && pc2->rgb[0] == pc2->rgb[2])
                     {
                         useColors = false;
@@ -246,8 +452,6 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
                     p.setColorAtIndex(*pc2, 3);
                 }
                 
-                //printf("c2 %d\n", c2);
-                // TEST - disqualify grayscale
                 if (useColors)
                 {
                     testImages[c2] = fsDitherer->createDitheredImageFromImageWithPalette(subImage, p);
@@ -261,59 +465,52 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
                     }
                 }
             }
-            
-            // remember color selections
-            // TEMP
-            //minErrorIndex[0] = 0;
-            //minErrorIndex[1] = 0;
-            
-            //printf("c1 %d c2 %d\n", minErrorIndex[0], minErrorIndex[1]);
-            
-            newImage->setBlockColor(xb, yb, 0, minErrorIndex[0]);
-            newImage->setBlockColor(xb, yb, 1, minErrorIndex[1]);
-            
-            Color* pc;
-            pc = palette.colorAtIndex(minErrorIndex[0]);
-            p.setColorAtIndex(*pc, 2);
-            pc = palette.colorAtIndex(minErrorIndex[1]);
-            p.setColorAtIndex(*pc, 3);
-            
-            pcolors[2] = minErrorIndex[0];
-            pcolors[3] = minErrorIndex[1];
-            
-            Image* ii = testImages[minErrorIndex[1]];
-            //Image* ii = fsDitherer->createDitheredImageFromImageWithPalette(subImage, p);
-            
-            // map to full c64 palette
-            for (int y = 0; y < ii->getHeight(); y++)
-            {
-                for (int x = 0; x < ii->getWidth(); x++)
-                {
-                    Pixel* p = ii->pixelAt(x, y);
-                    int c64_palette_color = pcolors[p->palette_index];
-                    p->palette_index = c64_palette_color;
-                }
-            }
-            
-            // copy subimage into destination image
-            newImage->copyFromImageAtPosition(*ii, xb*blockWidth, yb*blockHeight);
-            
-            for (int c = 0; c < palette.getNumColors(); c++)
-            {
-                if (testImages[c])
-                {
-                    delete testImages[c];
-                }
-            }
-            free(testImages);
-            
-            // temp
-            //free(ii);
         }
+        
+        //printf("c1 %d c2 %d\n", minErrorIndex[0], minErrorIndex[1]);
+        
+        Color* pc;
+        pc = palette->colorAtIndex(minErrorIndex[0]);
+        p.setColorAtIndex(*pc, 2);
+        pc = palette->colorAtIndex(minErrorIndex[1]);
+        p.setColorAtIndex(*pc, 3);
+        
+        pcolors[2] = minErrorIndex[0];
+        pcolors[3] = minErrorIndex[1];
+        
+        Image* ii = testImages[minErrorIndex[1]];
+        
+        for (int y = 0; y < ii->getHeight(); y++)
+        {
+            for (int x = 0; x < ii->getWidth(); x++)
+            {
+                Pixel* p = ii->pixelAt(x, y);
+                int c64_palette_color = pcolors[p->palette_index];
+                p->palette_index = c64_palette_color;
+            }
+        }
+        
+        // copy subimage into destination image
+        
+        {
+            std::lock_guard<std::mutex> guard(process_mutex);
+            image->setBlockColor(xb, yBlock, 0, minErrorIndex[0]);
+            image->setBlockColor(xb, yBlock, 1, minErrorIndex[1]);
+            image->copyFromImageAtPosition(*ii, xb*blockWidth, yBlock*blockHeight);
+        }
+        
+        for (int c = 0; c < palette->getNumColors(); c++)
+        {
+            if (testImages[c])
+            {
+                delete testImages[c];
+            }
+        }
+        free(testImages);
     }
-     
+    
     delete fsDitherer;
-    return newImage;
+    delete palette;
 }
 
 #if 0

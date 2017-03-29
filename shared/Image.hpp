@@ -59,9 +59,10 @@ public:
     Palette();
     Palette(int numColors);
     Palette(unsigned char* colorValues, int numColors);
+    Palette(const Palette& p);
     
     void setNumColors(int numColors);
-    void getClosestColorTo(const Color& inColor, Color& outColor, int& index, bool includeGrayscale = true) const;
+    void getClosestColorTo(const Color& inColor, Color& outColor, int& index, bool includeGrayscale = true, int excludeColorIndex = -1) const;
     Color* colorAtIndex(int index) const;
     void setColorAtIndex(const Color& color, int index) const;
     int getNumColors() const
@@ -91,6 +92,8 @@ public:
     int getWidth() const { return width; }
     int getHeight() const { return height; }
     void getAvgColor(Color& color);
+    void getSecondaryColor(Color& firstColor, Color& secondaryColor, bool useColorVector);
+    
     void colorHistogram();
     float getErrorFromImage(const Image& im);
     void copyFromImageAtPosition(const Image& im, int xOffset, int yOffset);

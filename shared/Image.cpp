@@ -106,6 +106,21 @@ Palette::Palette(unsigned char* colorValues, int nc)
     }
 }
 
+Palette::Palette(const Palette& p)
+{
+    numColors = p.getNumColors();
+    if (numColors > 0)
+    {
+        colors = new Color[numColors];
+    }
+    
+    for (int i = 0; i < numColors; i++)
+    {
+        Color* c = p.colorAtIndex(i);
+        colors[i].fromColor(*c);
+    }
+}
+
 void Palette::setNumColors(int numColors)
 {
     this->numColors = numColors;
@@ -118,7 +133,7 @@ void Palette::setNumColors(int numColors)
     colors = new Color[this->numColors];
 }
 
-void Palette::getClosestColorTo(const Color& inColor, Color& outColor, int& index, bool includeGrayscale) const
+void Palette::getClosestColorTo(const Color& inColor, Color& outColor, int& index, bool includeGrayscale, int excludeColorIndex) const
 {
     float lowestError = 999999.9;
     int lowestErrorIndex = -1;
@@ -136,6 +151,11 @@ void Palette::getClosestColorTo(const Color& inColor, Color& outColor, int& inde
             }
         }
         
+        if (excludeColorIndex == i)
+        {
+            useColor = false;
+        }
+            
         if (useColor)
         {
             float error = c->distanceFromColor(inColor);
@@ -410,6 +430,91 @@ void Image::getAvgColor(Color &color)
             {
                 color.rgb[c] += p->rgb[c] / divisor;
             }
+        }
+    }
+}
+
+void Image::getSecondaryColor(Color &firstColor, Color &secondaryColor, bool useColorVector)
+{
+    // get an ordered list of pixels, by descending error
+    typedef struct
+    {
+        Pixel* p;
+        float error;
+    } PixelError;
+    
+    Color fromColor;
+    if (useColorVector)
+    {
+        Color gray;
+        firstColor.getGrayAndColorComponents(gray, fromColor);
+    }
+    else
+    {
+        fromColor.fromColor(firstColor);
+    }
+    
+    list<PixelError> pixelIndicesDescendingError;
+    for (int h = 0; h < height; h++)
+    {
+        for (int w = 0; w < width; w++)
+        {
+            Pixel* p = pixelAt(w, h);
+            Color toColor;
+            if (useColorVector)
+            {
+                Color gray;
+                Color c;
+                c.fromPixel(*p);
+                c.getGrayAndColorComponents(gray, toColor);
+            }
+            else
+            {
+                toColor.fromPixel(*p);
+            }
+            
+            float error = 0;
+            float diff = 0;
+            for (int c = 0; c < 3; c++)
+            {
+                diff = firstColor.rgb[c] - p->rgb[c];
+                error += (diff*diff);
+            }
+            
+            PixelError thisError;
+            thisError.p = p;
+            thisError.error = error;
+            bool found = false;
+            for (list<PixelError>::iterator it = pixelIndicesDescendingError.begin();
+                 it != pixelIndicesDescendingError.end();
+                 it++)
+            {
+                if (it->error < error)
+                {
+                    pixelIndicesDescendingError.insert(it, thisError);
+                    found = true;
+                    break;
+                }
+            }
+            
+            if (!found)
+            {
+                pixelIndicesDescendingError.push_back(thisError);
+            }
+        }
+    }
+    
+    int halfPixelCount = (height*width) / 2;
+    int i = 0;
+    float divisor = float(halfPixelCount);
+    secondaryColor.set(0, 0, 0);
+    for (list<PixelError>::iterator it = pixelIndicesDescendingError.begin();
+         it != pixelIndicesDescendingError.end() && i < halfPixelCount;
+         it++, i++)
+    {
+        for (int c = 0; c < 3; c++)
+        {
+            secondaryColor.rgb[c] += it->p->rgb[c] / divisor;
         }
     }
 }
