@@ -19,6 +19,14 @@
 #include "StringTools.h"
 #include "c64_colors.h"
 
+unsigned char bw_colors[] =
+{
+    0,      0,      0,
+    255,    255,    255
+};
+
+int num_bw_colors = 2;
+
 int main(int argc, const char * argv[]) {
     
     const char* outdir = argv[1];
@@ -46,19 +54,23 @@ int main(int argc, const char * argv[]) {
     int imWidth = inputImage.getWidth();
     int imHeight = inputImage.getHeight();
     Image halfImage(inputImage, imWidth / 2, imHeight);
-    Ditherer* ditherer = Ditherer::createC64Ditherer();
-    
     timer.start();
-    Image* dithered = ditherer->createDitheredImageFromImageWithPalette(halfImage, c64palette);
-    C64Image* c64im = (C64Image*)dithered;
     
     if (strcmp(type, "ppm") == 0)
     {
+        Ditherer* ditherer = Ditherer::createC64Ditherer();
+        Image* dithered = ditherer->createDitheredImageFromImageWithPalette(halfImage, c64palette);
+        C64Image* c64im = (C64Image*)dithered;
         Image fullImage(*dithered, imWidth, imHeight);
         fullImage.writePPM(outfname);
+        delete ditherer;
+        delete dithered;
     }
     else if (strcmp(type, "c64") == 0)
     {
+        Ditherer* ditherer = Ditherer::createC64Ditherer();
+        Image* dithered = ditherer->createDitheredImageFromImageWithPalette(halfImage, c64palette);
+        C64Image* c64im = (C64Image*)dithered;
         int c64FrameSize = c64im->getC64FrameSize();
         unsigned char* frame = (unsigned char*)malloc(sizeof(unsigned char) * c64FrameSize);
         FILE *fp = fopen(outfname, "wb");
@@ -66,13 +78,20 @@ int main(int argc, const char * argv[]) {
         c64im->getC64Frame(frame, time);
         fwrite(frame, 1, c64FrameSize, fp);
         fclose(fp);
+        delete ditherer;
+        delete dithered;
+    }
+    else if (strcmp(type, "bwdither") == 0)
+    {
+        Palette bwPalette(bw_colors, num_bw_colors);
+        Ditherer* ditherer = Ditherer::createFloydSteinbergDitherer();
+        Image* dithered = ditherer->createDitheredImageFromImageWithPalette(inputImage, bwPalette);
+        dithered->writePPM(outfname);
+        delete ditherer;
+        delete dithered;
     }
     
     double time = timer.getTime();
     printf("Completed in %lf seconds.\n", time);
-    
-    
-    delete ditherer;
-    delete dithered;
     return 0;
 }
