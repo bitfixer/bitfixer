@@ -1,0 +1,289 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		6520EBE41E8F65FC00F7D65A /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6520EBE31E8F65FC00F7D65A /* main.cpp */; };
+		6520EBF11E8F662700F7D65A /* timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6520EBEC1E8F662700F7D65A /* timer.cpp */; };
+		6520EBF21E8F662700F7D65A /* NetPort.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6520EBEE1E8F662700F7D65A /* NetPort.cpp */; };
+		6520EBF31E8F662700F7D65A /* CommPort.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6520EBF01E8F662700F7D65A /* CommPort.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		6520EBDE1E8F65FC00F7D65A /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		6520EBE01E8F65FC00F7D65A /* c64netplayer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = c64netplayer; sourceTree = BUILT_PRODUCTS_DIR; };
+		6520EBE31E8F65FC00F7D65A /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		6520EBEB1E8F662700F7D65A /* timer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = timer.hpp; path = ../shared/timer.hpp; sourceTree = "<group>"; };
+		6520EBEC1E8F662700F7D65A /* timer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = timer.cpp; path = ../shared/timer.cpp; sourceTree = "<group>"; };
+		6520EBED1E8F662700F7D65A /* NetPort.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NetPort.h; path = ../shared/NetPort.h; sourceTree = "<group>"; };
+		6520EBEE1E8F662700F7D65A /* NetPort.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NetPort.cpp; path = ../shared/NetPort.cpp; sourceTree = "<group>"; };
+		6520EBEF1E8F662700F7D65A /* CommPort.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommPort.h; path = ../shared/CommPort.h; sourceTree = "<group>"; };
+		6520EBF01E8F662700F7D65A /* CommPort.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CommPort.cpp; path = ../shared/CommPort.cpp; sourceTree = "<group>"; };
+		6520EBF51E8F67A000F7D65A /* Net.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Net.h; path = ../external/Net/Net.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		6520EBDD1E8F65FC00F7D65A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		6520EBD71E8F65FC00F7D65A = {
+			isa = PBXGroup;
+			children = (
+				6520EBF41E8F678F00F7D65A /* external */,
+				6520EBEA1E8F660500F7D65A /* shared */,
+				6520EBE21E8F65FC00F7D65A /* c64netplayer */,
+				6520EBE11E8F65FC00F7D65A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		6520EBE11E8F65FC00F7D65A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6520EBE01E8F65FC00F7D65A /* c64netplayer */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6520EBE21E8F65FC00F7D65A /* c64netplayer */ = {
+			isa = PBXGroup;
+			children = (
+				6520EBE31E8F65FC00F7D65A /* main.cpp */,
+			);
+			path = c64netplayer;
+			sourceTree = "<group>";
+		};
+		6520EBEA1E8F660500F7D65A /* shared */ = {
+			isa = PBXGroup;
+			children = (
+				6520EBEB1E8F662700F7D65A /* timer.hpp */,
+				6520EBEC1E8F662700F7D65A /* timer.cpp */,
+				6520EBED1E8F662700F7D65A /* NetPort.h */,
+				6520EBEE1E8F662700F7D65A /* NetPort.cpp */,
+				6520EBEF1E8F662700F7D65A /* CommPort.h */,
+				6520EBF01E8F662700F7D65A /* CommPort.cpp */,
+			);
+			name = shared;
+			sourceTree = "<group>";
+		};
+		6520EBF41E8F678F00F7D65A /* external */ = {
+			isa = PBXGroup;
+			children = (
+				6520EBF51E8F67A000F7D65A /* Net.h */,
+			);
+			name = external;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		6520EBDF1E8F65FC00F7D65A /* c64netplayer */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6520EBE71E8F65FC00F7D65A /* Build configuration list for PBXNativeTarget "c64netplayer" */;
+			buildPhases = (
+				6520EBDC1E8F65FC00F7D65A /* Sources */,
+				6520EBDD1E8F65FC00F7D65A /* Frameworks */,
+				6520EBDE1E8F65FC00F7D65A /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = c64netplayer;
+			productName = c64netplayer;
+			productReference = 6520EBE01E8F65FC00F7D65A /* c64netplayer */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		6520EBD81E8F65FC00F7D65A /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0820;
+				ORGANIZATIONNAME = "Michael Hill";
+				TargetAttributes = {
+					6520EBDF1E8F65FC00F7D65A = {
+						CreatedOnToolsVersion = 8.2.1;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 6520EBDB1E8F65FC00F7D65A /* Build configuration list for PBXProject "c64netplayer" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 6520EBD71E8F65FC00F7D65A;
+			productRefGroup = 6520EBE11E8F65FC00F7D65A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				6520EBDF1E8F65FC00F7D65A /* c64netplayer */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6520EBDC1E8F65FC00F7D65A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6520EBF21E8F662700F7D65A /* NetPort.cpp in Sources */,
+				6520EBE41E8F65FC00F7D65A /* main.cpp in Sources */,
+				6520EBF31E8F662700F7D65A /* CommPort.cpp in Sources */,
+				6520EBF11E8F662700F7D65A /* timer.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		6520EBE51E8F65FC00F7D65A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		6520EBE61E8F65FC00F7D65A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		6520EBE81E8F65FC00F7D65A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		6520EBE91E8F65FC00F7D65A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		6520EBDB1E8F65FC00F7D65A /* Build configuration list for PBXProject "c64netplayer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6520EBE51E8F65FC00F7D65A /* Debug */,
+				6520EBE61E8F65FC00F7D65A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6520EBE71E8F65FC00F7D65A /* Build configuration list for PBXNativeTarget "c64netplayer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6520EBE81E8F65FC00F7D65A /* Debug */,
+				6520EBE91E8F65FC00F7D65A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 6520EBD81E8F65FC00F7D65A /* Project object */;
+}

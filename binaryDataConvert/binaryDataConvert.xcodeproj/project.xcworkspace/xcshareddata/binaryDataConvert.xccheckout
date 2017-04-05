@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>D3D7337D-BB5A-4E8A-BF5B-CE16E3610A20</string>
+	<key>IDESourceControlProjectName</key>
+	<string>project</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>127564C1FFE5AE659241BE1B8EA48F4A02F61396</key>
+		<string>https://github.com/bitfixer/bitfixer.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>binaryDataConvert/binaryDataConvert.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>127564C1FFE5AE659241BE1B8EA48F4A02F61396</key>
+		<string>../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/bitfixer/bitfixer.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>127564C1FFE5AE659241BE1B8EA48F4A02F61396</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>127564C1FFE5AE659241BE1B8EA48F4A02F61396</string>
+			<key>IDESourceControlWCCName</key>
+			<string>bitfixer</string>
+		</dict>
+	</array>
+</dict>
+</plist>
