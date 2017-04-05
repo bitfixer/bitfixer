@@ -37,7 +37,7 @@
     _socket = -1;
     // Do any additional setup after loading the view, typically from a nib.
     videoCamera = [[GPUImageVideoCamera alloc] initWithSessionPreset:AVCaptureSessionPreset640x480
-                                                      cameraPosition:AVCaptureDevicePositionBack];
+                                                      cameraPosition:AVCaptureDevicePositionFront];
     videoCamera.outputImageOrientation = UIInterfaceOrientationPortrait;
     
     //GPUImageCropFilter *crop = [[GPUImageCropFilter alloc] initWithCropRegion:CGRectMake(0, 0, 256.0/480.0, 256.0/640.0)];
@@ -209,7 +209,7 @@
          
         memset(&_broadcastAddr, 0, sizeof _broadcastAddr);
         _broadcastAddr.sin_family = AF_INET;
-        inet_pton(AF_INET, "192.168.1.25", &_broadcastAddr.sin_addr); // Set the broadcast IP address
+        inet_pton(AF_INET, "192.168.1.6", &_broadcastAddr.sin_addr); // Set the broadcast IP address
         _broadcastAddr.sin_port = htons(99999);
     }
     

@@ -5,53 +5,90 @@ import sys
 import select
 import serial
 import time
+import binascii
 
-#setup the UDP input
-host = "0.0.0.0"
-port = 9999
-s = socket(AF_INET, SOCK_DGRAM)
-s.bind((host, port))
-addr = (host, port)
-buf = 1024
+class FrameDataSource:
+    def read(self, size):
+        print "FrameDataSource recv " + str(size)
+        return 0
+
+class NetworkFrameDataSource(FrameDataSource):
+    def __init__(self):
+        host = "0.0.0.0"
+        port = 9999
+        self.s = socket(AF_INET, SOCK_DGRAM)
+        self.s.bind((host, port))
+        addr = (host, port)
+
+    def read(self):
+        size = 1000
+        print "NetworkFrameDataSource recv " + str(size)
+        res, addr = self.s.recvfrom(size)
+        print "got " + str(len(res)) + " bytes from " + str(addr)
+        # network frames should always play in realtime
+        return res, -1.0
+
+class FileFrameDataSource(FrameDataSource):
+    def __init__(self, fname):
+        self.file = open(fname, 'rb')
+
+    def read(self):
+        size = 1024
+        print "FileFrameDataSource recv " + str(size)
+        framedata = self.file.read(size)
+        if len(framedata) != size:
+            return "", -1.0
+
+        framestr = framedata[:1000]
+        #timestr = framedata[1000:1024].rstrip()
+        timedata = framedata[1000:1024]
+        #print "timedata: " + timedata + "*"
+        #timestr = binascii.b2a_uu(timedata).rstrip()
+        timestr = "%s" % timedata
+        #print "timestr: " + timestr + "*"
+        frametime = float(timestr)
+        return framestr, frametime
 
 ser = serial.Serial('/dev/ttyAMA0', 460800, timeout=10)
+datasource = FrameDataSource()
 
 # check for file input
-print "len " + str(len(sys.argv))
-fname = ""
 if len(sys.argv) >= 2:
     print sys.argv[1]
     fname = sys.argv[1]
-
-numframes = 1000
-file = open(fname, 'rb')
+    datasource = FileFrameDataSource(fname)
+else:
+    datasource = NetworkFrameDataSource()
 
 starttime = time.time()
 
-#for t in range(0,numframes):
-#t = 0
+numframes = 0
 done = False
 while done == False:
-    #str, addr = s.recvfrom(buf)
-    #print t, len(str)
-    #t = t+1
+    framestr, frametime = datasource.read()
+    if (len(framestr) == 1000):
+        print "frametime " + str(frametime)
+        currPlaybackTime = time.time() - starttime
+        playFrame = True
+        if (currPlaybackTime < frametime):
+            # wait until correct time to play frame
+            waitTime = frametime - currPlaybackTime
+            time.sleep(waitTime)
+        elif (currPlaybackTime > frametime and frametime >= 0.0):
+            playFrame = False
+            print "skip frame at " + str(frametime)
 
-    str = file.read(1000)
-    if (len(str) == 1000):
-        for i in range(0,10):
-            ser.write(chr(0xff));
+        if playFrame == True:
+            currPlaybackTime = time.time() - starttime
+            print "frame " + str(frametime) + " real " + str(currPlaybackTime)
 
-        ser.write(chr(0x00))
-        ser.write(str)
+            for i in range(0,10):
+                ser.write(chr(0xff));
 
-        file.seek(24,1)
+            ser.write(chr(0x00))
+            ser.write(framestr[:1000])
 
-        #x = ser.read()
-        #while x != ':':
-        #    print x
-        #    x = ser.read()
-
-        time.sleep(0.1)
+            numframes += 1
     else:
         done = True
 
@@ -61,21 +98,4 @@ fps = numframes/(endtime-starttime)
 print endtime-starttime
 print fps
 
-
 ser.close()
-
-
-
-
-
-
-
-
-#for r in range(0,25):
-#        str = file.read(40)
-#        print str
-
-#    file.seek(24, 1)
-#    print
-
-#    time.sleep(0.1)

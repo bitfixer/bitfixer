@@ -29,10 +29,10 @@ loadpet: clean petpix_8032.wav
 
 
 petpix_fast.tap: petpix_fast
-	./prg2wav -s -t petpixfast.tap -m c64ntsc petpixf.prg
+	prg2wav -s -t petpixfast.tap -m c64ntsc petpixf.prg
 
 petpix_fast.wav: petpix_fast.tap
-	./c64tape -f 44100 -r petpixfast.tap > petpixfast_long.wav
+	tap2wav -f 44100 -r petpixfast.tap > petpixfast_long.wav
 	ffmpeg -ss 7.5 -i petpixfast_long.wav petpixfast.wav
 
 petpix_fast.load: clean petpix_fast.wav

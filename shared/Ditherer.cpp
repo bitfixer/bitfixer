@@ -155,7 +155,7 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
     
     int* blockColors = (int*)calloc(sizeof(int), 2*yBlocks*xBlocks);
     
-    bool useThreads = false;
+    bool useThreads = true;
     if (useThreads)
     {
         //mutex process_mutex;

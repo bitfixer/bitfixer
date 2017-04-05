@@ -18,7 +18,7 @@ int main(int argc, const char * argv[]) {
     const char* fname = argv[1];
     FILE* fp = fopen(fname, "rb");
     
-    NetPort port(192,168,1,9,99998,99999);
+    NetPort port(192,168,1,6,99998,99999);
     
     bool done = false;
     unsigned char buffer[9216];

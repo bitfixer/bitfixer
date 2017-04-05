@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		6520EC031E8F7D6B00F7D65A /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6520EC021E8F7D6B00F7D65A /* main.cpp */; };
+		6520EC101E8F7D8900F7D65A /* timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6520EC0B1E8F7D8900F7D65A /* timer.cpp */; };
+		6520EC111E8F7D8900F7D65A /* NetPort.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6520EC0D1E8F7D8900F7D65A /* NetPort.cpp */; };
+		6520EC121E8F7D8900F7D65A /* CommPort.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6520EC0F1E8F7D8900F7D65A /* CommPort.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +28,13 @@
 /* Begin PBXFileReference section */
 		6520EBFF1E8F7D6B00F7D65A /* petnetplayer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = petnetplayer; sourceTree = BUILT_PRODUCTS_DIR; };
 		6520EC021E8F7D6B00F7D65A /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		6520EC0A1E8F7D8900F7D65A /* timer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = timer.hpp; path = ../shared/timer.hpp; sourceTree = "<group>"; };
+		6520EC0B1E8F7D8900F7D65A /* timer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = timer.cpp; path = ../shared/timer.cpp; sourceTree = "<group>"; };
+		6520EC0C1E8F7D8900F7D65A /* NetPort.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NetPort.h; path = ../shared/NetPort.h; sourceTree = "<group>"; };
+		6520EC0D1E8F7D8900F7D65A /* NetPort.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NetPort.cpp; path = ../shared/NetPort.cpp; sourceTree = "<group>"; };
+		6520EC0E1E8F7D8900F7D65A /* CommPort.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommPort.h; path = ../shared/CommPort.h; sourceTree = "<group>"; };
+		6520EC0F1E8F7D8900F7D65A /* CommPort.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CommPort.cpp; path = ../shared/CommPort.cpp; sourceTree = "<group>"; };
+		6520EC141E8F7DA000F7D65A /* Net.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Net.h; path = ../external/Net/Net.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -41,6 +51,8 @@
 		6520EBF61E8F7D6B00F7D65A = {
 			isa = PBXGroup;
 			children = (
+				6520EC131E8F7D8D00F7D65A /* external */,
+				6520EC091E8F7D7300F7D65A /* shared */,
 				6520EC011E8F7D6B00F7D65A /* petnetplayer */,
 				6520EC001E8F7D6B00F7D65A /* Products */,
 			);
@@ -60,6 +72,27 @@
 				6520EC021E8F7D6B00F7D65A /* main.cpp */,
 			);
 			path = petnetplayer;
+			sourceTree = "<group>";
+		};
+		6520EC091E8F7D7300F7D65A /* shared */ = {
+			isa = PBXGroup;
+			children = (
+				6520EC0A1E8F7D8900F7D65A /* timer.hpp */,
+				6520EC0B1E8F7D8900F7D65A /* timer.cpp */,
+				6520EC0C1E8F7D8900F7D65A /* NetPort.h */,
+				6520EC0D1E8F7D8900F7D65A /* NetPort.cpp */,
+				6520EC0E1E8F7D8900F7D65A /* CommPort.h */,
+				6520EC0F1E8F7D8900F7D65A /* CommPort.cpp */,
+			);
+			name = shared;
+			sourceTree = "<group>";
+		};
+		6520EC131E8F7D8D00F7D65A /* external */ = {
+			isa = PBXGroup;
+			children = (
+				6520EC141E8F7DA000F7D65A /* Net.h */,
+			);
+			name = external;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -119,7 +152,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6520EC111E8F7D8900F7D65A /* NetPort.cpp in Sources */,
 				6520EC031E8F7D6B00F7D65A /* main.cpp in Sources */,
+				6520EC121E8F7D8900F7D65A /* CommPort.cpp in Sources */,
+				6520EC101E8F7D8900F7D65A /* timer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

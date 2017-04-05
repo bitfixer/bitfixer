@@ -81,8 +81,8 @@
     timer.start();
     Image inputImage((int)fbSize.width, (int)fbSize.height, (int)[firstInputFramebuffer bytesPerRow], 4, inputBytes);
     double t1 = timer.getTime();
-    NSURL* docsDir = [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
-    NSURL* ppmurl = [docsDir URLByAppendingPathComponent:@"output.ppm"];
+    //NSURL* docsDir = [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
+    //NSURL* ppmurl = [docsDir URLByAppendingPathComponent:@"output.ppm"];
     
     // output the image
     //inputImage.writePPM([[ppmurl path] cStringUsingEncoding:NSUTF8StringEncoding]);
