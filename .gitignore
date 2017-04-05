@@ -1,4 +1,11 @@
 .DS_Store
 *.xcuserstate
 *.xcscheme
-*/xcschememanagement.plist
+*.mp4
+*.wav
+*.ppm
+*.o
+*.so
+**/xcschememanagement.plist
+**/xcuserdata/*
+**/build/*
