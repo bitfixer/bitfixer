@@ -12,12 +12,19 @@
 class softSpi
 {
 public:
-    softSpi() {};
+    softSpi(bool driveChipSelect)
+    : _driveChipSelect(driveChipSelect)
+    {};
+    
     ~softSpi() {};
     
     void init();
-    void send();
+    void send(unsigned char sendbyte);
     unsigned char read();
+private:
+    bool _driveChipSelect;
+    
+    void setMiso(unsigned char bit);
 };
 
 #endif /* softSpi_hpp */

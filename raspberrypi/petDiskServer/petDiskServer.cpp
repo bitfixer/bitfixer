@@ -12,11 +12,14 @@ public:
     rpiSoftSPI(int clockPin,
                int chipSelectPin,
                int misoPin,
-               int mosiPin)
+               int mosiPin,
+               bool masterDrivesChipSelect = true)
     : _clockPin(clockPin)
     , _chipSelectPin(chipSelectPin)
     , _misoPin(misoPin)
     , _mosiPin(mosiPin)
+    , _clockDelay(3)
+    , _masterDrivesChipSelect(masterDrivesChipSelect)
     {};
     
     ~rpiSoftSPI() {};
@@ -27,9 +30,16 @@ public:
         pinMode(_clockPin, OUTPUT);
         digitalWrite(_clockPin, LOW);
         
-        // chip select
-        pinMode(_chipSelectPin, OUTPUT);
-        digitalWrite(_chipSelectPin, LOW);
+        if (_masterDrivesChipSelect)
+        {
+            // chip select
+            pinMode(_chipSelectPin, OUTPUT);
+            digitalWrite(_chipSelectPin, HIGH);
+        }
+        else
+        {
+            pinMode(_chipSelectPin, INPUT);
+        }
         
         // data in (MISO)
         pinMode(_misoPin, INPUT);
@@ -39,11 +49,28 @@ public:
         digitalWrite(_mosiPin, LOW);
     }
     
+    bool isSelected()
+    {
+        if (_masterDrivesChipSelect)
+        {
+            return false;
+        }
+        
+        int cs = getChipSelect();
+        //printf("cs %d\n", cs);
+        return (cs == LOW);
+    }
+    
     void send(unsigned char byte)
     {
-        // set clock
-        setClock(LOW);
-
+        unsigned char recvByte = 0;
+        //printf("sending %X\n", byte);
+        if (_masterDrivesChipSelect)
+        {
+            // set clock
+            setClock(LOW);
+        }
+            
         // set chip select
         setChipSelect(LOW);
         
@@ -51,13 +78,32 @@ public:
         {
             // present bit
             setMosi(byte & bit);
-            delayMicroseconds(2);
+            delayMicroseconds(_clockDelay);
             setClock(HIGH);
-            delayMicroseconds(2);
+            
+            recvByte <<= 1;
+            if (getMiso() == HIGH)
+            {
+                recvByte = recvByte | 0x01;
+            }
+            
+            delayMicroseconds(_clockDelay);
             setClock(LOW);
         }
         
-        setChipSelect(HIGH);
+        if (_masterDrivesChipSelect)
+        {
+            setChipSelect(HIGH);
+        }
+        else
+        {
+            while (getChipSelect() == LOW)
+            {
+                delayMicroseconds(1);
+            }
+        }
+        
+        printf("spi received %X\n", recvByte);
     }
     
 private:
@@ -65,6 +111,8 @@ private:
     int _chipSelectPin;
     int _misoPin;
     int _mosiPin;
+    int _clockDelay;
+    bool _masterDrivesChipSelect;
     
     void setClock(int value)
     {
@@ -74,6 +122,11 @@ private:
     void setChipSelect(int value)
     {
         digitalWrite(_chipSelectPin, value);
+    }
+    
+    int getChipSelect()
+    {
+        return digitalRead(_chipSelectPin);
     }
     
     void setMosi(int value)
@@ -95,16 +148,25 @@ int main(int argc, char **argv)
     rpiSoftSPI spi(1, // clock
                    0, // chip select
                    3, // miso
-                   2  // mosi
+                   2, // mosi
+                   false
                    );
     
     wiringPiSetup();
     spi.init();
+    unsigned char tmp = 0xA0;
     
     while(1)
     {
-        spi.send(0xCD);
-        delayMicroseconds(5000000);
+        if (spi.isSelected())
+        {
+            spi.send(tmp);
+            tmp++;
+        }
+        else
+        {
+            delayMicroseconds(1000);
+        }
     }
     
     printf("checking for commands..\n");
