@@ -33,7 +33,34 @@ private:
     high_resolution_clock::time_point startTime;
 };
 
-Timer* Timer::createTimer()
+Timer::Timer()
+: _timerImpl(NULL)
 {
-    return new TimerImpl();
+}
+
+Timer::~Timer()
+{
+    if (_timerImpl)
+    {
+        delete _timerImpl;
+        _timerImpl = NULL;
+    }
+}
+
+void Timer::start()
+{
+    if (!_timerImpl)
+    {
+        _timerImpl = new TimerImpl();
+    }
+    _timerImpl->start();
+}
+
+double Timer::getTime()
+{
+    if (_timerImpl)
+    {
+        return _timerImpl->getTime();
+    }
+    return 0.0;
 }

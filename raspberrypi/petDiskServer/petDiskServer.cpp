@@ -14,9 +14,7 @@ int main(int argc, char **argv)
     printf("load %s\n", fname);
     
     unsigned char buffer[256];
-    //Tools::Timer t;
-    
-    Tools::Timer* t = Tools::Timer::createTimer();
+    Tools::Timer t;
     int value = 0;
     rpiSoftSPI spi(1, // clock
                    0, // chip select
@@ -27,7 +25,6 @@ int main(int argc, char **argv)
     
     wiringPiSetup();
     spi.init();
-    //sprintf((char*)buffer, "Come here, I need you.");
     
     int bytesToSend = 200;
     memset(buffer, 0, 256);
@@ -40,13 +37,11 @@ int main(int argc, char **argv)
         delayMicroseconds(1000);
     }
     
-    
-    t->start();
+    t.start();
     spi.send(buffer, strlen((const char*)buffer));
-    double elapsed = t->getTime();
     
+    double elapsed = t.getTime();
     double rate = (double)bytesToSend / elapsed;
-    
     printf("done. took %lf seconds, Bps %lf\n", elapsed, rate);
     
     /*
