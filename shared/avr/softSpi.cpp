@@ -49,19 +49,19 @@ void softSpi::setMiso(unsigned char bit)
     PORTB = c;
 }
 
-void softSpi::send(unsigned char sendbyte)
+int softSpi::send(unsigned char* buffer, int size)
 {
     unsigned char c = 1;
     unsigned char clk;
+    unsigned char cs;
     unsigned char bits = 0;
     unsigned char byte = 0;
+    unsigned char sendbyte = 0xAA;
+    int bytesReceived = 0;
     
     if (_driveChipSelect)
     {
         // lower chip select line
-        //c = PORTB;
-        //c = c & ~CSMASK;
-        //PORTB = c;
         PORTB = 0x00;
     }
     else // read chip select from master
@@ -74,38 +74,52 @@ void softSpi::send(unsigned char sendbyte)
     
     clk = PINB & SCKMASK;
     
-    for (unsigned char i = 0; i < 8; i++)
+    for (int s = 0; s < size && c == 0; s++)
     {
-        // present bit
-        setMiso(sendbyte & 0x80);
-        sendbyte <<= 1;
-        
-        while (clk == 0x00)
+        byte = 0;
+        for (unsigned char i = 0; i < 8; i++)
         {
-            clk = PINB & SCKMASK;
+            // present bit
+            setMiso(sendbyte & 0x80);
+            sendbyte <<= 1;
+            
+            while (clk == 0x00 && c == 0)
+            {
+                clk = PINB & SCKMASK;
+                if (!_driveChipSelect)
+                {
+                    c = PINB & CSMASK;
+                }
+            }
+            
+            if (c != 0)
+            {
+                break;
+            }
+            
+            byte <<= 1;
+            if ((PINB & MOSIMASK) != 0x00)
+            {
+                byte = byte | 0x01;
+            }
+            
+            while (clk != 0x00)
+            {
+                clk = PINB & SCKMASK;
+            }
         }
         
-        byte <<= 1;
-        if ((PINB & MOSIMASK) != 0x00)
+        if (c == 0)
         {
-            byte = byte | 0x01;
-        }
-        
-        while (clk != 0x00)
-        {
-            clk = PINB & SCKMASK;
+            buffer[s] = byte;
+            bytesReceived++;
         }
     }
     
     if (_driveChipSelect)
     {
-        //c = PORTB;
-        //c = c | CSMASK;
-        //PORTB = c;
         PORTB = CSMASK;
     }
     
-    transmitString((unsigned char *)"read cs data: ");
-    transmitHex(CHAR, byte);
-    transmitString((unsigned char*)"\r\n");
+    return bytesReceived;
 }

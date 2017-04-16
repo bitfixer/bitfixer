@@ -19,7 +19,7 @@ public:
     ~softSpi() {};
     
     void init();
-    void send(unsigned char sendbyte);
+    int send(unsigned char* buffer, int size);
     unsigned char read();
 private:
     bool _driveChipSelect;

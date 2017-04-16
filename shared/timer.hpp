@@ -9,21 +9,14 @@
 #ifndef timer_hpp
 #define timer_hpp
 
-#include <iostream>
-#include <chrono>
-
 namespace Tools
 {
     class Timer
     {
     public:
-        Timer() {};
-        
-        void start();
-        double getTime();
-        
-    private:
-        std::chrono::high_resolution_clock::time_point startTime;
+        static Timer* createTimer();
+        virtual void start() = 0;
+        virtual double getTime() = 0;
     };
 }
 

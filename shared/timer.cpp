@@ -7,17 +7,33 @@
 //
 
 #include "timer.hpp"
+#include <iostream>
+#include <chrono>
+
 using namespace std::chrono;
 using namespace Tools;
 
-void Timer::start()
+class TimerImpl : public Timer
 {
-    startTime = high_resolution_clock::now();
-}
+public:
+    TimerImpl() {};
+    void start()
+    {
+        startTime = high_resolution_clock::now();
+    }
+    
+    double getTime()
+    {
+        std::chrono::high_resolution_clock::time_point now = high_resolution_clock::now();
+        duration<double> dur = duration_cast<duration<double>>(now - startTime);
+        return dur.count();
+    }
+    
+private:
+    high_resolution_clock::time_point startTime;
+};
 
-double Timer::getTime()
+Timer* Timer::createTimer()
 {
-    std::chrono::high_resolution_clock::time_point now = high_resolution_clock::now();
-    duration<double> dur = duration_cast<duration<double>>(now - startTime);
-    return dur.count();
+    return new TimerImpl();
 }
