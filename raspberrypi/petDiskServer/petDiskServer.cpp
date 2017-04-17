@@ -26,8 +26,8 @@ int main(int argc, char **argv)
     wiringPiSetup();
     spi.init();
 
-    int bytesToSend = 200;
-    memset(buffer, 0, 256);
+    int bytesToSend = 512;
+    memset(buffer, 0, 512);
     FILE* fp = fopen(fname, "rb");
     fread(buffer, 1, bytesToSend, fp);
     fclose(fp);
@@ -45,11 +45,11 @@ int main(int argc, char **argv)
     bool dataGood = true;
     for (int i = 0; i < bytesToSend; i++)
     {
-        //printf("buffer %d: %X\n", i, buffer[i]);
-        if (i != buffer[i])
+        printf("buffer %d: %X\n", i, buffer[i]);
+        if (i % 256 != buffer[i])
         {
             dataGood = false;
-            break;
+            //break;
         }
     }
     printf("done. took %lf seconds, Bps %lf. DataGood: %d\n", elapsed, rate, dataGood);
