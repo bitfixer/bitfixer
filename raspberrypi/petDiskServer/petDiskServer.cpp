@@ -12,8 +12,8 @@ int main(int argc, char **argv)
 {
     const char* fname = argv[1];
     printf("load %s\n", fname);
-    
-    unsigned char buffer[256];
+
+    unsigned char buffer[512];
     Tools::Timer t;
     int value = 0;
     rpiSoftSPI spi(1, // clock
@@ -22,45 +22,39 @@ int main(int argc, char **argv)
                    2, // mosi
                    true
                    );
-    
+
     wiringPiSetup();
     spi.init();
-    
+
     int bytesToSend = 200;
     memset(buffer, 0, 256);
     FILE* fp = fopen(fname, "rb");
     fread(buffer, 1, bytesToSend, fp);
     fclose(fp);
-    
+
     while (!spi.isSelected())
     {
         delayMicroseconds(1000);
     }
-    
+
     t.start();
-    spi.send(buffer, strlen((const char*)buffer));
-    
+    spi.transfer(buffer, strlen((const char*)buffer));
     double elapsed = t.getTime();
     double rate = (double)bytesToSend / elapsed;
-    printf("done. took %lf seconds, Bps %lf\n", elapsed, rate);
-    
-    /*
-    buffer[0] = 0xA0;
-    while(1)
+
+    bool dataGood = true;
+    for (int i = 0; i < bytesToSend; i++)
     {
-        if (spi.isSelected())
+        //printf("buffer %d: %X\n", i, buffer[i]);
+        if (i != buffer[i])
         {
-            spi.send(buffer, 1);
-            buffer[0]++;
-        }
-        else
-        {
-            delayMicroseconds(1000);
+            dataGood = false;
+            break;
         }
     }
-    
-    printf("checking for commands..\n");
-    */
-    
+    printf("done. took %lf seconds, Bps %lf. DataGood: %d\n", elapsed, rate, dataGood);
+
+
+
     return 1;
 }

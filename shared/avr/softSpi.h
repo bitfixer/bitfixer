@@ -1,5 +1,5 @@
 //
-//  softSpi.hpp
+//  softSpi.h
 //  
 //
 //  Created by Michael Hill on 4/8/17.
@@ -19,11 +19,9 @@ public:
     ~softSpi() {};
     
     void init();
-    int send(unsigned char* buffer, int size);
-    unsigned char read();
+    int transfer(unsigned char* buffer, int maxsize);
 private:
     bool _driveChipSelect;
-    
     void setMiso(unsigned char bit);
 };
 

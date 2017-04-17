@@ -4,13 +4,14 @@ OBJECTS	= 	petDiskServer.o \
 			timer.o \
 			rpiSoftSpi.o
 
+BUILDDIR = build
+
 COMPILE = g++ -c -std=c++11
 
 .cpp.o:
 	$(COMPILE) $< -o $@
 
 all: $(OBJECTS)
-	echo g++ -o petDiskServer -lwiringPi -std=c++11 petDiskServer.cpp timer.cpp rpiSoftSpi.cpp
 	g++ -o petDiskServer $(OBJECTS) -lwiringPi
 
 transfer:
