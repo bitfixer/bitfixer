@@ -15,10 +15,10 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    
+
     Contact the author at bitfixer@bitfixer.com
     http://bitfixer.com
-    
+
 */
 
 #ifndef _UART_ROUTINES_H_
@@ -32,10 +32,9 @@
 
 void uart0_init(unsigned int ubrr);
 unsigned char receiveByte(void);
-void transmitByte(unsigned char);
-void transmitString_F(char *);
-void transmitString(unsigned char *);
+void transmitByte(unsigned char data);
+void transmitString_F(const unsigned char* string);
+void transmitString(const unsigned char* string);
 void transmitHex( unsigned char dataType, unsigned long data );
-
 
 #endif

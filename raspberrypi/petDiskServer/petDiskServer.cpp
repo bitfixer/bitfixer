@@ -5,6 +5,7 @@
 #include <sys/time.h>
 #include <math.h>
 #include <string.h>
+#include <stdint.h>
 #include "timer.hpp"
 #include "rpiSoftSpi.h"
 
@@ -20,39 +21,77 @@ int main(int argc, char **argv)
                    0, // chip select
                    3, // miso
                    2, // mosi
-                   true
+                   false
                    );
 
     wiringPiSetup();
     spi.init();
 
-    int bytesToSend = 512;
+    int bytesToSend = 8;
     memset(buffer, 0, 512);
     FILE* fp = fopen(fname, "rb");
     fread(buffer, 1, bytesToSend, fp);
     fclose(fp);
 
-    while (!spi.isSelected())
+    while(1)
     {
-        delayMicroseconds(1000);
+        // get filename
+        spi.transfer(buffer, 8);
+        buffer[8] = 0;
+        printf("filename: %s\n", buffer);
+
+        FILE* prgfp = fopen("msh.prg", "rb");
+        fseek(prgfp, 0, SEEK_END);
+        uint16_t size = (uint16_t)ftell(prgfp);
+        fseek(prgfp, 0, SEEK_SET);
+
+        // send the file length
+        //unsigned char* sizeBytes = (unsigned char*)&size;
+        unsigned char sizeBytes[2];
+        sizeBytes[0] = (size & 0xFF00) >> 8;
+        sizeBytes[1] = size & 0x00FF;
+
+        spi.transfer(sizeBytes, 2);
+
+        int bytes_read = 0;
+        do {
+            bytes_read = fread(buffer, 1, 512, prgfp);
+            spi.transfer(buffer, 512);
+            printf("sent %d\n", bytes_read);
+        } while(bytes_read == 512);
+
+        fclose(prgfp);
+        printf("done.\n");
     }
 
-    t.start();
-    spi.transfer(buffer, strlen((const char*)buffer));
-    double elapsed = t.getTime();
-    double rate = (double)bytesToSend / elapsed;
 
-    bool dataGood = true;
-    for (int i = 0; i < bytesToSend; i++)
+
+    while(1)
     {
-        printf("buffer %d: %X\n", i, buffer[i]);
-        if (i % 256 != buffer[i])
+        printf("!\n");
+        while (!spi.isSelected())
         {
-            dataGood = false;
-            //break;
+            delayMicroseconds(1);
+        }
+        printf("~\n");
+
+        t.start();
+        spi.transfer(buffer, bytesToSend);
+        double elapsed = t.getTime();
+        double rate = (double)bytesToSend / elapsed;
+
+        bool dataGood = true;
+        for (int i = 0; i < bytesToSend; i++)
+        {
+            printf("buffer %d: %X\n", i, buffer[i]);
+            if (i % 256 != buffer[i])
+            {
+                dataGood = false;
+                //break;
+            }
         }
     }
-    printf("done. took %lf seconds, Bps %lf. DataGood: %d\n", elapsed, rate, dataGood);
+    //printf("done. took %lf seconds, Bps %lf. DataGood: %d\n", elapsed, rate, dataGood);
 
 
 

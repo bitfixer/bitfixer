@@ -15,10 +15,10 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    
+
     Contact the author at bitfixer@bitfixer.com
     http://bitfixer.com
-    
+
 */
 
 #include "UART_routines.h"
@@ -33,52 +33,32 @@
 //**************************************************
 void uart0_init(unsigned int ubrr)
 {
-/*
- UCSR0B = 0x00; //disable while setting baud rate
- UCSR0A = 0x00;
- //UCSR0C = (1 << URSEL) | 0x06;
- UCSR0C = (1 << UMSEL00);
- UBRR0L = 0x19; //set baud rate lo
- UBRR0H = 0x00; //set baud rate hi
- UCSR0B = 0x18;
- */
- 
- UBRR0H = (unsigned char)(ubrr>>8);
- UBRR0L = (unsigned char)ubrr;
- 
- //UBRR0H = 0;
- //UBRR0L = 25;
- 
- UCSR0A = 0x00;
- UCSR0B = (1<<RXEN0)|(1<<TXEN0);
- UCSR0C = (1<<USBS0)|(3<<UCSZ00);
- 
- 
+    UBRR0H = (unsigned char)(ubrr>>8);
+    UBRR0L = (unsigned char)ubrr;
+
+    UCSR0A = 0x00;
+    UCSR0B = (1<<RXEN0)|(1<<TXEN0);
+    UCSR0C = (1<<USBS0)|(3<<UCSZ00);
 }
 
 //**************************************************
 //Function to receive a single byte
 //*************************************************
-unsigned char receiveByte( void )
+unsigned char receiveByte(void)
 {
 	unsigned char data;
-	
-	while(!(UCSR0A & (1<<RXC0))); 	// Wait for incomming data
-	
-	//status = UCSR0A;
+	while(!(UCSR0A & (1<<RXC0))); 	// Wait for incoming data
 	data = UDR0;
-	
-	return(data);
+	return data;
 }
 //***************************************************
 //Function to transmit a single byte
 //***************************************************
-void transmitByte( unsigned char data )
+void transmitByte(unsigned char data)
 {
     while ( !(UCSR0A & (1<<UDRE0)) );    // Wait for empty transmit buffer
 	UDR0 = data;                         // Start transmission
 }
-
 
 //***************************************************
 //Function to transmit hex format data
@@ -88,44 +68,46 @@ void transmitByte( unsigned char data )
 
 void transmitHex( unsigned char dataType, unsigned long data )
 {
-unsigned char count, i, temp;
-unsigned char dataString[] = "0x        ";
+    unsigned char count, i, temp;
+    unsigned char dataString[] = "0x        ";
 
-if (dataType == CHAR) count = 2;
-if (dataType == INT) count = 4;
-if (dataType == LONG) count = 8;
+    if (dataType == CHAR) count = 2;
+    if (dataType == INT) count = 4;
+    if (dataType == LONG) count = 8;
 
-for(i=count; i>0; i--)
-{
-  temp = data % 16;
-  if((temp>=0) && (temp<10)) dataString [i+1] = temp + 0x30;
-  else dataString [i+1] = (temp - 10) + 0x41;
+    for(i = count; i > 0; i--)
+    {
+        temp = data % 16;
+        if((temp>=0) && (temp<10)) dataString [i+1] = temp + 0x30;
+        else dataString [i+1] = (temp - 10) + 0x41;
 
-  data = data/16;
-}
-
-
-transmitString (dataString);
+        data = data/16;
+    }
+    transmitString (dataString);
 }
 
 //***************************************************
 //Function to transmit a string in Flash
 //***************************************************
-void transmitString_F(char* string)
+void transmitString_F(const unsigned char* string)
 {
     while (pgm_read_byte(&(*string)))
+    {
         transmitByte(pgm_read_byte(&(*string++)));
-    
+    }
+
     TX_NEWLINE;
 }
 
 //***************************************************
 //Function to transmit a string in RAM
 //***************************************************
-void transmitString(unsigned char* string)
+void transmitString(const unsigned char* string)
 {
     while (*string)
+    {
         transmitByte(*string++);
+    }
 
     TX_NEWLINE;
 }

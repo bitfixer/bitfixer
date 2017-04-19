@@ -15,7 +15,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    
+
     Contact the author at bitfixer@bitfixer.com
     http://bitfixer.com
 */
@@ -59,6 +59,7 @@ void wait_for_atn_low();
 void wait_for_nrfd_high();
 void wait_for_nrfd_low();
 void wait_for_ndac_high();
+void wait_for_ndac_low();
 unsigned char wait_for_ndac_high_or_atn_low();
 unsigned char wait_for_ndac_low_or_atn_low();
 void unlisten();

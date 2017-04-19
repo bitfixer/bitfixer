@@ -26,11 +26,13 @@ void softSpi::init()
     if (_driveChipSelect)
     {
         // if driving the chip select line, enable it
+        transmitString((unsigned char*)"softspi init cs\r\n");
         DDRB = CSMASK | MISOMASK;
         PORTB = CSMASK;
     }
     else
     {
+        transmitString((unsigned char*)"softspi init nocs\r\n");
         DDRB = MISOMASK;
         PORTB = 0x00;
     }
@@ -51,7 +53,7 @@ void softSpi::setMiso(unsigned char bit)
     PORTB = c;
 }
 
-int softSpi::transfer(unsigned char* buffer, int size)
+int softSpi::transfer_asm(unsigned char* buffer, int size)
 {
     unsigned char c = 1;
     unsigned char clk;
@@ -76,40 +78,27 @@ int softSpi::transfer(unsigned char* buffer, int size)
 
     // assembly version
     asm volatile(
+            // prepare miso values
+            "ldi r22, 0x00" "\n\t"
+            "ldi r23, %2" "\n\t"
         "transferbyte:\n\t"
-    // prepare input and output bytes
-    // zero out input byte
-        "ldi r20, 0x00" "\n\t"
-    // load input value from buffer
-        "ld r17, X" "\n\t"
-
-    // prepare miso values
-        "ldi r22, 0x00" "\n\t"
-        "ldi r23, %2" "\n\t"
-
-    // prepare counter
-        "ldi r21, 8" "\n\t"
+            // prepare input and output bytes
+            // load input value from buffer
+            "ld r17, X" "\n\t"
+            // prepare counter
+            "ldi r21, 8" "\n\t"
         "transferbit:\n\t"
-
-    // shift left to check highest bit
-        "lsl r17" "\n\t"
-    // check C flag to present 0 or one on miso line
-        "brcs sendmisohigh" "\n\t"
+            // shift left to check highest bit
+            "lsl r17" "\n\t"
+            // check C flag to present 0 or one on miso line
+            "brcs sendmisohigh" "\n\t"
         "sendmisolow:" "\n\t"
-            //"in r18, %1" "\n\t"
-            //"andi r18, %3" "\n\t"
             "out %1, r22" "\n\t"
             "jmp waitclock" "\n\t"
             //"jmp presentmiso" "\n\t"
         "sendmisohigh:\n\t"
             "out %1, r23" "\n\t"
-            //"in r18, %1" "\n\t"
-            //"ori r18, %2" "\n\t"
-        // present bit on miso line
-        //"presentmiso:\n\t"
-            //"out %1, r18" "\n\t"
-
-    // wait for clock to go high
+        // wait for clock to go high
         "waitclock:\n\t"
             // read port
             "in r18, %4" "\n\t"
@@ -135,17 +124,6 @@ int softSpi::transfer(unsigned char* buffer, int size)
             "breq waitclocklow" "\n\t"
         "readbithigh:\n\t"
             "ori r20, 0x01" "\n\t"
-
-/*
-            // test
-            "lsl r17" "\n\t"
-            "brcs sndhigh" "\n\t"
-            "mov r19, r22" "\n\t"
-            "jmp waitclocklow" "\n\t"
-            "sndhigh:" "\n\t"
-            "mov r19, r23" "\n\t"
-            */
-
         "waitclocklow:\n\t"
             // read port
             "in r18, %4" "\n\t"
@@ -153,19 +131,14 @@ int softSpi::transfer(unsigned char* buffer, int size)
             "andi r18, %5" "\n\t"
             // if clock not zero, check again
             "brne waitclocklow" "\n\t"
-
-            // output value
-            //"out %1, r19" "\n\t"
-
-        // decrement counter and check if done
-        "dec r21" "\n\t"
-        "brne transferbit" "\n\t"
-        //"brne waitclock" "\n\t"
-
-        // done with byte, copy to buffer
-        "st X+, r20" "\n\t"
-        "jmp transferbyte" "\n\t"
-    // done
+        "donebit:\n\t"
+            // decrement counter and check if done
+            "dec r21" "\n\t"
+            "brne transferbit" "\n\t"
+            // done with byte, copy to buffer
+            "st X+, r20" "\n\t"
+            "jmp transferbyte" "\n\t"
+        // done
         "done:\n\t"
         :
         : "x" (buffer)
@@ -177,9 +150,33 @@ int softSpi::transfer(unsigned char* buffer, int size)
         , "M" (CSMASK)
         , "M" (MOSIMASK)
     );
+}
 
+int softSpi::transfer(unsigned char* buffer, int size)
+{
+    unsigned char c = 1;
+    unsigned char clk;
+    unsigned char cs;
+    unsigned char bits = 0;
+    unsigned char byte = 0;
+    unsigned char sendbyte;
+    int bytesReceived = 0;
 
-/*
+    if (_driveChipSelect)
+    {
+        //transmitString((unsigned char*)"cs\r\n");
+        // lower chip select line
+        PORTB = 0x00;
+        c = 0;
+    }
+    else // read chip select from master
+    {
+        while (c != 0)
+        {
+            c = PINB & CSMASK;
+        }
+    }
+
     // C version
     clk = PINB & SCKMASK;
 
@@ -234,7 +231,6 @@ int softSpi::transfer(unsigned char* buffer, int size)
     {
         PORTB = CSMASK;
     }
-*/
 
     return bytesReceived;
 }

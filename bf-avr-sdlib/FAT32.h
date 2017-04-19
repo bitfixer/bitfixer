@@ -15,13 +15,13 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    
+
     Contact the author at bitfixer@bitfixer.com
     http://bitfixer.com
-    
+
     FAT32 code inspired by CC Dharmani's microcontroller blog
     http://www.dharmanitech.com
-    
+
 */
 
 #ifndef _FAT32_H_
@@ -34,12 +34,12 @@ unsigned char	partitionData[64];	//partition records (16x4)
 unsigned int	signature;		//0xaa55
 };
 
-//Structure to access info of the first partioion of the disk 
-struct partitionInfo_Structure{ 				
+//Structure to access info of the first partioion of the disk
+struct partitionInfo_Structure{
 unsigned char	status;				//0x80 - active partition
 unsigned char 	headStart;			//starting head
 unsigned int	cylSectStart;		//starting cylinder and sector
-unsigned char	type;				//partition type 
+unsigned char	type;				//partition type
 unsigned char	headEnd;			//ending head of the partition
 unsigned int	cylSectEnd;			//ending cylinder and sector
 unsigned long	firstSector;		//total sectors between MBR & the first sector of the partition
@@ -163,7 +163,7 @@ typedef struct _file_position {
 #define ADD		0
 #define REMOVE	1
 #define LOW		0
-#define HIGH	1	
+#define HIGH	1
 #define TOTAL_FREE   1
 #define NEXT_FREE    2
 #define GET_LIST     0
@@ -183,7 +183,6 @@ unsigned char _freeClusterCountUpdated;
 volatile unsigned long _fileStartCluster;
 
 volatile unsigned char _longEntryString[MAX_FILENAME];
-//volatile unsigned long _fileNameLong[MAX_FILENAME];
 volatile file_position _filePosition;
 
 
@@ -191,8 +190,8 @@ volatile file_position _filePosition;
 unsigned char getBootSectorData (void);
 unsigned long getFirstSector(unsigned long clusterNumber);
 unsigned long getSetFreeCluster(unsigned char totOrNext, unsigned char get_set, unsigned long FSEntry);
-struct dir_Structure* findFile (unsigned char *fileName, unsigned long firstCluster);
-unsigned long getSetNextCluster (unsigned long clusterNumber,unsigned char get_set,unsigned long clusterEntry);
+struct dir_Structure* findFile(unsigned char *fileName, unsigned long firstCluster);
+unsigned long getSetNextCluster(unsigned long clusterNumber,unsigned char get_set,unsigned long clusterEntry);
 unsigned char readFile (unsigned char flag, unsigned char *fileName);
 
 void convertToShortFilename(unsigned char *input, unsigned char *output);
