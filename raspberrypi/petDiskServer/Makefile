@@ -2,7 +2,7 @@ REMOTE := 192.168.1.7
 
 OBJECTS	= 	petDiskServer.o \
 			timer.o \
-			rpiSoftSpi.o
+			rpiThreeWireSPI.o
 
 BUILDDIR = build
 
@@ -19,5 +19,5 @@ transfer:
 	scp ../../shared/timer.hpp pi@$(REMOTE):~/petDiskServer/timer.hpp
 	scp ../../shared/timer.cpp pi@$(REMOTE):~/petDiskServer/timer.cpp
 	scp Makefile pi@$(REMOTE):~/petDiskServer/Makefile
-	scp ../../shared/rpi/rpiSoftSpi.h pi@$(REMOTE):~/petDiskServer/rpiSoftSpi.h
-	scp ../../shared/rpi/rpiSoftSpi.cpp pi@$(REMOTE):~/petDiskServer/rpiSoftSpi.cpp
+	scp ../../shared/rpi/rpiThreeWireSPI.h pi@$(REMOTE):~/petDiskServer/rpiThreeWireSPI.h
+	scp ../../shared/rpi/rpiThreeWireSPI.cpp pi@$(REMOTE):~/petDiskServer/rpiThreeWireSPI.cpp

@@ -7,7 +7,8 @@
 #include <string.h>
 #include <stdint.h>
 #include "timer.hpp"
-#include "rpiSoftSpi.h"
+//#include "rpiSoftSpi.h"
+#include "rpiThreeWireSPI.h"
 
 int main(int argc, char **argv)
 {
@@ -17,12 +18,11 @@ int main(int argc, char **argv)
     unsigned char buffer[512];
     Tools::Timer t;
     int value = 0;
-    rpiSoftSPI spi(1, // clock
-                   0, // chip select
-                   3, // miso
-                   2, // mosi
-                   false
-                   );
+    rpiThreeWireSPI spi(1, // clock
+                        0, // chip select
+                        3, // miso
+                        2 // mosi
+                        );
 
     wiringPiSetup();
     spi.init();
@@ -65,29 +65,25 @@ int main(int argc, char **argv)
     }
 
 
-
     while(1)
     {
-        printf("!\n");
-        while (!spi.isSelected())
+        for (int i = 0; i < 512; i++)
         {
-            delayMicroseconds(1);
+            buffer[i] = i+5;
         }
-        printf("~\n");
 
-        t.start();
-        spi.transfer(buffer, bytesToSend);
-        double elapsed = t.getTime();
-        double rate = (double)bytesToSend / elapsed;
+        //t.start();
+        int bytesTransferred = spi.transfer(buffer, 100);
+        //double elapsed = t.getTime();
+        //double rate = (double)bytesToSend / elapsed;
 
         bool dataGood = true;
-        for (int i = 0; i < bytesToSend; i++)
+        for (int i = 0; i < bytesTransferred; i++)
         {
             printf("buffer %d: %X\n", i, buffer[i]);
             if (i % 256 != buffer[i])
             {
                 dataGood = false;
-                //break;
             }
         }
     }
