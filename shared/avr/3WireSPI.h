@@ -24,6 +24,7 @@ private:
     void setInput();
     void setMiso(unsigned char bit);
     void sendCommand(unsigned char cmd, int size);
+    void waitClockCycle();
 
     void sendBytes(unsigned char* bytes, int size);
     void recvBytes(unsigned char* bytes, int size);

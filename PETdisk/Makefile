@@ -136,5 +136,8 @@ debug:
 firmware: PETdisk.bin
 	dd if=PETdisk.bin ibs=14336 count=1 of=FIRM30B.BIN conv=sync
 
+screen:
+	screen $(SPAREPORT) 38400
+
 xmodem: firmware
 	screen -p0 -X exec \!\! lsz -X PETdisk.bin

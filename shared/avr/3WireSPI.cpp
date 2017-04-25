@@ -126,6 +126,21 @@ void ThreeWireSPI::recvBytes(unsigned char* bytes, int size)
     }
 }
 
+void ThreeWireSPI::waitClockCycle()
+{
+    unsigned char clk = PINB & SCKMASK;
+    while (clk == 0x00)
+    {
+        clk = PINB & SCKMASK;
+    }
+
+    // wait for clock to go low
+    while (clk != 0x00)
+    {
+        clk = PINB & SCKMASK;
+    }
+}
+
 int ThreeWireSPI::send(unsigned char* buffer, int size)
 {
     // lower chip select
@@ -138,6 +153,9 @@ int ThreeWireSPI::send(unsigned char* buffer, int size)
 
     // raise chip select
     PORTB = CSMASK;
+
+    // wait for clock to indicate server done
+    waitClockCycle();
 }
 
 int ThreeWireSPI::receive(unsigned char* buffer, int size)
@@ -151,6 +169,7 @@ int ThreeWireSPI::receive(unsigned char* buffer, int size)
     recvBytes(buffer, size);
 
     PORTB = CSMASK;
+    waitClockCycle();
     setOutput();
 }
 

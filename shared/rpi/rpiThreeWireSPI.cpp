@@ -73,8 +73,10 @@ void rpiThreeWireSPI::recvBytes(unsigned char* buffer, int size)
             setClock(LOW);
         }
         buffer[b] = recvByte;
+        //printf("recv %d: %X\n", b, buffer[b]);
         delayMicroseconds(_byteDelay);
     }
+    //printf("recv done\n");
 }
 
 void rpiThreeWireSPI::sendBytes(unsigned char* buffer, int size)
@@ -133,44 +135,12 @@ int rpiThreeWireSPI::transfer(unsigned char* buffer, int size)
         delayMicroseconds(1);
     }
 
+    // do one clock cycle
+    setClock(HIGH);
+    delayMicroseconds(_clockDelay);
+    setClock(LOW);
+
     return cmd_size;
-
-/*
-    printf("yo");
-    for (int b = 0; b < size; b++)
-    {
-        for (unsigned char bit = 0x80; bit != 0; bit >>= 1)
-        {
-            // present bit
-            setMosi(buffer[b] & bit);
-            delayMicroseconds(_clockDelay);
-            setClock(HIGH);
-
-            recvByte <<= 1;
-            if (getMiso() == HIGH)
-            {
-                recvByte = recvByte | 0x01;
-            }
-
-            delayMicroseconds(_clockDelay);
-            setClock(LOW);
-        }
-        buffer[b] = recvByte;
-        delayMicroseconds(_byteDelay);
-    }
-
-    if (_masterDrivesChipSelect)
-    {
-        setChipSelect(HIGH);
-    }
-    else
-    {
-        while (getChipSelect() == LOW)
-        {
-            delayMicroseconds(1);
-        }
-    }
-*/
 }
 
 // private methods
