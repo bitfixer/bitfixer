@@ -90,7 +90,7 @@ int main(int argc, char **argv)
     printf("directory %s\n", dirname);
     mkdir(dirname, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
-    list_dir(dirname);
+    //list_dir(dirname);
 
     unsigned char buffer[512];
     int value = 0;
@@ -117,20 +117,27 @@ int main(int argc, char **argv)
     {
         // read command
         spi.transfer((unsigned char*)&cmd, sizeof(petDiskCommand));
-        printf("fname: %s\n", cmd.arg);
+        //printf("fname: %s\n", cmd.arg);
         if (cmd.command_id == PD_CMD_OPEN_FILE_FOR_READING)
         {
+            printf("reading\n");
             unsigned char filename[256];
             unsigned char fullname[512];
             uint16_t size = 0;
-            //bool found = find_file(cmd.arg, dirname, filename);
-            strcpy((char*)filename, "bart.prg");
-            bool found = true;
+
+            if (prgfp)
+            {
+                fclose(prgfp);
+                prgfp = NULL;
+            }
+
+            printf("open for reading: %s\n", cmd.arg);
+            bool found = find_file(cmd.arg, dirname, filename);
             if (found)
             {
-                //printf("found %s\n", filename);
                 //prgfp = fopen((const char*)filename, "rb");
                 sprintf((char*)fullname, "%s/%s", dirname, filename);
+                printf("found %s, full %s\n", filename, fullname);
                 //prgfp = fopen((const char*)"bart.prg", "rb");
                 prgfp = fopen((const char*)fullname, "rb");
                 fseek(prgfp, 0, SEEK_END);
@@ -145,7 +152,7 @@ int main(int argc, char **argv)
             sizeBytes[1] = size & 0x00FF;
 
             spi.transfer(sizeBytes, 2);
-            
+
             reading = true;
             writing = false;
         }
@@ -158,9 +165,9 @@ int main(int argc, char **argv)
         else if (cmd.command_id == PD_CMD_READ_BLOCK)
         {
             int bytes_read = fread(buffer, 1, 512, prgfp);
-            printf("read %d bytes\n", bytes_read);
+            //printf("read %d bytes\n", bytes_read);
             spi.transfer(buffer, 512);
-            printf("done.\n");
+            //printf("done.\n");
         }
         else if (cmd.command_id == PD_CMD_WRITE_BLOCK)
         {

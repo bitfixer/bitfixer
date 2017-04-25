@@ -42,7 +42,7 @@ void rpiThreeWireSPI::receiveCommand(unsigned char& cmd, int& size)
     unsigned char cmdbytes[3];
     recvBytes(cmdbytes, 3);
 
-    printf("%X %X %X\n", cmdbytes[0], cmdbytes[1], cmdbytes[2]);
+    //printf("%X %X %X\n", cmdbytes[0], cmdbytes[1], cmdbytes[2]);
 
     // parse bytes
     cmd = cmdbytes[0];
@@ -115,7 +115,8 @@ int rpiThreeWireSPI::transfer(unsigned char* buffer, int size)
     unsigned char cmd = 0;
     int cmd_size = 0;
     receiveCommand(cmd, cmd_size);
-    printf("cmd %d, size %d\n", cmd, cmd_size);
+    //printf("cmd %d, size %d\n", cmd, cmd_size);
+    delayMicroseconds(1000);
 
     // send or receive
     if (cmd == TW_SENDCMD)
