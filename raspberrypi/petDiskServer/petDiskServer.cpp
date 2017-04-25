@@ -1,19 +1,96 @@
 #include <wiringPi.h>
 #include <wiringPiSPI.h>
 #include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/time.h>
 #include <math.h>
 #include <string.h>
 #include <stdint.h>
-//#include "timer.hpp"
+#include <sys/stat.h>
+#include <dirent.h>
 #include "rpiThreeWireSPI.h"
 #include "petDiskCommand.h"
 
+void list_dir(const char *path)
+{
+    struct dirent *entry;
+    DIR *dir = opendir(path);
+    if (dir == NULL) {
+        return;
+    }
+
+    while ((entry = readdir(dir)) != NULL) {
+        printf("%s type %d len %d\n",entry->d_name, entry->d_type, entry->d_reclen);
+    }
+
+    closedir(dir);
+}
+
+bool find_file(unsigned char* fname, const char* path, unsigned char* buffer)
+{
+    DIR* dir = opendir(path);
+    if (dir == NULL)
+    {
+        return false;
+    }
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if (entry->d_type == DT_REG)
+        {
+            // check filename
+            //printf("checking %s against %s\n", fname, entry->d_name);
+            if (strlen((char*)fname) == strlen(entry->d_name))
+            {
+                int len = strlen((char*)fname);
+                bool match = true;
+                for (int i = 0; i < len; i++)
+                {
+                    if (toupper(fname[i]) != toupper(entry->d_name[i]))
+                    {
+                        // not a match
+                        match = false;
+                        break;
+                    }
+                }
+
+                if (match)
+                {
+                    // found the file
+                    //printf("MATCH %s against %s\n", fname, entry->d_name);
+                    break;
+                }
+            }
+        }
+    }
+
+    if (entry != NULL)
+    {
+        strcpy((char*)buffer, (const char*)entry->d_name);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 int main(int argc, char **argv)
 {
-    const char* fname = argv[1];
-    printf("load %s\n", fname);
+    if (argc < 2)
+    {
+        printf("usage: petDiskServer <dir>\n");
+        exit(0);
+    }
+
+    const char* dirname = argv[1];
+    printf("directory %s\n", dirname);
+    mkdir(dirname, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
+    list_dir(dirname);
 
     unsigned char buffer[512];
     int value = 0;
@@ -26,42 +103,49 @@ int main(int argc, char **argv)
     wiringPiSetup();
     spi.init();
 
-    int bytesToSend = 8;
     memset(buffer, 0, 512);
-    FILE* fp = fopen(fname, "rb");
-    fread(buffer, 1, bytesToSend, fp);
-    fclose(fp);
-
     petDiskCommand cmd;
 
     bool reading = false;
     bool writing = false;
     FILE* prgfp = NULL;
+    // directory
+    DIR* dir = NULL;
+
+    int temp = 5;
     while(1)
     {
-        // get filename
-        /*
-        spi.transfer(buffer, 8);
-        buffer[8] = 0;
-        printf("filename: %s\n", buffer);
-        */
-
         // read command
         spi.transfer((unsigned char*)&cmd, sizeof(petDiskCommand));
         printf("fname: %s\n", cmd.arg);
         if (cmd.command_id == PD_CMD_OPEN_FILE_FOR_READING)
         {
-            prgfp = fopen("bart.prg", "rb");
-            fseek(prgfp, 0, SEEK_END);
-            uint16_t size = (uint16_t)ftell(prgfp);
-            fseek(prgfp, 0, SEEK_SET);
+            unsigned char filename[256];
+            unsigned char fullname[512];
+            uint16_t size = 0;
+            //bool found = find_file(cmd.arg, dirname, filename);
+            strcpy((char*)filename, "bart.prg");
+            bool found = true;
+            if (found)
+            {
+                //printf("found %s\n", filename);
+                //prgfp = fopen((const char*)filename, "rb");
+                sprintf((char*)fullname, "%s/%s", dirname, filename);
+                //prgfp = fopen((const char*)"bart.prg", "rb");
+                prgfp = fopen((const char*)fullname, "rb");
+                fseek(prgfp, 0, SEEK_END);
+                size = (uint16_t)ftell(prgfp);
+                fseek(prgfp, 0, SEEK_SET);
+            }
 
+            /*
             // send the file length
             unsigned char sizeBytes[2];
             sizeBytes[0] = (size & 0xFF00) >> 8;
             sizeBytes[1] = size & 0x00FF;
 
             spi.transfer(sizeBytes, 2);
+            */
             reading = true;
             writing = false;
         }
@@ -74,7 +158,9 @@ int main(int argc, char **argv)
         else if (cmd.command_id == PD_CMD_READ_BLOCK)
         {
             int bytes_read = fread(buffer, 1, 512, prgfp);
+            printf("read %d bytes\n", bytes_read);
             spi.transfer(buffer, 512);
+            printf("done.\n");
         }
         else if (cmd.command_id == PD_CMD_WRITE_BLOCK)
         {
@@ -92,79 +178,78 @@ int main(int argc, char **argv)
             reading = false;
             writing = false;
         }
-
-/*
-        if (cmd.command_id == PD_CMD_OPEN_FILE_FOR_READING)
+        else if (cmd.command_id == PD_CMD_DIRECTORY)
         {
-            FILE* prgfp = fopen("bart.prg", "rb");
-            fseek(prgfp, 0, SEEK_END);
-            uint16_t size = (uint16_t)ftell(prgfp);
-            fseek(prgfp, 0, SEEK_SET);
-
-            // send the file length
-            //unsigned char* sizeBytes = (unsigned char*)&size;
-            unsigned char sizeBytes[2];
-            sizeBytes[0] = (size & 0xFF00) >> 8;
-            sizeBytes[1] = size & 0x00FF;
-
-            spi.transfer(sizeBytes, 2);
-
-            int bytes_read = 0;
-            do {
-                bytes_read = fread(buffer, 1, 512, prgfp);
-                spi.transfer(buffer, 512);
-                printf("sent %d\n", bytes_read);
-            } while(bytes_read == 512);
-
-            fclose(prgfp);
-            printf("done.\n");
-        }
-        else if (cmd.command_id == PD_CMD_OPEN_FILE_FOR_WRITING)
-        {
-            FILE* prgfp = fopen((const char*)cmd.arg, "wb");
-            int blocks = 0;
-            int bytes_read = 0;
-            do
+            printf("open directory.\n");
+            if (dir)
             {
-                bytes_read = spi.transfer(buffer, 512);
-                printf("received %d block %d\n", bytes_read, blocks++);
-                fwrite(buffer, 1, bytes_read, prgfp);
+                closedir(dir);
+                dir = NULL;
             }
-            while (bytes_read == 512);
 
-            fclose(prgfp);
-            printf("done writing.\n");
+            dir = opendir(dirname);
         }
-*/
-
-    }
-
-
-    while(1)
-    {
-        for (int i = 0; i < 512; i++)
+        else if (cmd.command_id == PD_CMD_GET_NEXT_DIRECTORY_ENTRY)
         {
-            buffer[i] = i+5;
-        }
+            struct dirent* entry = NULL;
+            DirectoryEntry* dirent = (DirectoryEntry*)buffer;
 
-        //t.start();
-        int bytesTransferred = spi.transfer(buffer, 100);
-        //double elapsed = t.getTime();
-        //double rate = (double)bytesToSend / elapsed;
-
-        bool dataGood = true;
-        for (int i = 0; i < bytesTransferred; i++)
-        {
-            printf("buffer %d: %X\n", i, buffer[i]);
-            if (i % 256 != buffer[i])
+            while ((entry = readdir(dir)) != NULL)
             {
-                dataGood = false;
+                if (entry->d_type == DT_REG)
+                {
+                    // regular file
+                    break;
+                }
             }
+
+            if (entry != NULL)
+            {
+                // get extension
+                int maxlen = 17;
+                int namelen = strlen(entry->d_name);
+                int extstartindex = -1;
+                if (entry->d_name[namelen-4] == '.')
+                {
+                    extstartindex = namelen - 3;
+                    namelen = namelen - 4;
+                }
+
+                if (namelen >= maxlen)
+                {
+                    namelen = maxlen;
+                }
+
+                dirent->valid = 1;
+                dirent->name_length = (unsigned char)namelen;
+                printf("name_length: %d\n", dirent->name_length);
+
+                memset(dirent->name, 0, maxlen);
+                for (int i = 0; i < namelen; i++)
+                {
+                    dirent->name[i] = toupper(entry->d_name[i]);
+                }
+
+                memset(dirent->ext, 0, 3);
+                if (extstartindex > 0)
+                {
+                    for (int i = 0; i < 3; i++)
+                    {
+                        dirent->ext[i] = toupper(entry->d_name[extstartindex + i]);
+                    }
+                }
+                temp--;
+            }
+            else
+            {
+                dirent->valid = 0;
+                closedir(dir);
+                dir = NULL;
+            }
+
+            spi.transfer(buffer, 512);
         }
     }
-    //printf("done. took %lf seconds, Bps %lf. DataGood: %d\n", elapsed, rate, dataGood);
-
-
 
     return 1;
 }

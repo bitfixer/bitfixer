@@ -64,7 +64,7 @@ unsigned char wait_for_ndac_high_or_atn_low();
 unsigned char wait_for_ndac_low_or_atn_low();
 void unlisten();
 void recv_byte_IEEE(unsigned char *byte);
-void ListFilesIEEE(unsigned long firstCluster, void* dataSource);
+void ListFilesIEEE(unsigned long firstCluster, void* dataSource, unsigned char* buffer);
 void writeFileFromIEEE(void* dataSource, unsigned char* buffer);
 unsigned char sendIEEEByteCheckForATN(unsigned char byte);
 
