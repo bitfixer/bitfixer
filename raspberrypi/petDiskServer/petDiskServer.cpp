@@ -138,14 +138,14 @@ int main(int argc, char **argv)
                 fseek(prgfp, 0, SEEK_SET);
             }
 
-            /*
+
             // send the file length
             unsigned char sizeBytes[2];
             sizeBytes[0] = (size & 0xFF00) >> 8;
             sizeBytes[1] = size & 0x00FF;
 
             spi.transfer(sizeBytes, 2);
-            */
+            
             reading = true;
             writing = false;
         }
