@@ -6,6 +6,14 @@
 *.ppm
 *.o
 *.so
+*.bin
+*.elf
+*.hex
+*.BIN
+*.port
+*.prg
+*.PRG
+*.d64
 **/xcschememanagement.plist
 **/xcuserdata/*
 **/build/*
