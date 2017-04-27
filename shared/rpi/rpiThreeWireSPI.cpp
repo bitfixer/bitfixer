@@ -116,6 +116,9 @@ int rpiThreeWireSPI::transfer(unsigned char* buffer, int size)
     int cmd_size = 0;
     receiveCommand(cmd, cmd_size);
     //printf("cmd %d, size %d\n", cmd, cmd_size);
+
+    // delay to allow master (mcu) to set up its io lines.
+    // possibly replace this with explicit handshaking
     delayMicroseconds(1000);
 
     // send or receive

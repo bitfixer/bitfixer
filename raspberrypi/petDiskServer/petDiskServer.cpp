@@ -229,13 +229,14 @@ int main(int argc, char **argv)
 
                 dirent->valid = 1;
                 dirent->name_length = (unsigned char)namelen;
-                printf("name_length: %d\n", dirent->name_length);
 
                 memset(dirent->name, 0, maxlen);
                 for (int i = 0; i < namelen; i++)
                 {
                     dirent->name[i] = toupper(entry->d_name[i]);
                 }
+
+                printf("name %s name_length: %d\n", dirent->name, dirent->name_length);
 
                 memset(dirent->ext, 0, 3);
                 if (extstartindex > 0)
@@ -254,7 +255,7 @@ int main(int argc, char **argv)
                 dir = NULL;
             }
 
-            spi.transfer(buffer, 512);
+            spi.transfer(buffer, 256);
         }
     }
 

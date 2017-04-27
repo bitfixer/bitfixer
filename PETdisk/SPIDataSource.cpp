@@ -95,22 +95,17 @@ void SPIDataSource::openFileForWriting(unsigned char* filename, unsigned long di
 {
     transmitString(filename);
     transmitString((unsigned char*)" open for writing\r\n");
-
-    //cmd.command_id = PD_CMD_OPEN_FILE_FOR_WRITING;
     for (int i = 0; i < 12; i++)
     {
         cmd.arg[i] = filename[i];
     }
     // send command to server
-    //spi.send((unsigned char*)&cmd, sizeof(petDiskCommand));
     sendCommand(PD_CMD_OPEN_FILE_FOR_WRITING);
 }
 
 void SPIDataSource::writeBufferToFile(unsigned char* buffer, unsigned int bytesToWrite)
 {
     transmitString((unsigned char*)"writing buffer\r\n");
-    //cmd.command_id = PD_CMD_WRITE_BLOCK;
-    //spi.send((unsigned char*)&cmd, sizeof(petDiskCommand));
     sendCommand(PD_CMD_WRITE_BLOCK);
 
     spi.send(buffer, bytesToWrite);
@@ -119,15 +114,12 @@ void SPIDataSource::writeBufferToFile(unsigned char* buffer, unsigned int bytesT
 void SPIDataSource::closeFile()
 {
     transmitString((unsigned char*)"closing file\r\n");
-    //cmd.command_id = PD_CMD_CLOSE_FILE;
-    //spi.send((unsigned char*)&cmd, sizeof(petDiskCommand));
     sendCommand(PD_CMD_CLOSE_FILE);
 }
 
 void SPIDataSource::openDirectory()
 {
     transmitString((unsigned char*)"open directory\r\n");
-    //cmd.command_id = PD_CMD_DIRECTORY;
     sendCommand(PD_CMD_DIRECTORY);
 }
 
@@ -140,7 +132,7 @@ void SPIDataSource::sendCommand(unsigned char cmd_id)
 DirectoryEntry* SPIDataSource::getNextDirectoryEntry(unsigned char* buffer)
 {
     sendCommand(PD_CMD_GET_NEXT_DIRECTORY_ENTRY);
-    spi.receive(buffer, 512);
+    spi.receive(buffer, sizeof(DirectoryEntry));
 
     DirectoryEntry* dirent = (DirectoryEntry*)buffer;
     if (dirent->valid != 0)
@@ -149,24 +141,4 @@ DirectoryEntry* SPIDataSource::getNextDirectoryEntry(unsigned char* buffer)
     }
 
     return 0;
-
-    /*
-    if (test > 0)
-    {
-        test--;
-        DirectoryEntry* dirent = (DirectoryEntry*)buffer;
-        for (int i = 0; i < 17; i++)
-        {
-            dirent->name[i] = 'A'+i;
-        }
-        dirent->ext[0] = 'P';
-        dirent->ext[1] = 'R';
-        dirent->ext[2] = 'G';
-        return dirent;
-    }
-    else
-    {
-        return 0;
-    }
-    */
 }
