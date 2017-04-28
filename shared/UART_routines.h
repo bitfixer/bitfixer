@@ -36,5 +36,6 @@ void transmitByte(unsigned char data);
 void transmitString_F(const unsigned char* string);
 void transmitString(const unsigned char* string);
 void transmitHex( unsigned char dataType, unsigned long data );
+void transmitString_nonewline(const unsigned char* string);
 
 #endif

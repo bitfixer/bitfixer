@@ -13,6 +13,65 @@
 #include "rpiThreeWireSPI.h"
 #include "petDiskCommand.h"
 
+class PETFile
+{
+public:
+    PETFile(const char* fname, const char* dirname)
+    : _fname(NULL)
+    {
+        // copy input filename
+        _fname = new char[strlen(fname)+1];
+        strcpy(_fname, fname);
+
+        _dirname = new char[strlen(dirname)+1];
+        strcpy(_dirname, dirname);
+
+        _canonicalFname = new char[strlen(fname)+1];
+        for (int i = 0; i < strlen(fname); i++)
+        {
+            _canonicalFname[i] = tolower(_fname[i]);
+        }
+        _canonicalFname[strlen(fname)] = 0;
+
+        _fullFname = new char[strlen(_dirname) + 1 + strlen(_canonicalFname) + 1];
+        sprintf(_fullFname, "%s/%s", _dirname, _canonicalFname);
+    }
+
+    ~PETFile()
+    {
+        if (_fname)
+        {
+            delete[] _fname;
+        }
+
+        if (_canonicalFname)
+        {
+            delete[] _canonicalFname;
+        }
+
+        if (_dirname)
+        {
+            delete[] _dirname;
+        }
+
+        if (_fullFname)
+        {
+            delete[] _fullFname;
+        }
+    }
+
+    const char* getFullFname()
+    {
+        return _fullFname;
+    }
+
+private:
+    char* _fname;
+    char* _dirname;
+    char* _canonicalFname;
+    char* _fullFname;
+};
+
 void list_dir(const char *path)
 {
     struct dirent *entry;
@@ -158,7 +217,9 @@ int main(int argc, char **argv)
         }
         else if (cmd.command_id == PD_CMD_OPEN_FILE_FOR_WRITING)
         {
-            prgfp = fopen((const char*)cmd.arg, "wb");
+            PETFile petfile((const char*)cmd.arg, (const char*)dirname);
+            printf("filename: %s\n", petfile.getFullFname());
+            prgfp = fopen(petfile.getFullFname(), "wb");
             reading = false;
             writing = true;
         }
@@ -172,6 +233,7 @@ int main(int argc, char **argv)
         else if (cmd.command_id == PD_CMD_WRITE_BLOCK)
         {
             int bytes_read = spi.transfer(buffer, 512);
+            printf("writing %d bytes\n", bytes_read);
             fwrite(buffer, 1, bytes_read, prgfp);
         }
         else if (cmd.command_id == PD_CMD_CLOSE_FILE)

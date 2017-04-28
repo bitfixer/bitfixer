@@ -83,7 +83,7 @@ void transmitHex( unsigned char dataType, unsigned long data )
 
         data = data/16;
     }
-    transmitString (dataString);
+    transmitString_nonewline (dataString);
 }
 
 //***************************************************
@@ -110,4 +110,12 @@ void transmitString(const unsigned char* string)
     }
 
     TX_NEWLINE;
+}
+
+void transmitString_nonewline(const unsigned char* string)
+{
+    while (*string)
+    {
+        transmitByte(*string++);
+    }
 }

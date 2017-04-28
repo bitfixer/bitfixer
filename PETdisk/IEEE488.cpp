@@ -411,9 +411,7 @@ void ListFilesIEEE(unsigned long firstCluster, void* dataSource, unsigned char* 
 
             int startline = 0;
             int fname_length = dirent->name_length;
-            //transmitString(dirent->name);
-            transmitHex(INT, fname_length);
-
+            
             entry[startline] = (unsigned char)(dir_start & 0x00ff);
             entry[startline+1] = (unsigned char)((dir_start & 0xff00) >> 8);
             entry[startline+2] = file+1;
@@ -425,7 +423,6 @@ void ListFilesIEEE(unsigned long firstCluster, void* dataSource, unsigned char* 
             for (int f = 0; f < 17; f++)
             {
                 entry[startline+7+f] = ' ';
-                //entry[startline+7+f] = dirent->name[f];
             }
 
             for (int f = 0; f < fname_length; f++)
@@ -445,100 +442,6 @@ void ListFilesIEEE(unsigned long firstCluster, void* dataSource, unsigned char* 
             file++;
 
             sendIEEEBytes(entry, 32, 0);
-            /*
-            if (dir->attrib != ATTR_VOLUME_ID)
-            {
-                dir_start += 0x0020;
-
-                int startline = 0;
-                fname_length = 0;
-
-                entry[startline] = (unsigned char)(dir_start & 0x00ff);
-                entry[startline+1] = (unsigned char)((dir_start & 0xff00) >> 8);
-                entry[startline+2] = file+1;
-                entry[startline+3] = 0x00;
-                entry[startline+4] = 0x20;
-                entry[startline+5] = 0x20;
-                entry[startline+6] = 0x22;
-
-                hasLongEntry = _filePosition.isLongFilename;
-                if (hasLongEntry)
-                {
-                    if (_filePosition.fileName[0] == 0)
-                    {
-                        hasLongEntry = 0;
-                    }
-                }
-
-                if (hasLongEntry)
-                {
-                    fname_length = strlen((char *)_filePosition.fileName);
-
-                    if (fname_length > 5)
-                    {
-                        if (_filePosition.fileName[fname_length-4] == '.')
-                        {
-                            fname_length = fname_length-4;
-                        }
-                    }
-
-                    if (fname_length >= 17)
-                    {
-                        fname_length = 17;
-                    }
-
-                    for (f = 0; f < fname_length; f++)
-                    {
-                        thisch = _filePosition.fileName[f];
-                        if (thisch >= 'a' && thisch <= 'z')
-                        {
-                            thisch -= 32;
-                        }
-                        entry[startline+7+f] = thisch;
-                    }
-                }
-                else
-                {
-                    fname_length = 0;
-                    for (f = 0; f < 8; f++)
-                    {
-                        if (dir->name[f] == ' ')
-                            break;
-
-                        entry[startline+7+f] = dir->name[f];
-                        fname_length++;
-                    }
-                }
-
-                entry[startline+7+fname_length] = 0x22;
-                for (f = 0; f < (17 - fname_length); f++)
-                {
-                    entry[startline+7+fname_length+f+1] = ' ';
-                }
-
-
-                if (dir->attrib == ATTR_DIRECTORY)
-                {
-                    entry[startline+25] = 'D';
-                    entry[startline+26] = 'I';
-                    entry[startline+27] = 'R';
-                }
-                else
-                {
-                    entry[startline+25] = dir->name[8];
-                    entry[startline+26] = dir->name[9];
-                    entry[startline+27] = dir->name[10];
-                }
-
-                entry[startline+28] = ' ';
-                entry[startline+29] = ' ';
-                entry[startline+30] = ' ';
-                entry[startline+31] = 0x00;
-                file++;
-
-                sendIEEEBytes(entry, 32, 0);
-            }
-            */
         }
     }
     while (dirent != 0);
@@ -550,6 +453,7 @@ void writeFileFromIEEE(void* dataSource, unsigned char* buffer)
     unsigned int numBytes;
     unsigned char rdchar;
     unsigned char rdbus;
+    int bytes_in_buffer = 256;
     DataSource* ds = (DataSource*)dataSource;
 
     numBytes = 0;
@@ -564,7 +468,7 @@ void writeFileFromIEEE(void* dataSource, unsigned char* buffer)
         // read byte into buffer
         buffer[numBytes++] = rdchar;
 
-        if (numBytes >= 512)
+        if (numBytes >= bytes_in_buffer)
         {
             // write buffer to datasource
             transmitString((unsigned char *)"writing block..\r\n");
