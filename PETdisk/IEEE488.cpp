@@ -34,8 +34,6 @@ extern "C" {
 #include <string.h>
 #include <stdio.h>
 #include "UART_routines.h"
-//#include "FAT32.h"
-//#include "sd_routines.h"
 }
 
 void wait_for_dav_high()
@@ -324,7 +322,6 @@ unsigned char sendIEEEByteCheckForATN(unsigned char byte)
     }
 
     // wait for NRFD high
-    //wait_for_nrfd_high();
     result = wait_for_nrfd_high_or_atn_low();
     if (result == ATN)
     {
@@ -334,18 +331,6 @@ unsigned char sendIEEEByteCheckForATN(unsigned char byte)
     // lower DAV
     temp = DAV;
     PORTC = ~temp;
-
-    /*
-    // wait for NDAC high
-    result = wait_for_ndac_high_or_atn_low();
-
-    // raise DAV
-    temp = DAV | EOI;
-    // output to bus
-    PORTC = temp;
-
-    return result;
-    */
 }
 
 void sendIEEEBytes(unsigned char *entry, int size, unsigned char isLast)
@@ -382,7 +367,6 @@ void ListFilesIEEE(unsigned long firstCluster, void* dataSource, unsigned char* 
     // open remote directory
     ds->openDirectory();
 
-    int tt = 2;
     do
     {
         // get next directory entry
@@ -411,7 +395,7 @@ void ListFilesIEEE(unsigned long firstCluster, void* dataSource, unsigned char* 
 
             int startline = 0;
             int fname_length = dirent->name_length;
-            
+
             entry[startline] = (unsigned char)(dir_start & 0x00ff);
             entry[startline+1] = (unsigned char)((dir_start & 0xff00) >> 8);
             entry[startline+2] = file+1;
@@ -449,11 +433,10 @@ void ListFilesIEEE(unsigned long firstCluster, void* dataSource, unsigned char* 
 
 void writeFileFromIEEE(void* dataSource, unsigned char* buffer)
 {
-    int blocks = 0;
     unsigned int numBytes;
     unsigned char rdchar;
     unsigned char rdbus;
-    int bytes_in_buffer = 256;
+    int bytes_in_buffer = 512;
     DataSource* ds = (DataSource*)dataSource;
 
     numBytes = 0;
@@ -471,8 +454,6 @@ void writeFileFromIEEE(void* dataSource, unsigned char* buffer)
         if (numBytes >= bytes_in_buffer)
         {
             // write buffer to datasource
-            transmitString((unsigned char *)"writing block..\r\n");
-            transmitHex(INT, blocks++);
             ds->writeBufferToFile(buffer, numBytes);
             numBytes = 0;
         }
@@ -487,11 +468,8 @@ void writeFileFromIEEE(void* dataSource, unsigned char* buffer)
     if (numBytes > 0)
     {
         // write last block of file
-        transmitString((unsigned char *)"writing last block\r\n");
-        transmitHex(INT, blocks++);
         ds->writeBufferToFile(buffer, numBytes);
     }
 
     ds->closeFile();
-    transmitString((unsigned char *)"done writing file.\r\n");
 }

@@ -32,8 +32,9 @@ public:
 class SPIDataSource : public DataSource
 {
 public:
-    SPIDataSource()
+    SPIDataSource(volatile unsigned char* buffer)
     : fileSize(0)
+    , tempBuffer(buffer)
     {};
     ~SPIDataSource() {};
     void init();
@@ -54,6 +55,7 @@ private:
     ThreeWireSPI spi;
     int fileSize;
     petDiskCommand cmd;
+    volatile unsigned char* tempBuffer;
     int test;
 };
 

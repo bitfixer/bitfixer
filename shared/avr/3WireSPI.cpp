@@ -27,8 +27,6 @@ extern "C"
 void ThreeWireSPI::init()
 {
     // if driving the chip select line, enable it
-    transmitString((unsigned char*)"ThreeWireSPI init cs\r\n");
-    //DDRB = CSMASK | MISOMASK; // data line output
     setOutput();
     PORTB = CSMASK;
 }
@@ -172,88 +170,3 @@ int ThreeWireSPI::receive(unsigned char* buffer, int size)
     waitClockCycle();
     setOutput();
 }
-
-/*
-int ThreeWireSPI::transfer(unsigned char* buffer, int size)
-{
-    unsigned char c = 1;
-    unsigned char clk;
-    unsigned char cs;
-    unsigned char bits = 0;
-    unsigned char byte = 0;
-    unsigned char sendbyte;
-    int bytesReceived = 0;
-
-    if (_driveChipSelect)
-    {
-        //transmitString((unsigned char*)"cs\r\n");
-        // lower chip select line
-        PORTB = 0x00;
-        c = 0;
-    }
-    else // read chip select from master
-    {
-        while (c != 0)
-        {
-            c = PINB & CSMASK;
-        }
-    }
-
-    // C version
-    clk = PINB & SCKMASK;
-
-    for (int s = 0; s < size && c == 0; s++)
-    {
-        byte = 0;
-        // get current byte in send buffer
-        sendbyte = buffer[s];
-        for (unsigned char i = 0; i < 8; i++)
-        {
-            // present bit
-            setMiso(sendbyte & 0x80);
-            sendbyte <<= 1;
-
-            while (clk == 0x00 && c == 0)
-            {
-                clk = PINB & SCKMASK;
-                if (!_driveChipSelect)
-                {
-                    c = PINB & CSMASK;
-                }
-            }
-
-            if (c != 0)
-            {
-                break;
-            }
-
-            // shift current bit in to receive byte
-            byte <<= 1;
-            if ((PINB & MOSIMASK) != 0x00)
-            {
-                byte = byte | 0x01;
-            }
-
-            // wait for clock to go low
-            while (clk != 0x00)
-            {
-                clk = PINB & SCKMASK;
-            }
-        }
-
-        if (c == 0)
-        {
-            // replace byte in buffer with received value
-            buffer[s] = byte;
-            bytesReceived++;
-        }
-    }
-
-    if (_driveChipSelect)
-    {
-        PORTB = CSMASK;
-    }
-
-    return bytesReceived;
-}
-*/

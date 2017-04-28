@@ -13,7 +13,6 @@ void SPIDataSource::init()
 
 void SPIDataSource::read()
 {
-    //transmitString((unsigned char*)"yo yo");
 }
 
 unsigned char SPIDataSource::initializeStorage()
@@ -30,12 +29,6 @@ unsigned char SPIDataSource::openFileForReading(unsigned char* filename, unsigne
 {
     memset(&cmd, 0, sizeof(petDiskCommand));
     strcpy((char*)cmd.arg, (const char*)filename);
-    /*
-    for (int i = 0; i < 12; i++)
-    {
-        cmd.arg[i] = filename[i];
-    }
-    */
 
     // send command to server
     sendCommand(PD_CMD_OPEN_FILE_FOR_READING);
@@ -54,20 +47,6 @@ unsigned int SPIDataSource::getNextFileBlock(unsigned char* buffer)
 {
     sendCommand(PD_CMD_READ_BLOCK);
     spi.receive(buffer, 512);
-
-    /*
-    int b = 0;
-    for (int i = 0; i < 16; i++)
-    {
-        for (int j = 0; j < 32; j++)
-        {
-            transmitHex(CHAR, buffer[b++]);
-            transmitString_nonewline((unsigned char*)" ");
-        }
-        transmitString_nonewline((unsigned char*)"\r\n");
-    }
-    */
-
     return 512;
 }
 
@@ -79,14 +58,6 @@ int SPIDataSource::getFileSize()
 void SPIDataSource::openFileForWriting(unsigned char* filename, unsigned long dirCluster)
 {
     transmitString(filename);
-
-    /*
-    transmitString((unsigned char*)" open for writing\r\n");
-    for (int i = 0; i < 12; i++)
-    {
-        cmd.arg[i] = filename[i];
-    }
-    */
     memset(&cmd, 0, sizeof(petDiskCommand));
     strcpy((char*)cmd.arg, (const char*)filename);
 
@@ -102,13 +73,11 @@ void SPIDataSource::writeBufferToFile(unsigned char* buffer, unsigned int bytesT
 
 void SPIDataSource::closeFile()
 {
-    transmitString((unsigned char*)"closing file\r\n");
     sendCommand(PD_CMD_CLOSE_FILE);
 }
 
 void SPIDataSource::openDirectory()
 {
-    transmitString((unsigned char*)"open directory\r\n");
     sendCommand(PD_CMD_DIRECTORY);
 }
 

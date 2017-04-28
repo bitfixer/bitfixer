@@ -194,10 +194,8 @@ int main(int argc, char **argv)
             bool found = find_file(cmd.arg, dirname, filename);
             if (found)
             {
-                //prgfp = fopen((const char*)filename, "rb");
                 sprintf((char*)fullname, "%s/%s", dirname, filename);
                 printf("found %s, full %s\n", filename, fullname);
-                //prgfp = fopen((const char*)"bart.prg", "rb");
                 prgfp = fopen((const char*)fullname, "rb");
                 fseek(prgfp, 0, SEEK_END);
                 size = (uint16_t)ftell(prgfp);
@@ -228,7 +226,6 @@ int main(int argc, char **argv)
             int bytes_read = fread(buffer, 1, 512, prgfp);
             //printf("read %d bytes\n", bytes_read);
             spi.transfer(buffer, 512);
-            //printf("done.\n");
         }
         else if (cmd.command_id == PD_CMD_WRITE_BLOCK)
         {

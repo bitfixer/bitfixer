@@ -658,12 +658,6 @@ void closeFile()
         num_long_entries = ((fname_len - fname_remainder) / 13) + 1;
 
         curr_long_entry = num_long_entries;
-
-        /*
-        transmitString("closefile:");
-        transmitHex(CHAR, fname_len);
-        TX_NEWLINE;
-        */
     }
     else
     {

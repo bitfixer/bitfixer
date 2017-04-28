@@ -309,7 +309,7 @@ int main(void)
     unsigned char doneSending;
 
     // datasource for reading/writing data
-    SPIDataSource spiDataSource;
+    SPIDataSource spiDataSource(_buffer);
     DataSource* ds = &spiDataSource;
     ds->read();
 
@@ -342,7 +342,6 @@ int main(void)
     memset(progname, 0, FNAMELEN);
 
     error = ds->initializeStorage();
-    //error = initializeSDCard(&stateVars);
     if (!error)
     {
         // copy firmware filename
@@ -355,7 +354,6 @@ int main(void)
         {
             // found firmware file
             ds->deleteFile();
-            //deleteFile();
         }
         else
         {
@@ -490,7 +488,6 @@ int main(void)
                     }
 
                     ds->closeFile();
-                    //closeFile();
                 }
 
                 stateVars.openFileAddress = -1;
@@ -597,7 +594,6 @@ int main(void)
                 {
                     if (currentState == OPEN_FNAME_READ_DONE)
                     {
-                        transmitString((unsigned char*)"%");
                         bytes_to_send = ds->getNextFileBlock((unsigned char*)_buffer);
                         //bytes_to_send = getNextFileBlock();
                     }
@@ -721,8 +717,6 @@ int main(void)
                         sendIEEEBytes((unsigned char *)_buffer, bytes_to_send, doneSending);
                         bytes_to_send = 0;
                     }
-
-                    transmitString((unsigned char*)"done reading!");
                 }
             }
             else if (currentState == OPEN_DATA_READ)
