@@ -23,7 +23,7 @@ SPAREPORT = $(shell cat spare.port)
 DEVICE     = atmega168
 CLOCK      = 8000000
 PROGRAMMER = -c stk500v2 -P $(MASTERPORT)
-OBJECTS    = PETdisk.o ../bf-avr-sdlib/FAT32.o IEEE488.o ../bf-avr-sdlib/SD_routines.o \
+OBJECTS    = PETdisk.o IEEE488.o ../bf-avr-sdlib/SD_routines.o \
 				../bf-avr-sdlib/SPI_routines.o ../shared/UART_routines.o \
 				SPIDataSource.o ../shared/avr/3WireSPI.o
 #FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0x24:m

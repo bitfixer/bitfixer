@@ -34,7 +34,7 @@ extern "C" {
 #include "SPI_routines.h"
 #include "SD_routines.h"
 #include "UART_routines.h"
-#include "FAT32.h"
+//#include "FAT32.h"
 }
 
 #include "IEEE488.h"
@@ -79,32 +79,6 @@ typedef enum _pdstate
     FILE_NOT_FOUND,
     CLOSING
 } pdstate;
-
-/*
-typedef enum _filedir
-{
-    FNONE,
-    FREAD,
-    FWRITE
-} filedir;
-*/
-
-//typedef enum { false, true } bool;
-
-/*
-typedef struct _pdStateVars
-{
-    char openFileAddress;
-    int fileWriteByte;
-    unsigned int fileReadByte;
-    unsigned char useRemainderByte;
-    unsigned char remainderByte;
-    filedir fileDirection;
-    unsigned char fileNotFound;
-    unsigned long currentDirectoryCluster;
-    unsigned char sd_boot_checksum;
-} pdStateVars;
-*/
 
 const unsigned char _dirHeader[] PROGMEM =
 {
@@ -162,10 +136,6 @@ void pgm_memcpy(unsigned char *dest, const unsigned char *src, int len)
 
 void port_init(void)
 {
-    // this will be initialized by the datasource
-    //SPI_CTL = (unsigned char)(~MISO & ~DATA0 & ~DATA1 & ~CASSETTE_READ & ~CASSETTE_WRITE);
-    //SPI_PORT = 0x7f;
-
     // all IEEE lines input
     IEEE_CTL = 0x00;
     // activate pullups
@@ -179,12 +149,11 @@ void port_init(void)
 //call this routine to initialize all peripherals
 void init_devices(void)
 {
- cli();  //all interrupts disabled
- port_init();
- //spi_init();
- uart0_init(MYUBRR);
+    cli();  //all interrupts disabled
+    port_init();
+    uart0_init(MYUBRR);
 
- MCUCR = 0x00;
+    MCUCR = 0x00;
 }
 
 unsigned char get_device_address()
@@ -253,50 +222,6 @@ unsigned char processFilename(unsigned char *filename, unsigned char length)
     return pLength;
 }
 
-// initialize SD card
-// note: this reads into global _buffer. Will trash any data there
-unsigned char initializeSDCard(pdStateVars *stateVars)
-{
-    int i;
-    unsigned char error;
-    unsigned char chksum = 0;
-    // initialize card
-    for (i = 0; i < 10; i++)
-    {
-        error = SD_init();
-        if (!error)
-            break;
-    }
-
-    if (i == 10)
-    {
-        // reset current directory to root
-        stateVars->currentDirectoryCluster = 0;
-    }
-
-    error = getBootSectorData (); //read boot sector and keep necessary data in global variables
-
-    // check for card change
-    // calculate checksum
-    for (i = 0; i < 512; i++)
-    {
-        chksum += _buffer[i];
-    }
-
-    if (chksum != stateVars->sd_boot_checksum)
-    {
-        stateVars->sd_boot_checksum = chksum;
-        stateVars->currentDirectoryCluster = 0;
-    }
-
-    if (stateVars->currentDirectoryCluster == 0)
-    {
-        stateVars->currentDirectoryCluster = _rootCluster;
-    }
-
-    return error;
-}
-
 int main(void)
 {
     unsigned char progname[FNAMELEN];
@@ -318,7 +243,7 @@ int main(void)
     stateVars.openFileAddress = -1;
     stateVars.fileWriteByte = -1;
     stateVars.fileDirection = FNONE;
-    stateVars.currentDirectoryCluster = 0;
+    //stateVars.currentDirectoryCluster = 0;
     stateVars.sd_boot_checksum = 0;
     stateVars.remainderByte = 0;
     stateVars.useRemainderByte = 0;
@@ -344,11 +269,11 @@ int main(void)
     error = ds->initializeStorage();
     if (!error)
     {
+        /*
         // copy firmware filename
         pgm_memcpy((unsigned char *)progname, (unsigned char *)_firmwareFileName, 5);
 
         dir = (struct dir_Structure*)ds->findFile(progname, _rootCluster);
-        //dir = findFile(progname, _rootCluster);
 
         if (dir != 0)
         {
@@ -359,6 +284,7 @@ int main(void)
         {
             transmitString_F(_nofirmware);
         }
+        */
     }
 
     // start main loop
@@ -375,7 +301,6 @@ int main(void)
 
         if (IEEE_CTL == 0x00)
         {
-            //SPI_PORT = 0xFF;
             // if we are in an unlisten state,
             // wait for my address
             buscmd = wait_for_device_address(address);
@@ -402,7 +327,6 @@ int main(void)
 
         if (SIGNAL_IS_LOW(rdbus, ATN)) // check for bus command
         {
-            //transmitHex(CHAR, rdchar);
             if (rdchar == PET_LOAD_FNAME_ADDR)
             {
                 currentState = LOAD_FNAME_READ;
@@ -425,7 +349,6 @@ int main(void)
                 }
                 else
                 {
-                    //transmitString("$");
                     currentState = FILE_READ;
                     // open file for reading
                     if (progname[0] == '$')
@@ -453,7 +376,7 @@ int main(void)
                         if (stateVars.fileWriteByte == -1)
                         {
                             transmitString_F(_saving);
-                            ds->openFileForWriting(progname, stateVars.currentDirectoryCluster);
+                            ds->openFileForWriting(progname);
                             stateVars.fileWriteByte = 0;
                         }
                         stateVars.fileDirection = FWRITE;
@@ -474,7 +397,6 @@ int main(void)
                     }
                 }
             }
-            //else if (rdchar == 0xE2) // close command
             else if ((rdchar & 0xF0) == 0xE0)
             {
                 unsigned char temp = rdchar & 0x0F;
@@ -482,7 +404,6 @@ int main(void)
                 {
                     if (stateVars.fileWriteByte > 0)
                     {
-                        //writeBufferToFile(stateVars.fileWriteByte);
                         ds->writeBufferToFile((unsigned char*)_buffer, stateVars.fileWriteByte);
                         stateVars.fileWriteByte = 0;
                     }
@@ -501,7 +422,6 @@ int main(void)
             _buffer[stateVars.fileWriteByte++] = rdchar;
             if (stateVars.fileWriteByte >= 512)
             {
-                //writeBufferToFile(stateVars.fileWriteByte);
                 ds->writeBufferToFile((unsigned char*)_buffer, stateVars.fileWriteByte);
                 stateVars.fileWriteByte = 0;
             }
@@ -572,20 +492,17 @@ int main(void)
         {
             // initialize sd card
             error = ds->initializeStorage();
-            //error = initializeSDCard(&stateVars);
 
             if (currentState == FILE_SAVE_OPENING)
             {
                 // open file
-                ds->openFileForWriting(progname, stateVars.currentDirectoryCluster);
-                //openFileForWriting(progname, stateVars.currentDirectoryCluster);
+                ds->openFileForWriting(progname);
                 currentState = IDLE;
             }
             else if (currentState == FILE_READ_OPENING ||
                      currentState == OPEN_FNAME_READ_DONE) // file read, either LOAD or OPEN command
             {
-                //if (!openFileForReading(progname, stateVars.currentDirectoryCluster))
-                if (!ds->openFileForReading(progname, stateVars.currentDirectoryCluster))
+                if (!ds->openFileForReading(progname))
                 {
                     // file not found
                     stateVars.fileNotFound = 1;
@@ -595,7 +512,6 @@ int main(void)
                     if (currentState == OPEN_FNAME_READ_DONE)
                     {
                         bytes_to_send = ds->getNextFileBlock((unsigned char*)_buffer);
-                        //bytes_to_send = getNextFileBlock();
                     }
                     else
                     {
@@ -657,50 +573,24 @@ int main(void)
                     // this is a change directory command
                     if (progname[1] == ':')
                     {
-                        // check if we should return to root
-                        if ((progname[2] == '\\' || progname[2] == '/') && progname[3] == 0)
-                        {
-                            stateVars.currentDirectoryCluster = _rootCluster;
-                        }
-                        else
-                        {
-                            // get the cluster for the new directory
-                            //dir = findFile(&progname[2], stateVars.currentDirectoryCluster);
-                            dir = (struct dir_Structure*)ds->findFile(&progname[2],
-                                                                      stateVars.currentDirectoryCluster);
-
-                            if (dir != 0)
-                            {
-                                // get new directory cluster
-                                stateVars.currentDirectoryCluster = getFirstCluster(dir);
-                                if (stateVars.currentDirectoryCluster == 0)
-                                {
-                                    stateVars.currentDirectoryCluster = _rootCluster;
-                                }
-                            }
-                        }
+                        // change directory command
+                        ds->changeDirectory(&progname[2]);
                     }
-
                     // write directory entries
-                    // TODO: fix this
-                    ListFilesIEEE(stateVars.currentDirectoryCluster, ds, (unsigned char*)_buffer);
+                    ListFilesIEEE(ds, (unsigned char*)_buffer);
                 }
                 else // read from file
                 {
-                    //transmitString_F(_reading);
                     // send blocks of file
                     doneSending = 0;
 
                     // test
                     int currByte = 0;
                     int sizeBytes = ds->getFileSize();
-                    //transmitString((unsigned char*)"file size:");
-                    //transmitHex(INT, sizeBytes);
 
                     while (doneSending == 0)
                     {
                         // get next block of the file being read
-                        //bytes_to_send = ds->getNextFileBlock((unsigned char*)_buffer);
                         if (bytes_to_send == 0)
                         {
                             bytes_to_send = ds->getNextFileBlock((unsigned char*)_buffer);
@@ -713,7 +603,7 @@ int main(void)
                             ds->closeFile();
                         }
                         currByte += bytes_to_send;
-                        //transmitString((unsigned char*)"*");
+
                         sendIEEEBytes((unsigned char *)_buffer, bytes_to_send, doneSending);
                         bytes_to_send = 0;
                     }
@@ -754,8 +644,7 @@ int main(void)
                         if (stateVars.fileReadByte >= 512)
                         {
                             // get next buffer block
-                            bytes_to_send = getNextFileBlock();
-                            //bytes_to_send = getNextFileBlock();
+                            bytes_to_send = ds->getNextFileBlock((unsigned char*)_buffer);
                             stateVars.fileReadByte = 0;
                         }
 

@@ -17,7 +17,7 @@ typedef struct _pdStateVars
     unsigned char remainderByte;
     filedir fileDirection;
     unsigned char fileNotFound;
-    unsigned long currentDirectoryCluster;
+    //unsigned long currentDirectoryCluster;
     unsigned char sd_boot_checksum;
 } pdStateVars;
 

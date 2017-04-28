@@ -170,8 +170,6 @@ int main(int argc, char **argv)
     FILE* prgfp = NULL;
     // directory
     DIR* dir = NULL;
-
-    int temp = 5;
     while(1)
     {
         // read command
@@ -260,6 +258,7 @@ int main(int argc, char **argv)
             struct dirent* entry = NULL;
             DirectoryEntry* dirent = (DirectoryEntry*)buffer;
 
+            /*
             while ((entry = readdir(dir)) != NULL)
             {
                 if (entry->d_type == DT_REG)
@@ -268,44 +267,64 @@ int main(int argc, char **argv)
                     break;
                 }
             }
+            */
+            entry = readdir(dir);
 
             if (entry != NULL)
             {
-                // get extension
-                int maxlen = 17;
-                int namelen = strlen(entry->d_name);
-                int extstartindex = -1;
-                if (entry->d_name[namelen-4] == '.')
+                if (entry->d_type == DT_REG)
                 {
-                    extstartindex = namelen - 3;
-                    namelen = namelen - 4;
-                }
-
-                if (namelen >= maxlen)
-                {
-                    namelen = maxlen;
-                }
-
-                dirent->valid = 1;
-                dirent->name_length = (unsigned char)namelen;
-
-                memset(dirent->name, 0, maxlen);
-                for (int i = 0; i < namelen; i++)
-                {
-                    dirent->name[i] = toupper(entry->d_name[i]);
-                }
-
-                printf("name %s name_length: %d\n", dirent->name, dirent->name_length);
-
-                memset(dirent->ext, 0, 3);
-                if (extstartindex > 0)
-                {
-                    for (int i = 0; i < 3; i++)
+                    // get extension
+                    int maxlen = 17;
+                    int namelen = strlen(entry->d_name);
+                    int extstartindex = -1;
+                    if (entry->d_name[namelen-4] == '.')
                     {
-                        dirent->ext[i] = toupper(entry->d_name[extstartindex + i]);
+                        extstartindex = namelen - 3;
+                        namelen = namelen - 4;
+                    }
+
+                    if (namelen >= maxlen)
+                    {
+                        namelen = maxlen;
+                    }
+
+                    dirent->valid = 1;
+                    dirent->name_length = (unsigned char)namelen;
+
+                    memset(dirent->name, 0, maxlen);
+                    for (int i = 0; i < namelen; i++)
+                    {
+                        dirent->name[i] = toupper(entry->d_name[i]);
+                    }
+
+                    printf("name %s name_length: %d\n", dirent->name, dirent->name_length);
+
+                    memset(dirent->ext, 0, 3);
+                    if (extstartindex > 0)
+                    {
+                        for (int i = 0; i < 3; i++)
+                        {
+                            dirent->ext[i] = toupper(entry->d_name[extstartindex + i]);
+                        }
                     }
                 }
-                temp--;
+                else if (entry->d_type == DT_DIR)
+                {
+                    int maxlen = 17;
+                    dirent->valid = 1;
+                    dirent->name_length = strlen(entry->d_name);
+
+                    memset(dirent->name, 0, maxlen);
+                    for (int i = 0; i < dirent->name_length; i++)
+                    {
+                        dirent->name[i] = toupper(entry->d_name[i]);
+                    }
+
+                    dirent->ext[0] = 'D';
+                    dirent->ext[1] = 'I';
+                    dirent->ext[2] = 'R';
+                }
             }
             else
             {
@@ -315,6 +334,10 @@ int main(int argc, char **argv)
             }
 
             spi.transfer(buffer, 256);
+        }
+        else if (cmd.command_id == PD_CMD_CHANGE_DIRECTORY)
+        {
+            printf("change directory: %s\n", cmd.arg);
         }
     }
 

@@ -354,7 +354,7 @@ void sendIEEEBytes(unsigned char *entry, int size, unsigned char isLast)
     }
 }
 
-void ListFilesIEEE(unsigned long firstCluster, void* dataSource, unsigned char* buffer)
+void ListFilesIEEE(void* dataSource, unsigned char* buffer)
 {
     unsigned int dir_start; // address of directory start
     unsigned char entry[32];

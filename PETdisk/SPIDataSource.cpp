@@ -20,12 +20,12 @@ unsigned char SPIDataSource::initializeStorage()
     return 1;
 }
 
-void* SPIDataSource::findFile(unsigned char* progname, unsigned long rootCluster)
+void* SPIDataSource::findFile(unsigned char* progname)
 {
     return 0;
 }
 
-unsigned char SPIDataSource::openFileForReading(unsigned char* filename, unsigned long dirCluster)
+unsigned char SPIDataSource::openFileForReading(unsigned char* filename)
 {
     memset(&cmd, 0, sizeof(petDiskCommand));
     strcpy((char*)cmd.arg, (const char*)filename);
@@ -55,7 +55,7 @@ int SPIDataSource::getFileSize()
     return fileSize;
 }
 
-void SPIDataSource::openFileForWriting(unsigned char* filename, unsigned long dirCluster)
+void SPIDataSource::openFileForWriting(unsigned char* filename)
 {
     transmitString(filename);
     memset(&cmd, 0, sizeof(petDiskCommand));
@@ -74,6 +74,13 @@ void SPIDataSource::writeBufferToFile(unsigned char* buffer, unsigned int bytesT
 void SPIDataSource::closeFile()
 {
     sendCommand(PD_CMD_CLOSE_FILE);
+}
+
+void SPIDataSource::changeDirectory(unsigned char* filename)
+{
+    memset(&cmd, 0, sizeof(petDiskCommand));
+    strcpy((char*)cmd.arg, (const char*)filename);
+    sendCommand(PD_CMD_CHANGE_DIRECTORY);
 }
 
 void SPIDataSource::openDirectory()
