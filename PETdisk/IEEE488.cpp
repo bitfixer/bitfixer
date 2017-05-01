@@ -371,6 +371,9 @@ void ListFilesIEEE(void* dataSource, unsigned char* buffer)
     {
         // get next directory entry
         dirent = ds->getNextDirectoryEntry(buffer);
+        // clear entry
+        memset(entry, ' ', 32);
+
         if (dirent == 0) // this is the end of the directory
         {
             // write ending bytes
@@ -396,6 +399,7 @@ void ListFilesIEEE(void* dataSource, unsigned char* buffer)
             int startline = 0;
             int fname_length = dirent->name_length;
 
+            /*
             // test
             for (int i = 0; i < fname_length; i++)
             {
@@ -410,40 +414,20 @@ void ListFilesIEEE(void* dataSource, unsigned char* buffer)
             }
 
             TX_NEWLINE;
-            memset(entry, ' ', 32);
+            */
+
+
 
             entry[startline] = (unsigned char)(dir_start & 0x00ff);
             entry[startline+1] = (unsigned char)((dir_start & 0xff00) >> 8);
             entry[startline+2] = file+1;
             entry[startline+3] = 0x00;
-            entry[startline+4] = 0x20;
-            entry[startline+5] = 0x20;
-            entry[startline+6] = 0x22;
 
-            /*
-            for (int f = 0; f < 17; f++)
-            {
-                entry[startline+7+f] = ' ';
-            }
-            */
+            entry[startline+6] = '"';
+            strncpy((char*)&entry[startline+7], (const char*)dirent->name, fname_length);
+            entry[startline+7+fname_length] = '"';
 
-            for (int f = 0; f < fname_length; f++)
-            {
-                entry[startline+7+f] = dirent->name[f];
-            }
-            entry[startline+7+fname_length] = 0x22;
-
-            entry[startline+25] = dirent->ext[0];
-            entry[startline+26] = dirent->ext[1];
-            entry[startline+27] = dirent->ext[2];
-
-            //entry[startline+25] = 'D';
-            //entry[startline+26] = 'I';
-            //entry[startline+27] = 'R';
-
-            entry[startline+28] = ' ';
-            entry[startline+29] = ' ';
-            entry[startline+30] = ' ';
+            strncpy((char*)&entry[startline+25], (const char*)dirent->ext, 3);
             entry[startline+31] = 0x00;
             file++;
 
