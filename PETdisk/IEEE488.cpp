@@ -396,6 +396,22 @@ void ListFilesIEEE(void* dataSource, unsigned char* buffer)
             int startline = 0;
             int fname_length = dirent->name_length;
 
+            // test
+            for (int i = 0; i < fname_length; i++)
+            {
+                transmitByte(dirent->name[i]);
+            }
+
+            TX_NEWLINE;
+
+            for (int i = 0; i < 3; i++)
+            {
+                transmitByte(dirent->ext[i]);
+            }
+
+            TX_NEWLINE;
+            memset(entry, ' ', 32);
+
             entry[startline] = (unsigned char)(dir_start & 0x00ff);
             entry[startline+1] = (unsigned char)((dir_start & 0xff00) >> 8);
             entry[startline+2] = file+1;
@@ -404,10 +420,12 @@ void ListFilesIEEE(void* dataSource, unsigned char* buffer)
             entry[startline+5] = 0x20;
             entry[startline+6] = 0x22;
 
+            /*
             for (int f = 0; f < 17; f++)
             {
                 entry[startline+7+f] = ' ';
             }
+            */
 
             for (int f = 0; f < fname_length; f++)
             {
@@ -418,6 +436,10 @@ void ListFilesIEEE(void* dataSource, unsigned char* buffer)
             entry[startline+25] = dirent->ext[0];
             entry[startline+26] = dirent->ext[1];
             entry[startline+27] = dirent->ext[2];
+
+            //entry[startline+25] = 'D';
+            //entry[startline+26] = 'I';
+            //entry[startline+27] = 'R';
 
             entry[startline+28] = ' ';
             entry[startline+29] = ' ';
