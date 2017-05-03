@@ -12,12 +12,18 @@
 #include <dirent.h>
 #include "rpiThreeWireSPI.h"
 #include "petDiskCommand.h"
+#include "URLFetcher.h"
+#include "Directory.h"
+#include "StringSplitter.h"
+#include "URL.h"
 
 class PETFile
 {
 public:
     PETFile(const char* fname, const char* dirname)
     : _fname(NULL)
+    , _mem(NULL)
+    , _memPos(0)
     {
         // copy input filename
         _fname = new char[strlen(fname)+1];
@@ -29,12 +35,14 @@ public:
         _canonicalFname = new char[strlen(fname)+1];
         for (int i = 0; i < strlen(fname); i++)
         {
-            _canonicalFname[i] = tolower(_fname[i]);
+            //_canonicalFname[i] = tolower(_fname[i]);
+            _canonicalFname[i] = _fname[i];
         }
         _canonicalFname[strlen(fname)] = 0;
 
         _fullFname = new char[strlen(_dirname) + 1 + strlen(_canonicalFname) + 1];
-        sprintf(_fullFname, "%s/%s", _dirname, _canonicalFname);
+        //sprintf(_fullFname, "%s/%s", _dirname, _canonicalFname);
+        sprintf(_fullFname, "%s%s", _dirname, _canonicalFname);
     }
 
     ~PETFile()
@@ -65,11 +73,54 @@ public:
         return _fullFname;
     }
 
+    void open()
+    {
+        // if url
+        if (_mem)
+        {
+            delete _mem;
+            _mem = NULL;
+        }
+
+        _mem = new MemoryStruct();
+        _fetcher.fetchURL(_fullFname, *_mem);
+        printf("dl %d bytes\n", _mem->size);
+    }
+
+    int read(unsigned char* buffer, int size)
+    {
+        int bytesLeft = _mem->size - _memPos;
+        int bytesToRead = size;
+        if (bytesToRead > bytesLeft)
+        {
+            bytesToRead = bytesLeft;
+        }
+
+        memcpy(buffer, &(_mem->memory[_memPos]), bytesToRead);
+        _memPos += bytesToRead;
+
+        return bytesToRead;
+    }
+
+    int getSize()
+    {
+        if (_mem)
+        {
+            return _mem->size;
+        }
+
+        return 0;
+    }
+
 private:
     char* _fname;
     char* _dirname;
     char* _canonicalFname;
     char* _fullFname;
+
+    URLFetcher _fetcher;
+    MemoryStruct* _mem;
+    int _memPos;
 };
 
 void list_dir(const char *path)
@@ -147,11 +198,68 @@ int main(int argc, char **argv)
 
     const char* dirname = argv[1];
     printf("directory %s\n", dirname);
+    PETFile* petFile = NULL;
+    Directory directory;
+    unsigned char buffer[512];
+
+    directory.fetch(dirname);
+
+    // testing
+    /*
+    URLFetcher urlFetcher;
+    MemoryStruct urlResponse;
+    if (urlFetcher.fetchURL(dirname, urlResponse))
+    {
+        printf("got %d bytes: %s\n", urlResponse.size, urlResponse.memory);
+    }
+    */
+
+    /*
+    Directory d;
+    d.fetch(dirname);
+
+    URLFetcher fetcher;
+    for (int i = 0; i < d.numEntries(); i++)
+    {
+        string str = d.getEntry(i);
+        string fullurl = string(dirname) + str;
+        printf("entry %d: %s %s\n", i, str.c_str(), fullurl.c_str());
+
+        // fetch this file
+        MemoryStruct m;
+        fetcher.fetchURL(fullurl.c_str(), m);
+        printf("received %d bytes\n", m.size);
+    }
+    */
+
+    /*
+    if (petFile)
+    {
+        delete petFile;
+        petFile = NULL;
+    }
+
+    petFile = new PETFile("bart.PRG", dirname);
+    char* n = (char*)petFile->getFullFname();
+    printf("file is %s\n", n);
+    petFile->open();
+
+    printf("reading..\n");
+    int bytesRead = 512;
+    while (bytesRead == 512)
+    {
+        bytesRead = petFile->read(buffer, 512);
+        printf("read %d bytes\n", bytesRead);
+    }
+    */
+
+    //URL u(dirname);
+
     mkdir(dirname, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
     //list_dir(dirname);
 
-    unsigned char buffer[512];
+
     int value = 0;
     rpiThreeWireSPI spi(1, // clock
                         0, // chip select
@@ -189,17 +297,38 @@ int main(int argc, char **argv)
             }
 
             printf("open for reading: %s\n", cmd.arg);
-            bool found = find_file(cmd.arg, dirname, filename);
-            if (found)
-            {
-                sprintf((char*)fullname, "%s/%s", dirname, filename);
-                printf("found %s, full %s\n", filename, fullname);
-                prgfp = fopen((const char*)fullname, "rb");
-                fseek(prgfp, 0, SEEK_END);
-                size = (uint16_t)ftell(prgfp);
-                fseek(prgfp, 0, SEEK_SET);
-            }
+            int dirindex = directory.find((const char*)cmd.arg);
 
+            if (dirindex >= 0)
+            {
+                /*
+                bool found = find_file(cmd.arg, dirname, filename);
+                if (found)
+                {
+                    sprintf((char*)fullname, "%s/%s", dirname, filename);
+                    printf("found %s, full %s\n", filename, fullname);
+                    prgfp = fopen((const char*)fullname, "rb");
+                    fseek(prgfp, 0, SEEK_END);
+                    size = (uint16_t)ftell(prgfp);
+                    fseek(prgfp, 0, SEEK_SET);
+                }
+                */
+
+                string fn = directory.getEntry(dirindex);
+
+                if (petFile)
+                {
+                    delete petFile;
+                    petFile = NULL;
+                }
+
+                petFile = new PETFile(fn.c_str(), dirname);
+                char* n = (char*)petFile->getFullFname();
+                printf("file is %s\n", n);
+                petFile->open();
+
+                size = petFile->getSize();
+            }
 
             // send the file length
             unsigned char sizeBytes[2];
@@ -221,7 +350,9 @@ int main(int argc, char **argv)
         }
         else if (cmd.command_id == PD_CMD_READ_BLOCK)
         {
-            int bytes_read = fread(buffer, 1, 512, prgfp);
+            memset(buffer, 0, 512);
+            int bytes_read = petFile->read(buffer, 512);
+            //int bytes_read = fread(buffer, 1, 512, prgfp);
             //printf("read %d bytes\n", bytes_read);
             spi.transfer(buffer, 512);
         }
@@ -244,7 +375,6 @@ int main(int argc, char **argv)
         }
         else if (cmd.command_id == PD_CMD_DIRECTORY)
         {
-            printf("open directory.\n");
             if (dir)
             {
                 closedir(dir);
@@ -257,17 +387,6 @@ int main(int argc, char **argv)
         {
             struct dirent* entry = NULL;
             DirectoryEntry* dirent = (DirectoryEntry*)buffer;
-
-            /*
-            while ((entry = readdir(dir)) != NULL)
-            {
-                if (entry->d_type == DT_REG)
-                {
-                    // regular file
-                    break;
-                }
-            }
-            */
             entry = readdir(dir);
 
             if (entry != NULL)

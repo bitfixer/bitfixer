@@ -25,7 +25,7 @@ CLOCK      = 8000000
 PROGRAMMER = -c stk500v2 -P $(MASTERPORT)
 OBJECTS    = PETdisk.o IEEE488.o ../bf-avr-sdlib/SD_routines.o \
 				../bf-avr-sdlib/SPI_routines.o ../shared/UART_routines.o \
-				SPIDataSource.o ../shared/avr/3WireSPI.o
+				SPIDataSource.o ../shared/avr/3WireSPI.o ../shared/avr/Utils.o
 #FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0x24:m
 FUSES      = -U efuse:w:0x00:m -U hfuse:w:0xdf:m -U lfuse:w:0xe2:m
 

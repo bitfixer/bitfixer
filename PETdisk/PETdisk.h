@@ -21,6 +21,6 @@ typedef struct _pdStateVars
     unsigned char sd_boot_checksum;
 } pdStateVars;
 
-void pgm_memcpy(unsigned char *dest, const unsigned char *src, int len);
+//void pgm_memcpy(unsigned char *dest, const unsigned char *src, int len);
 
 #endif

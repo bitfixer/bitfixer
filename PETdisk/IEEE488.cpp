@@ -24,10 +24,12 @@
 #include "IEEE488.h"
 #include "PETdisk.h"
 #include "DataSource.h"
+#include "Utils.h"
 
 extern "C" {
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <avr/pgmspace.h>
 #include <avr/sleep.h>
 #include <inttypes.h>
 #include <util/delay.h>
@@ -35,6 +37,8 @@ extern "C" {
 #include <stdio.h>
 #include "UART_routines.h"
 }
+
+const unsigned char _blocksFree[] PROGMEM = "BLOCKS FREE.";
 
 void wait_for_dav_high()
 {
@@ -384,7 +388,9 @@ void ListFilesIEEE(void* dataSource, unsigned char* buffer)
             entry[startline+1] = (unsigned char)((dir_start & 0xff00) >> 8);
             entry[startline+2] = 0xff;
             entry[startline+3] = 0xff;
-            sprintf((char *)&entry[startline+4], (char *)"BLOCKS FREE.             ");
+
+            pgm_memcpy(&entry[startline+4], _blocksFree, 12);
+
             entry[startline+29] = 0x00;
             entry[startline+30] = 0x00;
             entry[startline+31] = 0x00;
@@ -398,25 +404,6 @@ void ListFilesIEEE(void* dataSource, unsigned char* buffer)
 
             int startline = 0;
             int fname_length = dirent->name_length;
-
-            /*
-            // test
-            for (int i = 0; i < fname_length; i++)
-            {
-                transmitByte(dirent->name[i]);
-            }
-
-            TX_NEWLINE;
-
-            for (int i = 0; i < 3; i++)
-            {
-                transmitByte(dirent->ext[i]);
-            }
-
-            TX_NEWLINE;
-            */
-
-
 
             entry[startline] = (unsigned char)(dir_start & 0x00ff);
             entry[startline+1] = (unsigned char)((dir_start & 0xff00) >> 8);

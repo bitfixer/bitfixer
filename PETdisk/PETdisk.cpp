@@ -24,6 +24,10 @@
 #define BAUD 38400
 #define MYUBRR F_CPU/16/BAUD-1
 
+#include "IEEE488.h"
+#include "DataSource.h"
+#include "Utils.h"
+
 extern "C" {
 #include <avr/io.h>
 #include <avr/pgmspace.h>
@@ -34,11 +38,7 @@ extern "C" {
 #include "SPI_routines.h"
 #include "SD_routines.h"
 #include "UART_routines.h"
-//#include "FAT32.h"
 }
-
-#include "IEEE488.h"
-#include "DataSource.h"
 
 #define SPI_PORT PORTB
 #define SPI_CTL  DDRB
@@ -125,6 +125,7 @@ const unsigned char _firmwareFileName[] PROGMEM =
     0x00,
 };
 
+/*
 void pgm_memcpy(unsigned char *dest, const unsigned char *src, int len)
 {
     int i;
@@ -133,6 +134,7 @@ void pgm_memcpy(unsigned char *dest, const unsigned char *src, int len)
         *dest++ = pgm_read_byte(&(*src++));
     }
 }
+*/
 
 void port_init(void)
 {
