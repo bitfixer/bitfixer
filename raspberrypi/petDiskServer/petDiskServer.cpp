@@ -278,6 +278,7 @@ int main(int argc, char **argv)
     FILE* prgfp = NULL;
     // directory
     DIR* dir = NULL;
+    int directoryIndex = 0;
     while(1)
     {
         // read command
@@ -286,8 +287,8 @@ int main(int argc, char **argv)
         if (cmd.command_id == PD_CMD_OPEN_FILE_FOR_READING)
         {
             printf("reading\n");
-            unsigned char filename[256];
-            unsigned char fullname[512];
+            //unsigned char filename[256];
+            //unsigned char fullname[512];
             uint16_t size = 0;
 
             if (prgfp)
@@ -297,23 +298,12 @@ int main(int argc, char **argv)
             }
 
             printf("open for reading: %s\n", cmd.arg);
+
+            // find the file in the directory
             int dirindex = directory.find((const char*)cmd.arg);
 
             if (dirindex >= 0)
             {
-                /*
-                bool found = find_file(cmd.arg, dirname, filename);
-                if (found)
-                {
-                    sprintf((char*)fullname, "%s/%s", dirname, filename);
-                    printf("found %s, full %s\n", filename, fullname);
-                    prgfp = fopen((const char*)fullname, "rb");
-                    fseek(prgfp, 0, SEEK_END);
-                    size = (uint16_t)ftell(prgfp);
-                    fseek(prgfp, 0, SEEK_SET);
-                }
-                */
-
                 string fn = directory.getEntry(dirindex);
 
                 if (petFile)
@@ -375,6 +365,7 @@ int main(int argc, char **argv)
         }
         else if (cmd.command_id == PD_CMD_DIRECTORY)
         {
+            /*
             if (dir)
             {
                 closedir(dir);
@@ -382,9 +373,14 @@ int main(int argc, char **argv)
             }
 
             dir = opendir(dirname);
+            */
+
+            directoryIndex = 0;
         }
         else if (cmd.command_id == PD_CMD_GET_NEXT_DIRECTORY_ENTRY)
         {
+            DirectoryEntry* dirent = (DirectoryEntry*)buffer;
+            /*
             struct dirent* entry = NULL;
             DirectoryEntry* dirent = (DirectoryEntry*)buffer;
             entry = readdir(dir);
@@ -450,6 +446,49 @@ int main(int argc, char **argv)
                 dirent->valid = 0;
                 closedir(dir);
                 dir = NULL;
+            }
+            */
+            if (directoryIndex < directory.numEntries())
+            {
+                string name = directory.getName(directoryIndex++);
+                // get extension
+                int maxlen = 17;
+                int namelen = name.length();
+                int extstartindex = -1;
+                if (name.at(namelen-4) == '.')
+                {
+                    extstartindex = namelen - 3;
+                    namelen = namelen - 4;
+                }
+
+                if (namelen >= maxlen)
+                {
+                    namelen = maxlen;
+                }
+
+                dirent->valid = 1;
+                dirent->name_length = (unsigned char)namelen;
+
+                memset(dirent->name, 0, maxlen);
+                for (int i = 0; i < namelen; i++)
+                {
+                    dirent->name[i] = toupper(name.at(i));
+                }
+
+                printf("name %s name_length: %d\n", dirent->name, dirent->name_length);
+
+                memset(dirent->ext, ' ', 3);
+                if (extstartindex > 0)
+                {
+                    for (int i = 0; i < 3; i++)
+                    {
+                        dirent->ext[i] = toupper(name.at(extstartindex + i));
+                    }
+                }
+            }
+            else
+            {
+                dirent->valid = 0;
             }
 
             spi.transfer(buffer, 256);
