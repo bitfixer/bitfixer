@@ -30,13 +30,21 @@ if ($verb == "GET")
 				{
 					$entry = array();
 					$entry['name'] = $value;
-					$entry['path'] = $dir . DIRECTORY_SEPARATOR . $value;
+					//$entry['path'] = $dir . DIRECTORY_SEPARATOR . $value;
+					$entry['path'] = $value;
 					$result[] = $entry;
 				}
 			}
 		}
 
 		header('Content-Type: application/json');
+		$result_json = json_encode($result);
+		print $result_json;
+	}
+	else
+	{
+		header('Content-Type: application/json');
+		$result = array();
 		$result_json = json_encode($result);
 		print $result_json;
 	}
