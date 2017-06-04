@@ -3,7 +3,8 @@ REMOTE := 192.168.1.7
 OBJECTS	= 	petDiskServer.o \
 			rpiThreeWireSPI.o \
 			URLFetcher.o \
-			Directory.o
+			Directory.o \
+			URLUploader.o
 
 BUILDDIR = build
 
@@ -25,7 +26,10 @@ transfer:
 	scp ../../shared/petDiskCommand.h pi@$(REMOTE):~/petDiskServer/petDiskCommand.h
 	scp ../../shared/rpi/URLFetcher.h pi@$(REMOTE):~/petDiskServer/URLFetcher.h
 	scp ../../shared/rpi/URLFetcher.cpp pi@$(REMOTE):~/petDiskServer/URLFetcher.cpp
+	scp ../../shared/rpi/URLUploader.h pi@$(REMOTE):~/petDiskServer/URLUploader.h
+	scp ../../shared/rpi/URLUploader.cpp pi@$(REMOTE):~/petDiskServer/URLUploader.cpp
 	scp ../../shared/Directory.h pi@$(REMOTE):~/petDiskServer/Directory.h
 	scp ../../shared/Directory.cpp pi@$(REMOTE):~/petDiskServer/Directory.cpp
 	scp ../../shared/StringSplitter.h pi@$(REMOTE):~/petDiskServer/StringSplitter.h
 	scp ../../shared/URL.h pi@$(REMOTE):~/petDiskServer/URL.h
+	scp ../../external/picojson/picojson.h pi@$(REMOTE):~/petDiskServer/picojson.h
