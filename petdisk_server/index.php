@@ -2,35 +2,44 @@
 $verb = $_SERVER['REQUEST_METHOD'];
 if ($verb == "GET")
 {
-	$dir = "data";
-	$entries = scandir($dir);
-	$result = array();
+	$path = $_GET['path'];
+	$dir = "data" . $path;
 
-	foreach ($entries as $key => $value)
+	// check if the path points to a file
+	if (is_file($dir))
 	{
-		if (!in_array($value,array(".",".."))) 
-		{ 
-			if (is_dir($dir . DIRECTORY_SEPARATOR . $value)) 
-			{ 
-				$result[$value] = dirToArray($dir . DIRECTORY_SEPARATOR . $value); 
-			} 
-			else 
-			{ 
-				$entry = array();
-				$entry['name'] = $value;
-				$entry['path'] = $dir . DIRECTORY_SEPARATOR . $value;
-				$result[] = $entry;
-			} 
-		} 
+		// output the binary file
+		header('Content-Type: application/octet-stream');
+		$res = file_get_contents($dir);
+		print $res;
 	}
+	elseif (is_dir($dir))
+	{
+		$entries = scandir($dir);
+		$result = array();
 
-	//print_r($result);
-	$result_json = json_encode($result);
-	print $result_json;
+		foreach ($entries as $key => $value)
+		{
+			if (!in_array($value,array(".","..")))
+			{
+				if (is_dir($dir . DIRECTORY_SEPARATOR . $value))
+				{
+					$result[$value] = dirToArray($dir . DIRECTORY_SEPARATOR . $value);
+				}
+				else
+				{
+					$entry = array();
+					$entry['name'] = $value;
+					$entry['path'] = $dir . DIRECTORY_SEPARATOR . $value;
+					$result[] = $entry;
+				}
+			}
+		}
 
-
-	//$files_json = json_encode($files);
-	//print $files_json;
+		header('Content-Type: application/json');
+		$result_json = json_encode($result);
+		print $result_json;
+	}
 }
 else if ($verb == "PUT")
 {
