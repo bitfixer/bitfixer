@@ -16,6 +16,29 @@
 #include "Directory.h"
 #include "StringSplitter.h"
 #include "URL.h"
+#include "URLUploader.h"
+
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <curl/curl.h>
+
+/*
+int main(int argc, char **argv)
+{
+    MemoryStruct mem;
+    mem.memory = (char*)malloc(5);
+    mem.memory[0] = 'A';
+    mem.memory[1] = 'B';
+    mem.memory[2] = 'C';
+    mem.memory[3] = 'D';
+    mem.memory[4] = 'E';
+    mem.size = 5;
+
+    URLUploader uploader("http://www.bitfixer.com/pd/");
+    uploader.upload("zzzyyy.prg", mem);
+    printf("done.\n");
+}
+*/
 
 class PETFile
 {
@@ -203,6 +226,9 @@ int main(int argc, char **argv)
     unsigned char buffer[512];
 
     directory.fetch(dirname);
+    //int dirindex = directory.find("ACIGOL.PRG");
+    //printf("result %d\n", dirindex);
+    //exit(0);
 
     // testing
     /*
@@ -287,8 +313,6 @@ int main(int argc, char **argv)
         if (cmd.command_id == PD_CMD_OPEN_FILE_FOR_READING)
         {
             printf("reading\n");
-            //unsigned char filename[256];
-            //unsigned char fullname[512];
             uint16_t size = 0;
 
             if (prgfp)
