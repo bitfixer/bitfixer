@@ -226,65 +226,7 @@ int main(int argc, char **argv)
     unsigned char buffer[512];
 
     directory.fetch(dirname);
-    //int dirindex = directory.find("ACIGOL.PRG");
-    //printf("result %d\n", dirindex);
-    //exit(0);
-
-    // testing
-    /*
-    URLFetcher urlFetcher;
-    MemoryStruct urlResponse;
-    if (urlFetcher.fetchURL(dirname, urlResponse))
-    {
-        printf("got %d bytes: %s\n", urlResponse.size, urlResponse.memory);
-    }
-    */
-
-    /*
-    Directory d;
-    d.fetch(dirname);
-
-    URLFetcher fetcher;
-    for (int i = 0; i < d.numEntries(); i++)
-    {
-        string str = d.getEntry(i);
-        string fullurl = string(dirname) + str;
-        printf("entry %d: %s %s\n", i, str.c_str(), fullurl.c_str());
-
-        // fetch this file
-        MemoryStruct m;
-        fetcher.fetchURL(fullurl.c_str(), m);
-        printf("received %d bytes\n", m.size);
-    }
-    */
-
-    /*
-    if (petFile)
-    {
-        delete petFile;
-        petFile = NULL;
-    }
-
-    petFile = new PETFile("bart.PRG", dirname);
-    char* n = (char*)petFile->getFullFname();
-    printf("file is %s\n", n);
-    petFile->open();
-
-    printf("reading..\n");
-    int bytesRead = 512;
-    while (bytesRead == 512)
-    {
-        bytesRead = petFile->read(buffer, 512);
-        printf("read %d bytes\n", bytesRead);
-    }
-    */
-
-    //URL u(dirname);
-
     mkdir(dirname, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-
-    //list_dir(dirname);
-
 
     int value = 0;
     rpiThreeWireSPI spi(1, // clock
@@ -299,9 +241,8 @@ int main(int argc, char **argv)
     memset(buffer, 0, 512);
     petDiskCommand cmd;
 
-    bool reading = false;
-    bool writing = false;
-    FILE* prgfp = NULL;
+    //bool reading = false;
+    //bool writing = false;
     // directory
     DIR* dir = NULL;
     int directoryIndex = 0;
@@ -309,18 +250,10 @@ int main(int argc, char **argv)
     {
         // read command
         spi.transfer((unsigned char*)&cmd, sizeof(petDiskCommand));
-        //printf("fname: %s\n", cmd.arg);
+
         if (cmd.command_id == PD_CMD_OPEN_FILE_FOR_READING)
         {
-            printf("reading\n");
             uint16_t size = 0;
-
-            if (prgfp)
-            {
-                fclose(prgfp);
-                prgfp = NULL;
-            }
-
             printf("open for reading: %s\n", cmd.arg);
 
             // find the file in the directory
@@ -338,9 +271,7 @@ int main(int argc, char **argv)
 
                 petFile = new PETFile(fn.c_str(), dirname);
                 char* n = (char*)petFile->getFullFname();
-                printf("file is %s\n", n);
                 petFile->open();
-
                 size = petFile->getSize();
             }
 
@@ -350,128 +281,44 @@ int main(int argc, char **argv)
             sizeBytes[1] = size & 0x00FF;
 
             spi.transfer(sizeBytes, 2);
-
-            reading = true;
-            writing = false;
         }
         else if (cmd.command_id == PD_CMD_OPEN_FILE_FOR_WRITING)
         {
-            PETFile petfile((const char*)cmd.arg, (const char*)dirname);
-            printf("filename: %s\n", petfile.getFullFname());
-            prgfp = fopen(petfile.getFullFname(), "wb");
-            reading = false;
-            writing = true;
+            //PETFile petfile((const char*)cmd.arg, (const char*)dirname);
+            //printf("filename: %s\n", petfile.getFullFname());
+            //prgfp = fopen(petfile.getFullFname(), "wb");
         }
         else if (cmd.command_id == PD_CMD_READ_BLOCK)
         {
             memset(buffer, 0, 512);
             int bytes_read = petFile->read(buffer, 512);
-            //int bytes_read = fread(buffer, 1, 512, prgfp);
-            //printf("read %d bytes\n", bytes_read);
             spi.transfer(buffer, 512);
         }
         else if (cmd.command_id == PD_CMD_WRITE_BLOCK)
         {
             int bytes_read = spi.transfer(buffer, 512);
             printf("writing %d bytes\n", bytes_read);
-            fwrite(buffer, 1, bytes_read, prgfp);
+            //fwrite(buffer, 1, bytes_read, prgfp);
         }
         else if (cmd.command_id == PD_CMD_CLOSE_FILE)
         {
             printf("closing file\n");
+            /*
             if (prgfp)
             {
                 fclose(prgfp);
                 prgfp = NULL;
             }
-            reading = false;
-            writing = false;
+            */
         }
         else if (cmd.command_id == PD_CMD_DIRECTORY)
         {
-            /*
-            if (dir)
-            {
-                closedir(dir);
-                dir = NULL;
-            }
-
-            dir = opendir(dirname);
-            */
-
             directoryIndex = 0;
         }
         else if (cmd.command_id == PD_CMD_GET_NEXT_DIRECTORY_ENTRY)
         {
             DirectoryEntry* dirent = (DirectoryEntry*)buffer;
-            /*
-            struct dirent* entry = NULL;
-            DirectoryEntry* dirent = (DirectoryEntry*)buffer;
-            entry = readdir(dir);
 
-            if (entry != NULL)
-            {
-                if (entry->d_type == DT_REG)
-                {
-                    // get extension
-                    int maxlen = 17;
-                    int namelen = strlen(entry->d_name);
-                    int extstartindex = -1;
-                    if (entry->d_name[namelen-4] == '.')
-                    {
-                        extstartindex = namelen - 3;
-                        namelen = namelen - 4;
-                    }
-
-                    if (namelen >= maxlen)
-                    {
-                        namelen = maxlen;
-                    }
-
-                    dirent->valid = 1;
-                    dirent->name_length = (unsigned char)namelen;
-
-                    memset(dirent->name, 0, maxlen);
-                    for (int i = 0; i < namelen; i++)
-                    {
-                        dirent->name[i] = toupper(entry->d_name[i]);
-                    }
-
-                    printf("name %s name_length: %d\n", dirent->name, dirent->name_length);
-
-                    memset(dirent->ext, 0, 3);
-                    if (extstartindex > 0)
-                    {
-                        for (int i = 0; i < 3; i++)
-                        {
-                            dirent->ext[i] = toupper(entry->d_name[extstartindex + i]);
-                        }
-                    }
-                }
-                else if (entry->d_type == DT_DIR)
-                {
-                    int maxlen = 17;
-                    dirent->valid = 1;
-                    dirent->name_length = strlen(entry->d_name);
-
-                    memset(dirent->name, 0, maxlen);
-                    for (int i = 0; i < dirent->name_length; i++)
-                    {
-                        dirent->name[i] = toupper(entry->d_name[i]);
-                    }
-
-                    dirent->ext[0] = 'D';
-                    dirent->ext[1] = 'I';
-                    dirent->ext[2] = 'R';
-                }
-            }
-            else
-            {
-                dirent->valid = 0;
-                closedir(dir);
-                dir = NULL;
-            }
-            */
             if (directoryIndex < directory.numEntries())
             {
                 string name = directory.getName(directoryIndex++);
