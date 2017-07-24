@@ -21,6 +21,7 @@ class FloydSteinbergDitherer : public Ditherer
 {
 public:
     Image* createDitheredImageFromImageWithPalette(const Image& image, const Palette& palette);
+    void ditherImageInPlaceWithPalette(const Image& image, const Palette& palette);
 };
 
 Image* FloydSteinbergDitherer::createDitheredImageFromImageWithPalette(const Image& image, const Palette& palette)
@@ -59,6 +60,38 @@ Image* FloydSteinbergDitherer::createDitheredImageFromImageWithPalette(const Ima
     }
     
     return dImage;
+}
+
+void FloydSteinbergDitherer::ditherImageInPlaceWithPalette(const Image& image, const Palette& palette)
+{
+    Color pixelColor;
+    Color paletteColor;
+    for (int h = 0; h < image.getHeight(); h++)
+    {
+        for (int w = 0; w < image.getWidth(); w++)
+        {
+            Pixel* p = image.pixelAt(w, h);
+            pixelColor.fromPixel(*p);
+            palette.getClosestColorTo(pixelColor, paletteColor, p->palette_index);
+            
+            for (int c = 0; c < 3; c++)
+            {
+                float diff = pixelColor.rgb[c] - paletteColor.rgb[c];
+                
+                Pixel *pp;
+                pp = image.pixelAt(w+1, h);
+                if (pp) pp->rgb[c] += diff * 7.0 / 16.0;
+                pp = image.pixelAt(w-1, h+1);
+                if (pp) pp->rgb[c] += diff * 3.0 / 16.0;
+                pp = image.pixelAt(w, h+1);
+                if (pp) pp->rgb[c] += diff * 5.0 / 16.0;
+                pp = image.pixelAt(w+1, h+1);
+                if (pp) pp->rgb[c] += diff * 1.0 / 16.0;
+                
+                p->rgb[c] = paletteColor.rgb[c];
+            }
+        }
+    }
 }
 
 class NearestNeighborDitherer : public Ditherer
@@ -141,130 +174,55 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
 
 void C64Ditherer::processRow(C64Image* image, int blockWidth, int blockHeight, int yBlock, int xBlocks, const Palette& inpalette)
 {
-    Image** subImages = NULL;
-    Image** dImages = NULL;
-    Image rowImage(blockWidth*xBlocks, blockHeight);
+    Image SubImage(blockWidth, blockHeight);
     Ditherer* fsDitherer = createFloydSteinbergDitherer();
     Color avgColor;
     Color pColor;
     Color nextColor;
     Color pColor2;
-    Palette* palette = NULL;
     Palette p(4);
     
-    Color black;
-    black.set(0, 0, 0);
-    Color white;
-    white.set(1, 1, 1);
-    
-    p.setColorAtIndex(black, 0);
-    p.setColorAtIndex(white, 1);
     int pcolors[4];
     pcolors[0] = 0;
     pcolors[1] = 1;
     
-    int* blockColors = new int[2*xBlocks];
-    dImages = new Image*[xBlocks];
-    subImages = new Image*[xBlocks];
-    for (int x = 0; x < xBlocks; x++)
+    for (int c = 0; c < 2; c++)
     {
-        subImages[x] = new Image(blockWidth, blockHeight);
+        p.setColorAtIndex(*inpalette.colorAtIndex(pcolors[c]), c);
     }
-    
-    {
-        std::lock_guard<std::mutex> guard(process_mutex);
-        palette = new Palette(inpalette);
-        
-        for (int xb = 0; xb < xBlocks; xb++)
-        {
-            subImages[xb]->fromSubImage(*image, xb * blockWidth, blockWidth, yBlock * blockHeight, blockHeight);
-        }
-    }
-    
-    Image** testImages;
-    testImages = (Image**)calloc(sizeof(Image*), palette->getNumColors());
     
     for (int xb = 0; xb < xBlocks; xb++)
     {
-        Image* subImage = subImages[xb];
+        Image* subImage = &SubImage;
+        subImage->fromSubImage(*image, xb * blockWidth, blockWidth, yBlock * blockHeight, blockHeight);
+        
         subImage->getAvgColor(avgColor);
-        int bestColor;
-        palette->getClosestColorTo(avgColor, pColor, bestColor, false);
-        
-        int minErrorIndex[2];
-        int c1 = bestColor;
-        
+        inpalette.getClosestColorTo(avgColor, pColor, pcolors[2], false);
         subImage->getSecondaryColor(pColor, nextColor, false);
-        int c2;
-        palette->getClosestColorTo(nextColor, pColor2, c2, false, c1);
-        minErrorIndex[0] = c1;
-        minErrorIndex[1] = c2;
-        Color* col1 = palette->colorAtIndex(c1);
-        Color* col2 = palette->colorAtIndex(c2);
-        p.setColorAtIndex(*col1, 2);
-        p.setColorAtIndex(*col2, 3);
+        inpalette.getClosestColorTo(nextColor, pColor2, pcolors[3], false, pcolors[2]);
         
-        Color* pc;
-        pc = palette->colorAtIndex(minErrorIndex[0]);
-        p.setColorAtIndex(*pc, 2);
-        pc = palette->colorAtIndex(minErrorIndex[1]);
-        p.setColorAtIndex(*pc, 3);
-        
-        pcolors[2] = minErrorIndex[0];
-        pcolors[3] = minErrorIndex[1];
-        
-        blockColors[xb*2] = minErrorIndex[0];
-        blockColors[xb*2 + 1] = minErrorIndex[1];
-        
-        dImages[xb] = fsDitherer->createDitheredImageFromImageWithPalette(*subImage, p);
-        
-        for (int y = 0; y < dImages[xb]->getHeight(); y++)
+        for (int c = 2; c <= 3; c++)
         {
-            for (int x = 0; x < dImages[xb]->getWidth(); x++)
+            p.setColorAtIndex(*inpalette.colorAtIndex(pcolors[c]), c);
+        }
+        fsDitherer->ditherImageInPlaceWithPalette(*subImage, p);
+        
+        for (int y = 0; y < subImage->getHeight(); y++)
+        {
+            for (int x = 0; x < subImage->getWidth(); x++)
             {
-                Pixel* p = dImages[xb]->pixelAt(x, y);
+                Pixel* p = subImage->pixelAt(x, y);
                 int c64_palette_color = pcolors[p->palette_index];
                 p->palette_index = c64_palette_color;
             }
         }
-    }
-    
-    // copy subimage into destination image
-    {
-        std::lock_guard<std::mutex> guard(process_mutex);
-        for (int xb = 0; xb < xBlocks; xb++)
-        {
-            Image* dimage = dImages[xb];
-            image->setBlockColor(xb, yBlock, 0, blockColors[xb*2]);
-            image->setBlockColor(xb, yBlock, 1, blockColors[xb*2 + 1]);
-            image->copyFromImageAtPosition(*dimage, xb*blockWidth, yBlock*blockHeight);
-        }
+        
+        image->setBlockColor(xb, yBlock, 0, pcolors[2]);
+        image->setBlockColor(xb, yBlock, 1, pcolors[3]);
+        image->copyFromImageAtPosition(*subImage, xb*blockWidth, yBlock*blockHeight);
     }
      
-    for (int c = 0; c < palette->getNumColors(); c++)
-    {
-        if (testImages[c])
-        {
-            delete testImages[c];
-        }
-    }
-    free(testImages);
-    
-    for (int x = 0; x < xBlocks; x++)
-    {
-        delete dImages[x];
-    }
-    delete[] dImages;
-    
-    for (int x = 0; x < xBlocks; x++)
-    {
-        delete subImages[x];
-    }
-    delete[] subImages;
-    
-    delete[] blockColors;
     delete fsDitherer;
-    delete palette;
 }
 
 Ditherer* Ditherer::createFloydSteinbergDitherer()
