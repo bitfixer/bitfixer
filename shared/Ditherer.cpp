@@ -153,7 +153,7 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
         int votes;
     } ColorRank;
     
-    int* blockColors = (int*)calloc(sizeof(int), 2*yBlocks*xBlocks);
+    //int* blockColors = (int*)calloc(sizeof(int), 2*yBlocks*xBlocks);
     
     bool useThreads = true;
     if (useThreads)
@@ -173,6 +173,7 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
         // join all threads
         for (auto& th : threads) th.join();
     }
+    /*
     else
     {
         for (int yb = 0; yb < yBlocks; yb++)
@@ -384,6 +385,7 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
             }
         }
     }
+    */
     
     delete fsDitherer;
     return newImage;
@@ -391,11 +393,10 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
 
 void C64Ditherer::processRow(C64Image* image, int blockWidth, int blockHeight, int yBlock, int xBlocks, const Palette& inpalette)
 {
-    Image subImage(blockWidth, blockHeight);
+    Image** subImages = NULL;
     Image** dImages = NULL;
     Image rowImage(blockWidth*xBlocks, blockHeight);
     Ditherer* fsDitherer = createFloydSteinbergDitherer();
-    Ditherer* nnDitherer = createNearestNeighborDitherer();
     Color avgColor;
     Color pColor;
     Color nextColor;
@@ -415,12 +416,21 @@ void C64Ditherer::processRow(C64Image* image, int blockWidth, int blockHeight, i
     pcolors[1] = 1;
     
     int* blockColors = new int[2*xBlocks];
-    
     dImages = new Image*[xBlocks];
+    subImages = new Image*[xBlocks];
+    for (int x = 0; x < xBlocks; x++)
+    {
+        subImages[x] = new Image(blockWidth, blockHeight);
+    }
     
     {
         std::lock_guard<std::mutex> guard(process_mutex);
         palette = new Palette(inpalette);
+        
+        for (int xb = 0; xb < xBlocks; xb++)
+        {
+            subImages[xb]->fromSubImage(*image, xb * blockWidth, blockWidth, yBlock * blockHeight, blockHeight);
+        }
     }
     
     Image** testImages;
@@ -428,61 +438,19 @@ void C64Ditherer::processRow(C64Image* image, int blockWidth, int blockHeight, i
     
     for (int xb = 0; xb < xBlocks; xb++)
     {
-        {
-            std::lock_guard<std::mutex> guard(process_mutex);
-            subImage.fromSubImage(*image, xb * blockWidth, blockWidth, yBlock * blockHeight, blockHeight);
-        }
-        
-        subImage.getAvgColor(avgColor);
+        Image* subImage = subImages[xb];
+        subImage->getAvgColor(avgColor);
         int bestColor;
         palette->getClosestColorTo(avgColor, pColor, bestColor, false);
-        //bestColor = 4;
         
-        float minError = 9999999.9;
         int minErrorIndex[2];
         int c1 = bestColor;
         
         int method = 2;
         
-        /*
-        if (method == 0)
-        {
-            for (int c2 = 2; c2 < palette->getNumColors(); c2++)
-            {
-                bool useColors = c1 != c2;
-                if (useColors)
-                {
-                    Color* pc1 = palette->colorAtIndex(c1);
-                    p.setColorAtIndex(*pc1, 2);
-                    
-                    Color* pc2 = palette->colorAtIndex(c2);
-                    if (pc2->rgb[0] == pc2->rgb[1] && pc2->rgb[0] == pc2->rgb[2])
-                    {
-                        useColors = false;
-                    }
-                    
-                    p.setColorAtIndex(*pc2, 3);
-                }
-                
-                if (useColors)
-                {
-                    testImages[c2] = fsDitherer->createDitheredImageFromImageWithPalette(subImage, p);
-                    float err = testImages[c2]->getErrorFromImage(subImage);
-                    
-                    if (err < minError)
-                    {
-                        minError = err;
-                        minErrorIndex[0] = c1;
-                        minErrorIndex[1] = c2;
-                    }
-                }
-            }
-        }
-        else 
-        */
         if (method == 2)
         {
-            subImage.getSecondaryColor(pColor, nextColor, false);
+            subImage->getSecondaryColor(pColor, nextColor, false);
             int c2;
             palette->getClosestColorTo(nextColor, pColor2, c2, false, c1);
             minErrorIndex[0] = c1;
@@ -491,8 +459,6 @@ void C64Ditherer::processRow(C64Image* image, int blockWidth, int blockHeight, i
             Color* col2 = palette->colorAtIndex(c2);
             p.setColorAtIndex(*col1, 2);
             p.setColorAtIndex(*col2, 3);
-            //testImages[c2] = fsDitherer->createDitheredImageFromImageWithPalette(subImage, p);
-            //testImages[c2] = nnDitherer->createDitheredImageFromImageWithPalette(subImage, p);
         }
         
         Color* pc;
@@ -504,33 +470,20 @@ void C64Ditherer::processRow(C64Image* image, int blockWidth, int blockHeight, i
         pcolors[2] = minErrorIndex[0];
         pcolors[3] = minErrorIndex[1];
         
-        //blockColors[xb*2] = minErrorIndex[0];
-        //blockColors[xb*2 + 1] = minErrorIndex[1];
+        blockColors[xb*2] = minErrorIndex[0];
+        blockColors[xb*2 + 1] = minErrorIndex[1];
         
-        //Image* ii = testImages[minErrorIndex[1]];
-        Image* ii = fsDitherer->createDitheredImageFromImageWithPalette(subImage, p);
+        dImages[xb] = fsDitherer->createDitheredImageFromImageWithPalette(*subImage, p);
         
-        for (int y = 0; y < ii->getHeight(); y++)
+        for (int y = 0; y < dImages[xb]->getHeight(); y++)
         {
-            for (int x = 0; x < ii->getWidth(); x++)
+            for (int x = 0; x < dImages[xb]->getWidth(); x++)
             {
-                Pixel* p = ii->pixelAt(x, y);
+                Pixel* p = dImages[xb]->pixelAt(x, y);
                 int c64_palette_color = pcolors[p->palette_index];
                 p->palette_index = c64_palette_color;
             }
         }
-        
-        dImages[xb] = ii;
-        
-        /*
-        // copy subimage into destination image
-        {
-            std::lock_guard<std::mutex> guard(process_mutex);
-            image->setBlockColor(xb, yBlock, 0, minErrorIndex[0]);
-            image->setBlockColor(xb, yBlock, 1, minErrorIndex[1]);
-            image->copyFromImageAtPosition(*ii, xb*blockWidth, yBlock*blockHeight);
-        }
-        */
     }
     
     // copy subimage into destination image
@@ -544,7 +497,7 @@ void C64Ditherer::processRow(C64Image* image, int blockWidth, int blockHeight, i
             image->copyFromImageAtPosition(*dimage, xb*blockWidth, yBlock*blockHeight);
         }
     }
-    
+     
     for (int c = 0; c < palette->getNumColors(); c++)
     {
         if (testImages[c])
@@ -559,7 +512,7 @@ void C64Ditherer::processRow(C64Image* image, int blockWidth, int blockHeight, i
         delete dImages[x];
     }
     delete[] dImages;
-    
+    delete[] blockColors;
     delete fsDitherer;
     delete palette;
 }
