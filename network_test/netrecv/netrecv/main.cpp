@@ -7,12 +7,12 @@
 //
 
 #include <iostream>
-
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include "Netport.h"
+#include "timer.hpp"
 
 int main(int argc, const char * argv[]) {
     int c;
@@ -70,13 +70,15 @@ int main(int argc, const char * argv[]) {
     
     unsigned char* buf = new unsigned char[chunksize];
     NetPort port(ipaddr[0],ipaddr[1],ipaddr[2],ipaddr[3],inport,outport);
+    Tools::Timer timer;
+    timer.start();
     int currpkt = 0;
     if (!send)
     {
         while (numpackets == -1 || currpkt < numpackets)
         {
             int ret = port.recv_sync(buf, chunksize);
-            printf("pport got %d bytes\n", ret);
+            printf("pport got %d bytes time %lf\n", ret, timer.getTime());
             currpkt++;
         }
     }
