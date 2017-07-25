@@ -17,6 +17,7 @@ class Ditherer
 public:
     virtual ~Ditherer() {};
     virtual Image* createDitheredImageFromImageWithPalette(const Image& image, const Palette& palette) = 0;
+    virtual void ditherImageInPlaceWithPalette(const Image& image, const Palette& palette) {};
     
     static Ditherer* createFloydSteinbergDitherer();
     static Ditherer* createC64Ditherer();
