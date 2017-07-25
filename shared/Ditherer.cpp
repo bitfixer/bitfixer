@@ -130,10 +130,13 @@ class C64Ditherer : public Ditherer
 {
 public:
     Image* createDitheredImageFromImageWithPalette(const Image& image, const Palette& palette);
+    void ditherImageInPlaceWithPalette(const Image& image, const Palette& palette);
     static void threadFunc(C64Ditherer* ref, C64Image* image, int blockWidth, int blockHeight, int yBlock, int xBlocks, const Palette& palette);
     void processRow(C64Image* image, int blockWidth, int blockHeight, int yBlock, int xBlocks, const Palette& palette);
 private:
     std::mutex process_mutex;
+    
+    void ditherImage(C64Image* image, const Palette& palette);
 };
 
 void C64Ditherer::threadFunc(C64Ditherer* ref, C64Image* image, int blockWidth, int blockHeight, int yBlock, int xBlocks, const Palette& palette)
@@ -141,27 +144,32 @@ void C64Ditherer::threadFunc(C64Ditherer* ref, C64Image* image, int blockWidth, 
     ref->processRow(image, blockWidth, blockHeight, yBlock, xBlocks, palette);
 }
 
-Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, const Palette &palette)
+void C64Ditherer::ditherImage(C64Image *image, const Palette &palette)
 {
     Ditherer* fsDitherer = createFloydSteinbergDitherer();
     int blockWidth = 4;
     int blockHeight = 8;
     
-    int xBlocks = image.getWidth() / blockWidth;
-    int yBlocks = image.getHeight() / blockHeight;
+    int xBlocks = image->getWidth() / blockWidth;
+    int yBlocks = image->getHeight() / blockHeight;
     
-    C64Image* newImage = new C64Image(image);
-    newImage->bgcolor = 0;
-    newImage->fgcolor = 1;
+    image->bgcolor = 0;
+    image->fgcolor = 1;
     
     std::vector<std::thread> threads;
+    
+    bool useThreads = true;
     for (int yb = 0; yb < yBlocks; yb++)
     {
-        // create and run thread
+        if (useThreads)
         {
             // note: removed this mutex because it seemed unnecessary
             //std::lock_guard<std::mutex> guard(process_mutex);
-            threads.push_back(std::thread(C64Ditherer::threadFunc, this, newImage, blockWidth, blockHeight, yb, xBlocks, palette));
+            threads.push_back(std::thread(C64Ditherer::threadFunc, this, image, blockWidth, blockHeight, yb, xBlocks, palette));
+        }
+        else
+        {
+            processRow(image, blockWidth, blockHeight, yb, xBlocks, palette);
         }
     }
     
@@ -169,6 +177,18 @@ Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, 
     for (auto& th : threads) th.join();
     
     delete fsDitherer;
+}
+
+void C64Ditherer::ditherImageInPlaceWithPalette(const Image &image, const Palette &palette)
+{
+    C64Image* newImage = (C64Image*)&image;
+    ditherImage(newImage, palette);
+}
+
+Image* C64Ditherer::createDitheredImageFromImageWithPalette(const Image &image, const Palette &palette)
+{
+    C64Image* newImage = new C64Image(image);
+    ditherImage(newImage, palette);
     return newImage;
 }
 

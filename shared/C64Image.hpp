@@ -27,6 +27,16 @@ public:
         blockColors = (int*)malloc(sizeof(int) * 2 * xBlocks * yBlocks);
     };
     
+    C64Image(const Image& im, int w, int h)
+    : Image(im, w, h)
+    , xBlockSize(4)
+    , yBlockSize(8)
+    {
+        xBlocks = getWidth() / xBlockSize;
+        yBlocks = getHeight() / yBlockSize;
+        blockColors = (int*)malloc(sizeof(int) * 2 * xBlocks * yBlocks);
+    }
+    
     ~C64Image()
     {
         if (blockColors)
