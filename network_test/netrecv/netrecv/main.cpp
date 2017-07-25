@@ -7,57 +7,94 @@
 //
 
 #include <iostream>
+
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include "Netport.h"
 
 int main(int argc, const char * argv[]) {
-    printf("argc %d\n", argc);
-    if (argc < 2)
-    {
-        printf("Usage: netrecv <r/s>\n");
-        exit(0);
-    }
+    int c;
+    bool send = false;
+    int inport = -1;
+    int outport = -1;
+    int chunksize = 9216;
+    int ipaddr[4] = {127, 0, 0, 1};
+    int numpackets = -1;
+    FILE* fpin = stdin;
     
-    const char* dir = argv[1];
-    unsigned char temp[256];
-    if (strcmp(dir, "r") == 0)
+    while ((c = getopt(argc, (char**)argv, "sra:i:o:f:c:n:")) != -1)
     {
-        // receive
-        NetPort port(127,0,0,1,99999,111111);
-        int ret = port.recv_sync(temp, 256);
-        printf("pport got %d bytes\n", ret);
-    }
-    else
-    {
-        // send
-        // read specified file
-        if (argc >= 3)
+        if (c == 'a')
         {
-            const char* fname = argv[2];
-            FILE* fp = fopen(fname, "rb");
-            fseek(fp, 0, SEEK_END);
-            int size = (int)ftell(fp);
-            fseek(fp, 0, SEEK_SET);
-            printf("%s is %d bytes\n", fname, size);
+            // parse address
+            sscanf(optarg, "%d.%d.%d.%d", &ipaddr[0], &ipaddr[1], &ipaddr[2], &ipaddr[3]);
+            printf("address: %d %d %d %d\n", ipaddr[0], ipaddr[1], ipaddr[2], ipaddr[3]);
+        }
+        else if (c == 'i')
+        {
+            // parse input port
+            inport = atoi(optarg);
+            printf("input port: %d\n", inport);
             
-            unsigned char* buf = (unsigned char*)malloc(size);
-            fread(buf, 1, size, fp);
-            fclose(fp);
-            
-            // skip first 4 bytes
-            
-            NetPort port(192,168,1,25,99998,99999);
-            int ret = port.send(&buf[4], size-4);
-            printf("port sent %d bytes from file %s\n", ret, fname);
+        }
+        else if (c == 'o')
+        {
+            // parse output port
+            outport = atoi(optarg);
+            printf("output port: %d\n", outport);
+        }
+        else if (c == 's')
+        {
+            send = true;
+            printf("send\n");
+        }
+        else if (c == 'f')
+        {
+            fpin = fopen(optarg, "rb");
+        }
+        else if (c == 'c')
+        {
+            chunksize = atoi(optarg);
+        }
+        else if (c == 'n')
+        {
+            numpackets = atoi(optarg);
         }
         else
         {
-            unsigned char buf[9216];
-            int size = 9216;
-            NetPort port(192,168,1,25,99998,99999);
-            memset(buf, 1, size);
-            int ret = port.send(buf, size);
-            printf("port sent %d bytes\n", ret);
+            abort();
         }
+    }
+    
+    unsigned char* buf = new unsigned char[chunksize];
+    NetPort port(ipaddr[0],ipaddr[1],ipaddr[2],ipaddr[3],inport,outport);
+    int currpkt = 0;
+    if (!send)
+    {
+        while (numpackets == -1 || currpkt < numpackets)
+        {
+            int ret = port.recv_sync(buf, chunksize);
+            printf("pport got %d bytes\n", ret);
+            currpkt++;
+        }
+    }
+    else
+    {
+        while ((numpackets == -1 || currpkt < numpackets) &&
+               fread(buf, 1, chunksize, fpin) == chunksize)
+        {
+            int ret = port.send(buf, chunksize);
+            printf("port sent %d bytes\n", ret);
+            currpkt++;
+        }
+    }
+    
+    delete[] buf;
+    if (fpin != stdin)
+    {
+        fclose(fpin);
     }
     
     return 0;
