@@ -47,6 +47,7 @@ public:
     : _fname(NULL)
     , _mem(NULL)
     , _memPos(0)
+    , _writing(false)
     {
         // copy input filename
         _fname = new char[strlen(fname)+1];
@@ -110,6 +111,29 @@ public:
         printf("dl %d bytes\n", _mem->size);
     }
 
+    void create()
+    {
+        if (_mem)
+        {
+            delete _mem;
+            _mem = NULL;
+        }
+
+        _mem = new MemoryStruct();
+        _writing = true;
+    }
+
+    void write(unsigned char* buffer, int size)
+    {
+        _mem->append(buffer, size);
+    }
+
+    void save()
+    {
+        URLUploader uploader(_dirname);
+        uploader.upload(_fname, *_mem);
+    }
+
     int read(unsigned char* buffer, int size)
     {
         int bytesLeft = _mem->size - _memPos;
@@ -135,6 +159,11 @@ public:
         return 0;
     }
 
+    bool isWriting()
+    {
+        return _writing;
+    }
+
 private:
     char* _fname;
     char* _dirname;
@@ -144,6 +173,7 @@ private:
     URLFetcher _fetcher;
     MemoryStruct* _mem;
     int _memPos;
+    bool _writing;
 };
 
 void list_dir(const char *path)
@@ -229,7 +259,7 @@ int main(int argc, char **argv)
     mkdir(dirname, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
     int value = 0;
-    rpiThreeWireSPI spi(1, // clock
+    rpiThreeWireSPI spi(7, // clock
                         0, // chip select
                         3, // miso
                         2 // mosi
@@ -284,6 +314,16 @@ int main(int argc, char **argv)
         }
         else if (cmd.command_id == PD_CMD_OPEN_FILE_FOR_WRITING)
         {
+            // create new pet file
+            if (petFile)
+            {
+                delete petFile;
+                petFile = NULL;
+            }
+
+            petFile = new PETFile((const char*)cmd.arg, (const char*)dirname);
+            petFile->create();
+
             //PETFile petfile((const char*)cmd.arg, (const char*)dirname);
             //printf("filename: %s\n", petfile.getFullFname());
             //prgfp = fopen(petfile.getFullFname(), "wb");
@@ -298,18 +338,25 @@ int main(int argc, char **argv)
         {
             int bytes_read = spi.transfer(buffer, 512);
             printf("writing %d bytes\n", bytes_read);
+            petFile->write(buffer, bytes_read);
+
             //fwrite(buffer, 1, bytes_read, prgfp);
         }
         else if (cmd.command_id == PD_CMD_CLOSE_FILE)
         {
             printf("closing file\n");
-            /*
-            if (prgfp)
+
+            if (petFile)
             {
-                fclose(prgfp);
-                prgfp = NULL;
+                if (petFile->isWriting())
+                {
+                    petFile->save();
+                    directory.fetch(dirname);
+                }
+
+                delete petFile;
+                petFile = NULL;
             }
-            */
         }
         else if (cmd.command_id == PD_CMD_DIRECTORY)
         {
