@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		F90D580E1F27FAE8000709E3 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F90D580D1F27FAE8000709E3 /* main.cpp */; };
 		F90D58161F27FD29000709E3 /* timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F90D58151F27FD29000709E3 /* timer.cpp */; };
+		F90D58181F280485000709E3 /* NetPort.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F90D58171F280485000709E3 /* NetPort.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -27,6 +28,7 @@
 		F90D580A1F27FAE8000709E3 /* c64_video_timed_writer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = c64_video_timed_writer; sourceTree = BUILT_PRODUCTS_DIR; };
 		F90D580D1F27FAE8000709E3 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		F90D58151F27FD29000709E3 /* timer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = timer.cpp; path = ../../shared/timer.cpp; sourceTree = "<group>"; };
+		F90D58171F280485000709E3 /* NetPort.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NetPort.cpp; path = ../../shared/NetPort.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,6 +70,7 @@
 		F90D58141F27FD16000709E3 /* shared */ = {
 			isa = PBXGroup;
 			children = (
+				F90D58171F280485000709E3 /* NetPort.cpp */,
 				F90D58151F27FD29000709E3 /* timer.cpp */,
 			);
 			name = shared;
@@ -131,6 +134,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F90D58181F280485000709E3 /* NetPort.cpp in Sources */,
 				F90D580E1F27FAE8000709E3 /* main.cpp in Sources */,
 				F90D58161F27FD29000709E3 /* timer.cpp in Sources */,
 			);
@@ -230,7 +234,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DEVELOPMENT_TEAM = 842T4PY6T5;
-				HEADER_SEARCH_PATHS = ../shared;
+				HEADER_SEARCH_PATHS = (
+					../shared,
+					../external/Net,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -239,7 +246,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DEVELOPMENT_TEAM = 842T4PY6T5;
-				HEADER_SEARCH_PATHS = ../shared;
+				HEADER_SEARCH_PATHS = (
+					../shared,
+					../external/Net,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -263,6 +273,7 @@
 				F90D58131F27FAE8000709E3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

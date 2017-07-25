@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "timer.hpp"
+#include "NetPort.h"
 
 #define C64_FRAME_SIZE 9216
 
@@ -25,9 +26,9 @@ int main(int argc, const char * argv[]) {
     C64_Frame frame;
     Tools::Timer timer;
     
-    int frameSize = sizeof(frame);
-    //fprintf(stderr, "fs: %d\n", frameSize);
+    NetPort port(127,0,0,1,5555,8888);
     
+    int frameSize = sizeof(frame);
     float start_pts = -1;
     while (fread(&frame, 1, frameSize, fp) == frameSize)
     {
@@ -52,7 +53,8 @@ int main(int argc, const char * argv[]) {
         fprintf(stderr, "sending frame at time %lf relpts %f\n", timer.getTime(), rel_pts);
         
         // write data to output
-        fwrite(frame.data, 1, C64_FRAME_SIZE, fp_out);
+        //fwrite(frame.data, 1, C64_FRAME_SIZE, fp_out);
+        int ret = port.send(frame.data, C64_FRAME_SIZE);
     }
     
     return 0;
