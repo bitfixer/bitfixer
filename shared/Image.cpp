@@ -222,10 +222,6 @@ void Image::initWithData(unsigned char *pixels, int bytesPerRow, int bytesPerPix
             Pixel* p = pixelAt(ww, hh);
             for (int c = 0; c < 3; c++)
             {
-                //float pxval = (float)(*pp / 255.0);
-                //p->rgb[c] = pxval;
-                //pp++;
-                
                 float pxval = (float)(pp[rgbindices[c]]) / 255.0;
                 p->rgb[c] = pxval;
             }

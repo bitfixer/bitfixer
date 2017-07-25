@@ -85,7 +85,6 @@ public:
         
         unsigned char* byteptr = (unsigned char*)bytes;
         float* timestamp = (float*)byteptr;
-        printf("pts is %f\n", pts);
         *timestamp = pts;
         byteptr += sizeof(float);
         
