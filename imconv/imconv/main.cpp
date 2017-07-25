@@ -10,7 +10,7 @@
 #include <math.h>
 #include "Image.hpp"
 #include "Ditherer.hpp"
-#include "spock.c"
+//#include "spock.c"
 #include "timer.hpp"
 #include "C64Image.cpp"
 #include <stdio.h>

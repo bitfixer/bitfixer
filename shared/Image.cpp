@@ -298,9 +298,18 @@ Image::Image(const Image& im, int w, int h)
 
 Image::Image(const char* fname)
 {
-    unsigned char temp[256];
     FILE* fp = fopen(fname, "rb");
-    
+    initWithFile(fp);
+}
+
+Image::Image(FILE* fp)
+{
+    initWithFile(fp);
+}
+
+void Image::initWithFile(FILE *fp)
+{
+    unsigned char temp[256];
     fread(temp, 1, 2, fp);
     if (temp[0] == 'P' && temp[1] == '6')
     {
@@ -378,7 +387,10 @@ Image::Image(const char* fname)
         free(pixels);
     }
     
-    fclose(fp);
+    if (fp != stdin)
+    {
+        fclose(fp);
+    }
 }
 
 Image::Image(int w, int h)
@@ -663,7 +675,11 @@ void Image::copyFromImageAtPosition(const Image& im, int xOffset, int yOffset)
 void Image::writePPM(const char *fname)
 {
     FILE* fp = fopen(fname, "wb");
-    
+    writePPM(fp);
+}
+
+void Image::writePPM(FILE *fp)
+{
     // write ppm header
     fprintf(fp, "P6 %d %d 255\n", width, height);
     for (int hh = 0; hh < height; hh++)
@@ -678,6 +694,10 @@ void Image::writePPM(const char *fname)
             }
         }
     }
-    fclose(fp);
+    
+    if (fp != stdout)
+    {
+        fclose(fp);
+    }
 }
 

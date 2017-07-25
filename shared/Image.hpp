@@ -85,10 +85,12 @@ public:
     Image(const Image& im);
     Image(const Image& im, int w, int h);
     Image(const char* fname);
+    Image(FILE* fp);
     
     void fromSubImage(const Image& im, int xOffset, int width, int yOffset, int height);
     Pixel* pixelAt (int w, int h) const;
     void writePPM(const char* fname);
+    void writePPM(FILE* fp);
     int getWidth() const { return width; }
     int getHeight() const { return height; }
     void getAvgColor(Color& color);
@@ -106,6 +108,7 @@ private:
     Pixel* pixels = NULL;
     
     void initWithData(unsigned char* pixels, int bytesPerRow, int bytesPerPixel, int redIndex, int greenIndex, int blueIndex);
+    void initWithFile(FILE* fp);
 };
 
 #endif /* Image_hpp */

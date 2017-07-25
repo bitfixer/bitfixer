@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6548D7011F244DD100809674 /* imconv_batch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6548D7001F244DD100809674 /* imconv_batch.cpp */; };
+		6548D7021F244E0D00809674 /* Image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65B871911E824649008DA500 /* Image.cpp */; };
+		6548D7031F244E0D00809674 /* Ditherer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65B871931E824649008DA500 /* Ditherer.cpp */; };
+		6548D7041F244E0D00809674 /* C64Image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65B871951E824649008DA500 /* C64Image.cpp */; };
+		6548D7051F244E0D00809674 /* timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65ED46DB1E611DDA00DEF53D /* timer.cpp */; };
 		65B871961E824649008DA500 /* Image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65B871911E824649008DA500 /* Image.cpp */; };
 		65B871971E824649008DA500 /* Ditherer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65B871931E824649008DA500 /* Ditherer.cpp */; };
 		65B871981E824649008DA500 /* C64Image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65B871951E824649008DA500 /* C64Image.cpp */; };
@@ -15,6 +20,15 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		6548D6F71F244DBD00809674 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 		F9244E981E57AEAE00E87351 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -27,6 +41,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		6548D6F91F244DBD00809674 /* imconv_batch */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = imconv_batch; sourceTree = BUILT_PRODUCTS_DIR; };
+		6548D7001F244DD100809674 /* imconv_batch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = imconv_batch.cpp; path = imconv/imconv_batch.cpp; sourceTree = SOURCE_ROOT; };
 		659F22ED1E7F259D000F8FCB /* StringTools.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = StringTools.h; path = ../../shared/StringTools.h; sourceTree = "<group>"; };
 		65B8718F1E8245C2008DA500 /* c64_colors.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = c64_colors.h; path = ../../shared/c64_colors.h; sourceTree = "<group>"; };
 		65B871901E824649008DA500 /* Image.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Image.hpp; path = ../../shared/Image.hpp; sourceTree = "<group>"; };
@@ -41,6 +57,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		6548D6F61F244DBD00809674 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F9244E971E57AEAE00E87351 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -51,6 +74,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		6548D6FA1F244DBD00809674 /* imconv_batch */ = {
+			isa = PBXGroup;
+			children = (
+				6548D7001F244DD100809674 /* imconv_batch.cpp */,
+			);
+			path = imconv_batch;
+			sourceTree = "<group>";
+		};
 		65ED46DA1E611DC800DEF53D /* shared */ = {
 			isa = PBXGroup;
 			children = (
@@ -71,6 +102,7 @@
 			isa = PBXGroup;
 			children = (
 				F9244E9C1E57AEAE00E87351 /* imconv */,
+				6548D6FA1F244DBD00809674 /* imconv_batch */,
 				F9244E9B1E57AEAE00E87351 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -79,6 +111,7 @@
 			isa = PBXGroup;
 			children = (
 				F9244E9A1E57AEAE00E87351 /* imconv */,
+				6548D6F91F244DBD00809674 /* imconv_batch */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,6 +128,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		6548D6F81F244DBD00809674 /* imconv_batch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6548D6FF1F244DBD00809674 /* Build configuration list for PBXNativeTarget "imconv_batch" */;
+			buildPhases = (
+				6548D6F51F244DBD00809674 /* Sources */,
+				6548D6F61F244DBD00809674 /* Frameworks */,
+				6548D6F71F244DBD00809674 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = imconv_batch;
+			productName = imconv_batch;
+			productReference = 6548D6F91F244DBD00809674 /* imconv_batch */;
+			productType = "com.apple.product-type.tool";
+		};
 		F9244E991E57AEAE00E87351 /* imconv */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = F9244EA11E57AEAE00E87351 /* Build configuration list for PBXNativeTarget "imconv" */;
@@ -121,6 +171,10 @@
 				LastUpgradeCheck = 0820;
 				ORGANIZATIONNAME = "Michael Hill";
 				TargetAttributes = {
+					6548D6F81F244DBD00809674 = {
+						CreatedOnToolsVersion = 8.2.1;
+						ProvisioningStyle = Automatic;
+					};
 					F9244E991E57AEAE00E87351 = {
 						CreatedOnToolsVersion = 8.2.1;
 						ProvisioningStyle = Automatic;
@@ -140,11 +194,24 @@
 			projectRoot = "";
 			targets = (
 				F9244E991E57AEAE00E87351 /* imconv */,
+				6548D6F81F244DBD00809674 /* imconv_batch */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
+		6548D6F51F244DBD00809674 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6548D7011F244DD100809674 /* imconv_batch.cpp in Sources */,
+				6548D7051F244E0D00809674 /* timer.cpp in Sources */,
+				6548D7041F244E0D00809674 /* C64Image.cpp in Sources */,
+				6548D7031F244E0D00809674 /* Ditherer.cpp in Sources */,
+				6548D7021F244E0D00809674 /* Image.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F9244E961E57AEAE00E87351 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -160,6 +227,24 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		6548D6FD1F244DBD00809674 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = ../shared;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		6548D6FE1F244DBD00809674 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = ../shared;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		F9244E9F1E57AEAE00E87351 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -266,6 +351,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		6548D6FF1F244DBD00809674 /* Build configuration list for PBXNativeTarget "imconv_batch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6548D6FD1F244DBD00809674 /* Debug */,
+				6548D6FE1F244DBD00809674 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
 		F9244E951E57AEAE00E87351 /* Build configuration list for PBXProject "imconv" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
