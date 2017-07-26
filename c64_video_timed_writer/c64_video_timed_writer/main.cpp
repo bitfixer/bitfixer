@@ -22,11 +22,10 @@ typedef struct
 
 int main(int argc, const char * argv[]) {
     FILE* fp = stdin;
-    FILE* fp_out = stdout;
     C64_Frame frame;
     Tools::Timer timer;
     
-    NetPort port(127,0,0,1,5555,8888);
+    NetPort port(127,0,0,1,5555,99999);
     
     int frameSize = sizeof(frame);
     float start_pts = -1;
