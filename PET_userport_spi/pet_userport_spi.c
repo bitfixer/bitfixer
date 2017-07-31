@@ -114,7 +114,6 @@ void init()
     HANDSHAKE_OUTPUT_REG = (1<<HANDSHAKE_OUTPUT_PIN);
     DATA_REG = 0x00; // set data register to input
     
-    //DDRB = 0x41;
     SPI_READY_REG = 0x41;
     
     DDRD = 0x80;
@@ -181,14 +180,25 @@ int main(void)
 {
     unsigned char val;
     unsigned char cmd;
+    unsigned char buffer[2048];
     // wait for PET to request a frame
-    //PORTB = 0x01;
     SPI_READY_OUTPORT = (1<<SPI_READY_PIN);
     init();
     
-    // send simulated command
-    cmd = 0x35;
-    relay_command(cmd);
+    while (1)
+    {
+        // send simulated command
+        cmd = 0x00;
+        relay_command(cmd);
+        
+        for (int i = 0; i < 1024; i++)
+        {
+            buffer[i] = spi_receive();
+        }
+        
+        SPI_READY_OUTPORT = (1<<SPI_READY_PIN);
+        _delay_ms(1);
+    }
 }
 
 /*
