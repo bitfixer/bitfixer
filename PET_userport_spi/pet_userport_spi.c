@@ -31,6 +31,10 @@
 #define SPI_READY_OUTPORT   PORTB
 #define SPI_READY_PIN       PB0
 
+#define BUFFER_SIZE         2048
+#define SCREEN_BYTES_SIZE   2000
+
+#define GET_SCREEN_CMD      0x10
 
 #ifdef PET
 #define HANDSHAKE_OUTPUT_INPORT     PET_CA1_INPORT
@@ -77,41 +81,35 @@ unsigned char SPI_transmit(unsigned char data)
 
 void output_byte(unsigned char byte)
 {
-    //PORTC = byte;
     DATA_OUTPORT = byte;
 }
 
 unsigned char input_byte()
 {
-    //return PINC;
     return DATA_INPORT;
 }
 
 void set_data_output()
 {
-    //DDRC = 0xFF;
     DATA_REG = 0xFF;
 }
 
 void set_data_input()
 {
-    //DDRC = 0x00;
     DATA_REG = 0x00;
 }
 
 unsigned char read_byte()
 {
-    //unsigned char byte = PINC;
     unsigned char byte = DATA_INPORT;
     return byte;
 }
 
 void init()
 {
-    //DDRA = (1<<PA2);
-    //PORTA = (1<<PA2);
-    
     HANDSHAKE_OUTPUT_REG = (1<<HANDSHAKE_OUTPUT_PIN);
+    HANDSHAKE_OUTPUT_OUTPORT = 0x00;
+    
     DATA_REG = 0x00; // set data register to input
     
     SPI_READY_REG = 0x41;
@@ -122,7 +120,6 @@ void init()
     // PA1 is /PC2 handshake line
     // MISO out
     
-    //set_data_output();
     set_data_input();
     uart0_init(25); // 38.4kbaud
     spi_init();
@@ -130,13 +127,11 @@ void init()
 
 void lower_flag()
 {
-    //PORTA = 0x00;
     HANDSHAKE_OUTPUT_OUTPORT = 0x00;
 }
 
 void raise_flag()
 {
-    //PORTA = (1<<PA2);
     HANDSHAKE_OUTPUT_OUTPORT = (1<<HANDSHAKE_OUTPUT_PIN);
 }
 
@@ -170,7 +165,6 @@ void relay_command(unsigned char cmd)
     SPDR = cmd;
     
     // signal to read
-    //PORTB = 0x00;
     SPI_READY_OUTPORT = 0x00;
     while(!(SPSR & (1<<SPIF)));
     
@@ -180,7 +174,7 @@ int main(void)
 {
     unsigned char val;
     unsigned char cmd;
-    unsigned char buffer[2048];
+    unsigned char buffer[BUFFER_SIZE];
     // wait for PET to request a frame
     SPI_READY_OUTPORT = (1<<SPI_READY_PIN);
     init();
@@ -188,16 +182,53 @@ int main(void)
     while (1)
     {
         // send simulated command
-        cmd = 0x00;
+        cmd = GET_SCREEN_CMD;
         relay_command(cmd);
         
-        for (int i = 0; i < 1024; i++)
+        for (int i = 0; i < SCREEN_BYTES_SIZE; i++)
         {
             buffer[i] = spi_receive();
         }
         
         SPI_READY_OUTPORT = (1<<SPI_READY_PIN);
         _delay_ms(1);
+        
+        set_data_output();
+        // raise handshake line
+        HANDSHAKE_OUTPUT_OUTPORT = (1<<HANDSHAKE_OUTPUT_PIN);
+        
+        // wait for handshake input to go low
+        val = HANDSHAKE_INPUT_INPORT & (1<<HANDSHAKE_INPUT_PIN);
+        while (val != 0x00)
+        {
+            val = HANDSHAKE_INPUT_INPORT & (1<<HANDSHAKE_INPUT_PIN);
+        }
+        
+        HANDSHAKE_OUTPUT_OUTPORT = 0x00;
+        
+        for (int i = 0; i < SCREEN_BYTES_SIZE; i++)
+        {
+            DATA_OUTPORT = buffer[i];
+            val = HANDSHAKE_INPUT_INPORT & (1<<HANDSHAKE_INPUT_PIN);
+            while (val == 0x00)
+            {
+                val = HANDSHAKE_INPUT_INPORT & (1<<HANDSHAKE_INPUT_PIN);
+            }
+            
+            i++;
+            DATA_OUTPORT = buffer[i];
+            
+            if (i < SCREEN_BYTES_SIZE-1)
+            {
+                val = HANDSHAKE_INPUT_INPORT & (1<<HANDSHAKE_INPUT_PIN);
+                while (val != 0x00)
+                {
+                    val = HANDSHAKE_INPUT_INPORT & (1<<HANDSHAKE_INPUT_PIN);
+                }
+            }
+        }
+        
+        _delay_ms(20);
     }
 }
 

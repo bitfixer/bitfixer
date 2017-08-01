@@ -72,7 +72,6 @@ void set_background_color(unsigned char color_index)
 
 void init()
 {
-
     // set port register a to output for bit 2
     unsigned char reg = CIA2.ddra;
     // raise bit 2
@@ -83,6 +82,7 @@ void init()
     set_userport_output();
 }
 
+// send single byte command over userport
 void send_command(unsigned char cmd)
 {
     // place byte on userport
@@ -116,6 +116,7 @@ void set_vic_bank(unsigned char bank)
     CIA2.pra = val;
 }
 
+// load specified number of 256 byte pages into memory
 void load_mem(unsigned addr, unsigned char pages)
 {
     unsigned char lo;
@@ -218,12 +219,28 @@ quit:
     return;
 }
 
+void textMode()
+{
+    unsigned char* addr;
+    unsigned char val;
+    // enter text mode
+    addr = (unsigned char*)VICII;
+    val = *addr;
+    val &= 0xDF; // lower bit 5
+    *addr = val;
+    
+    addr = (unsigned char*)VICII_REG2;
+    val = *addr;
+    val &= 0xEF; // lower bit 4
+    *addr = val;
+}
+
 void standardBitmapMode()
 {
     unsigned char* addr;
     unsigned char val;
     // enter bit map mode
-    addr = (unsigned char *)VICII;
+    addr = (unsigned char*)VICII;
     val = *addr;
     val |= 0x20; // raise bit 5
     *addr = val;
@@ -269,7 +286,6 @@ int main(void)
     val |= 0x08;
     *addr = val;
 
-    //standardBitmapMode();
     multicolorBitmapMode();
 
     memset((unsigned char *)base, 0, 8000);
@@ -281,26 +297,8 @@ int main(void)
     set_border_color(0);
     set_background_color(0);
     set_vic_bank(1);
-    //set_vic_bank(0);
-
     
     memset((unsigned char*)SCREENRAM, 0xFF, 1000);
-
-    /*
-    for (i = 0; i < 128; i++)
-    {
-        addr = (unsigned char *)(base + i);
-        *addr = 0xC6;
-    }
-    */
-    
-    /*
-    for (i = 0; i < 8000; i++)
-    {
-        addr = (unsigned char *)(base + i);
-        *addr = 0xFF;
-    }
-    */
     
     val = 0;
     for (i = 0; i < 1000; i++)
@@ -309,6 +307,7 @@ int main(void)
         *addr = 0x11;
     }
     
+    /*
     // send command
     while (1)
     {
@@ -339,7 +338,30 @@ int main(void)
         if (currpage > 1)
             currpage = 0;
     }
-
+    */
+    
+    // TEST switching between text and graphics modes
+    while (1)
+    {
+        // check for keypress
+        val = *(unsigned char *)KEYPRESS;
+        if (val == 62)
+        {
+            // quit
+            break;
+        }
+        else if (val == 10)
+        {
+            textMode();
+        }
+        else if (val == 13)
+        {
+            multicolorBitmapMode();
+        }
+        
+        send_command(0);
+    }
+     
     set_vic_bank(0);
     return 1;
 }
