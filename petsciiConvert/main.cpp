@@ -228,6 +228,7 @@ double getDctDiffBetween(double *inputA, double *inputB, double sum_A, double su
     double score, diff;
     int points = dim*dim;
     score = 0;
+    
     for (int i = 0; i < points; i++)
     {
         diff = inputA[i]*inputB[i];
@@ -374,32 +375,19 @@ void prepareGlyphSignatures()
             thissig += (dctSignatures[ch][i] * dctSignatures[ch][i]);
         }
         sigSquareLookup[ch] = thissig;
-        
-        fprintf(stderr, "glyph %d dc %lf\n", ch, dctSignatures[ch][0]);
     }
     
     // create sorted list of indices
     std::array<int, 256> indices;
     for (int i = 0; i < 256; i++)
     {
-        fprintf(stderr, "index %d: %d\n", i, indices[i]);
-    }
-    
-    for (int i = 0; i < 256; i++)
-    {
         indices[i] = i;
-    }
-    
-    for (int i = 0; i < 256; i++)
-    {
-        fprintf(stderr, "index %d: %d\n", i, indices[i]);
     }
     
     // sort function
     struct {
         bool operator()(int a, int b) const
         {
-            fprintf(stderr, "comparing %d with %d\n", a, b);
             return dctSignatures[a][0] < dctSignatures[b][0];
         }
     } compFn;
@@ -409,9 +397,7 @@ void prepareGlyphSignatures()
     
     for (int i = 0; i < 256; i++)
     {
-        fprintf(stderr, "index %d: %d score %f\n", i, indices[i], dctSignatures[indices[i]][0]);
         sortedGlyphDctIndices[i] = indices[i];
-        
     }
     
     // create score lookup table
@@ -436,13 +422,8 @@ void prepareGlyphSignatures()
         {
             glyphScoreLookup[i] = 255;
         }
-        
-        fprintf(stderr, "lookup for %lf is index %d, score %lf\n", lookupScore, glyphScoreLookup[i], dctSignatures[sortedGlyphDctIndices[glyphScoreLookup[i]]][0]);
     }
-    fprintf(stderr, "done.\n");
 }
-
-
 
 void init()
 {
