@@ -4,6 +4,9 @@
 #include <math.h>
 #include <stdlib.h>
 #include "dct.h"
+#include "timer.hpp"
+
+#include <array>
 
 double **dctInput;
 double *dctOutput;
@@ -13,6 +16,9 @@ double ****cosLookup;
 double **alphaLookup;
 double *squareLookup;
 double *sigSquareLookup;
+
+int* glyphScoreLookup;
+int* sortedGlyphDctIndices;
 int num_files;
 
 
@@ -105,6 +111,11 @@ void convertImage(char *filename, int dim, float time)
     
     printf("image: %d %d\n",height,width);
     
+    Tools::Timer timer;
+    double dctTime = 0.0;
+    double matchTime = 0.0;
+    double convTime = 0.0;
+    
     for (y = 0; y < height; y += dim)
     {
         for (x = 0; x < width; x+= dim)
@@ -114,12 +125,40 @@ void convertImage(char *filename, int dim, float time)
             {
                 for (xx = 0; xx < dim; xx++)
                 {
+                    timer.start();
+                    
                     dctInput[xx][yy] = pixelBrightness(imageData,width,x+xx,y+yy);
+                    
+                    //dctInput[xx][yy] = 1;
+                    
+                    convTime += timer.getTime();
+                    
+                    //fprintf(stderr, "%f,", dctInput[xx][yy]);
                 }
+                //fprintf(stderr, "\n");
             }
+            //fprintf(stderr, "\n\n");
             
+            timer.start();
             dctWithInput(dctInput, dctOutput, cosLookup, dim);
+            dctTime += timer.getTime();
+            
+            /*
+            for (yy = 0; yy < dim; yy ++)
+            {
+                for (xx = 0; xx < dim; xx++)
+                {
+                    fprintf(stderr, "%0.4f\t", dctOutput[yy*dim + xx]);
+                }
+                fprintf(stderr, "\n");
+            }
+            fprintf(stderr, "\n\n");
+            */
+            
+            timer.start();
             matching = getMatchingGlyph(dctOutput);
+            matchTime += timer.getTime();
+            
             glyphIndex = (unsigned char)matching;
             
             fwrite(&glyphIndex, 1, 1, fp);
@@ -162,7 +201,7 @@ void convertImage(char *filename, int dim, float time)
             }
         }
     }
-    //save_png_to_file(&outputPng, bmpFname);
+    save_png_to_file(&outputPng, bmpFname);
     
     unsigned char temp[256];
     memset(temp, 0, 256);
@@ -180,6 +219,8 @@ void convertImage(char *filename, int dim, float time)
     */
     
     fclose(fp);
+    
+    fprintf(stderr, "dct time %lf match time %lf conversion time %lf\n", dctTime, matchTime, convTime);
 }
 
 double getDctDiffBetween(double *inputA, double *inputB, double sum_A, double sum_B, int dim)
@@ -189,7 +230,6 @@ double getDctDiffBetween(double *inputA, double *inputB, double sum_A, double su
     score = 0;
     for (int i = 0; i < points; i++)
     {
-        
         diff = inputA[i]*inputB[i];
         score += diff;
     }
@@ -212,9 +252,59 @@ int getMatchingGlyph(double *dctSearch)
         sumOfSquares += (dctSearch[i]*dctSearch[i]);
     }
     
+    // get closest index into sorted glyph table
+    int lookupIndex = (int)dctSearch[0];
+    int sortedIndex = glyphScoreLookup[lookupIndex];
+    
+    int searchRange = 30;
+    int startIndex = sortedIndex - searchRange;
+    if (startIndex < 0)
+    {
+        startIndex = 0;
+    }
+    
+    int endIndex = sortedIndex + searchRange;
+    if (endIndex > 255)
+    {
+        endIndex = 255;
+    }
+    
+    for (int d = startIndex; d < endIndex; d++)
+    {
+        int dctIndex = sortedGlyphDctIndices[d];
+        curr_score = getDctDiffBetween(dctSearch, dctSignatures[dctIndex], sumOfSquares, sigSquareLookup[dctIndex], 8);
+        
+        if (lowest == -1)
+        {
+            matchIndex = dctIndex;
+            lowest = curr_score;
+        }
+        else if (curr_score < lowest)
+        {
+            matchIndex = dctIndex;
+            lowest = curr_score;
+        }
+    }
+    
+    return matchIndex;
+}
+
+int getMatchingGlyph2(double *dctSearch)
+{
+    double lowest = -1;
+    double curr_score;
+    int matchIndex;
+    
+    double sumOfSquares;
+    sumOfSquares = 0;
+    
+    for (int i = 0; i < 64; i++)
+    {
+        sumOfSquares += (dctSearch[i]*dctSearch[i]);
+    }
+    
     for (int d = 0; d < 256; d++)
     {
-        
         curr_score = getDctDiffBetween(dctSearch, dctSignatures[d], sumOfSquares, sigSquareLookup[d], 8);
         
         if (d == 0)
@@ -231,6 +321,7 @@ int getMatchingGlyph(double *dctSearch)
     
     return matchIndex;
 }
+
 
 void prepareGlyphSignatures()
 {
@@ -283,7 +374,72 @@ void prepareGlyphSignatures()
             thissig += (dctSignatures[ch][i] * dctSignatures[ch][i]);
         }
         sigSquareLookup[ch] = thissig;
+        
+        fprintf(stderr, "glyph %d dc %lf\n", ch, dctSignatures[ch][0]);
     }
+    
+    // create sorted list of indices
+    std::array<int, 256> indices;
+    for (int i = 0; i < 256; i++)
+    {
+        fprintf(stderr, "index %d: %d\n", i, indices[i]);
+    }
+    
+    for (int i = 0; i < 256; i++)
+    {
+        indices[i] = i;
+    }
+    
+    for (int i = 0; i < 256; i++)
+    {
+        fprintf(stderr, "index %d: %d\n", i, indices[i]);
+    }
+    
+    // sort function
+    struct {
+        bool operator()(int a, int b) const
+        {
+            fprintf(stderr, "comparing %d with %d\n", a, b);
+            return dctSignatures[a][0] < dctSignatures[b][0];
+        }
+    } compFn;
+    std::sort(indices.begin(), indices.end(), compFn);
+    
+    sortedGlyphDctIndices = new int[256];
+    
+    for (int i = 0; i < 256; i++)
+    {
+        fprintf(stderr, "index %d: %d score %f\n", i, indices[i], dctSignatures[indices[i]][0]);
+        sortedGlyphDctIndices[i] = indices[i];
+        
+    }
+    
+    // create score lookup table
+    glyphScoreLookup = new int[4096];
+    for (int i = 0; i < 4096; i++)
+    {
+        double lookupScore = (double)i;
+        int j = 0;
+        for (j = 0; j < 256; j++)
+        {
+            if (dctSignatures[sortedGlyphDctIndices[j]][0] >= lookupScore)
+            {
+                break;
+            }
+        }
+        
+        if (j < 256)
+        {
+            glyphScoreLookup[i] = j;
+        }
+        else
+        {
+            glyphScoreLookup[i] = 255;
+        }
+        
+        fprintf(stderr, "lookup for %lf is index %d, score %lf\n", lookupScore, glyphScoreLookup[i], dctSignatures[sortedGlyphDctIndices[glyphScoreLookup[i]]][0]);
+    }
+    fprintf(stderr, "done.\n");
 }
 
 
