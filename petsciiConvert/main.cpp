@@ -11,10 +11,13 @@
 #include <array>
 #include <algorithm>
 
+#define USE_1D_DCT 1
+
 double **dctInput;
 double *dctOutput;
 double **dctSignatures;
 double ****cosLookup;
+double **cos1DLookup;
 double **alphaLookup;
 double *squareLookup;
 double *sigSquareLookup;
@@ -52,7 +55,7 @@ int main (int argc, char * const argv[]) {
     pixelFormat pf = RGB;
     bool output_image = false;
     
-    while ((c = getopt(argc, argv, "f:w:h:p:i:")) != -1)
+    while ((c = getopt(argc, argv, "f:w:h:p:i:o")) != -1)
     {
         if (c == 'f') // framerate
         {
@@ -80,6 +83,10 @@ int main (int argc, char * const argv[]) {
         else if (c == 'i') // input fname
         {
             fp_in = fopen(optarg, "rb");
+        }
+        else if (c == 'o') // output image flag
+        {
+            output_image = true;
         }
     }
     
@@ -183,7 +190,11 @@ void convertImageFromGray(unsigned char* gray,
             }
             
             timer.start();
+#ifdef USE_1D_DCT
+            dct1WithInput(dctInput, dctOutput, cos1DLookup, dim);
+#else
             dctWithInput(dctInput, dctOutput, cosLookup, dim);
+#endif
             dctTime += timer.getTime();
             
             timer.start();
@@ -389,7 +400,12 @@ void prepareGlyphSignatures()
             }
         }
         
+#ifdef USE_1D_DCT
+        dct1WithInput(dctInput, dctSignatures[ch], cos1DLookup, 8);
+#else
         dctWithInput(dctInput, dctSignatures[ch], cosLookup, 8);
+#endif
+        
         double thissig;
         thissig = 0;
         for (int i = 0; i < 64; i++)
@@ -449,14 +465,6 @@ void prepareGlyphSignatures()
 
 void init()
 {
-    /*
-    imagedat = (double **)malloc(sizeof(double *) * 320.0);
-    for (int i = 0; i < 320; i++)
-    {
-        imagedat[i] = (double *)malloc(sizeof(double) * 200.0);
-    }
-    */
-    
     dctSignatures = (double **)malloc(sizeof(double *) * 256);
     for (int i = 0; i < 256; i++)
     {
@@ -488,6 +496,12 @@ void init()
         }
     }
     
+    cos1DLookup = (double**)malloc(sizeof(double*) * 8);
+    for (int i = 0; i < 8; i++)
+    {
+        cos1DLookup[i] = (double*)malloc(sizeof(double) * 8);
+    }
+    
     alphaLookup = (double **)malloc(sizeof(double *) * 8);
     for (int i = 0; i < 8; i++)
     {
@@ -497,5 +511,6 @@ void init()
     sigSquareLookup = (double *)malloc(sizeof(double) * 256);
     generateAlphaLookup(alphaLookup, 8);
     generateCosLookup(cosLookup, alphaLookup, 8);
+    generateCos1DLookup(cos1DLookup, 8);
     prepareGlyphSignatures();
 }

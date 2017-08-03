@@ -53,6 +53,76 @@ void generateCosLookup(double ****cosLookup, double **alphaLookup, int height)
     }
 }
 
+void generateCos1DLookup(double **cos1DLookup, int dim)
+{
+    double coeff = sqrt(2.0f / dim);
+    for (int u = 0; u < dim; u++)
+    {
+        for (int i = 0; i < dim; i++)
+        {
+            cos1DLookup[u][i] = alpha(i) * cos( ((M_PI*u)/(2*dim)) * (2*i + 1) ) * coeff;
+        }
+    }
+}
+
+void dct1DWithInput(double* input, double* output, double** cos1DLookup, int dim)
+{
+    for (int u = 0; u < dim; u++)
+    {
+        double sum = 0;
+        for (int i = 0; i < dim; i++)
+        {
+            sum += cos1DLookup[u][i] * input[i];
+        }
+        output[u] = sum;
+    }
+}
+
+void dct1WithInput(double ** input, double *output, double **cos1DLookup, int dim)
+{
+    // do 2d dct by doing dim 1d dcts in either direction
+    double* in = new double[dim];
+    double* out = new double[dim];
+    
+    for (int x = 0; x < dim; x++)
+    {
+        // copy input
+        for (int y = 0; y < dim; y++)
+        {
+            in[y] = input[x][y];
+        }
+        
+        dct1DWithInput(in, out, cos1DLookup, dim);
+        
+        // copy output back
+        for (int y = 0; y < dim; y++)
+        {
+            input[x][y] = out[y];
+        }
+    }
+    
+    for (int y = 0; y < dim; y++)
+    {
+        // copy input
+        for (int x = 0; x < dim; x++)
+        {
+            in[x] = input[x][y];
+        }
+        
+        dct1DWithInput(in, out, cos1DLookup, dim);
+        
+        // copy output back
+        for (int x = 0; x < dim; x++)
+        {
+            //input[x][y] = out[x];
+            output[x + y*dim] = out[x];
+        }
+    }
+    
+    delete[] in;
+    delete[] out;
+}
+
 void dctWithInput(double ** input, double *output, double ****cosLookup, int dim)
 {
     int u,v,i,j;

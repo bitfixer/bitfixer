@@ -12,6 +12,8 @@
 double alpha(double e);
 void generateAlphaLookup(double **alphaLookup, int dim);
 void generateCosLookup(double ****cosLookup, double **alphaLookup, int height);
+void generateCos1DLookup(double **cos1DLookup, int dim);
 void dctWithInput(double ** input, double *output, double ****cosLookup, int dim);
+void dct1WithInput(double ** input, double *output, double **cosLookup, int dim);
 
 #endif
