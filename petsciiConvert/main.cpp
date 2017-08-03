@@ -182,9 +182,6 @@ void convertImageFromGray(unsigned char* gray,
             {
                 for (int xx = 0; xx < dim; xx++)
                 {
-                    //timer.start();
-                    //dctInput[xx][yy] = pixelBrightness(rgb,width,x+xx,y+yy,3);
-                    //convTime += timer.getTime();
                     dctInput[xx][yy] = gray[(y+yy)*width + (x+xx)];
                 }
             }
