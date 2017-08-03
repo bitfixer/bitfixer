@@ -16,14 +16,6 @@
 #define PET_FRAME_SIZE 2000
 #define C64_FRAME_SIZE 9216
 
-/*
-typedef struct
-{
-    float pts;
-    unsigned char* data;
-} C64_Frame;
-*/
-
 class Frame
 {
 public:
@@ -93,8 +85,9 @@ int main(int argc, char * const argv[]) {
     int frame_size = C64_FRAME_SIZE;
     int output_port = 99999;
     FILE* fp = stdin;
+    int ip[4] = {127, 0, 0, 1};
     
-    while ((c = getopt(argc, argv, "t:p:i:")) != -1)
+    while ((c = getopt(argc, argv, "t:p:i:a:")) != -1)
     {
         if (c == 't')
         {
@@ -115,11 +108,15 @@ int main(int argc, char * const argv[]) {
         {
             fp = fopen(optarg, "rb");
         }
+        else if (c == 'a') // ip address
+        {
+            sscanf(optarg, "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]);
+        }
     }
     
     Frame frame(frame_size);
     Tools::Timer timer;
-    NetPort port(192,168,1,22,5555,output_port);
+    NetPort port(ip[0],ip[1],ip[2],ip[3],5555,output_port);
     
     //int frameSize = frame.size();
     float start_pts = -1;
