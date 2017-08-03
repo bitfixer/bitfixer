@@ -29,15 +29,25 @@ int num_files;
 
 void init();
 void convertImage(char *filename, int dim, float time = 0.0);
-void convertImageFromRGB(unsigned char* rgb, int width, int height, int dim, float time, FILE* fp_out, bool output_image);
+void convertImageFromRGB(unsigned char* rgb,
+                         int width,
+                         int height,
+                         int dim,
+                         float time,
+                         FILE* fp_out,
+                         bool output_image,
+                         bool output_pts,
+                         int searchRange);
 void convertImageFromGray(unsigned char* gray,
                           int width,
                           int height,
                           int dim,
                           float time,
                           FILE* fp_out,
-                          bool output_image);
-int getMatchingGlyph(double *dctSearch);
+                          bool output_image,
+                          bool output_pts,
+                          int searchRange);
+int getMatchingGlyph(double *dctSearch, int searchRange);
 
 typedef enum {
     RGB,
@@ -54,8 +64,10 @@ int main (int argc, char * const argv[]) {
     FILE* fp_in = stdin;
     pixelFormat pf = RGB;
     bool output_image = false;
+    bool output_pts = false;
+    int searchRange = 30;
     
-    while ((c = getopt(argc, argv, "f:w:h:p:i:o")) != -1)
+    while ((c = getopt(argc, argv, "f:w:h:p:i:ots:")) != -1)
     {
         if (c == 'f') // framerate
         {
@@ -88,6 +100,14 @@ int main (int argc, char * const argv[]) {
         {
             output_image = true;
         }
+        else if (c == 't') // output pts
+        {
+            output_pts = true;
+        }
+        else if (c == 's') // search range for dct match
+        {
+            searchRange = atoi(optarg);
+        }
     }
     
     int framesize = (pf == RGB) ? width * height * 3 : width * height;
@@ -98,11 +118,11 @@ int main (int argc, char * const argv[]) {
     {
         if (pf == RGB)
         {
-            convertImageFromRGB(frame, width, height, 8, frameTime, stdout, output_image);
+            convertImageFromRGB(frame, width, height, 8, frameTime, stdout, output_image, output_pts, searchRange);
         }
         else if (pf == GRAY)
         {
-            convertImageFromGray(frame, width, height, 8, frameTime, stdout, output_image);
+            convertImageFromGray(frame, width, height, 8, frameTime, stdout, output_image, output_pts, searchRange);
         }
         frameTime += frameInterval;
     }
@@ -137,7 +157,9 @@ void convertImageFromRGB(unsigned char* rgb,
                          int dim,
                          float time,
                          FILE* fp_out,
-                         bool output_image)
+                         bool output_image,
+                         bool output_pts,
+                         int searchRange)
 {
     unsigned char* gray = new unsigned char[width*height];
     for (int y = 0; y < height; y++)
@@ -148,7 +170,7 @@ void convertImageFromRGB(unsigned char* rgb,
         }
     }
     
-    convertImageFromGray(gray, width, height, dim, time, fp_out, output_image);
+    convertImageFromGray(gray, width, height, dim, time, fp_out, output_image, output_pts, searchRange);
     delete[] gray;
 }
 
@@ -159,7 +181,9 @@ void convertImageFromGray(unsigned char* gray,
                           int dim,
                           float time,
                           FILE* fp_out,
-                          bool output_image)
+                          bool output_image,
+                          bool output_pts,
+                          int searchRange)
 {
     char bmpFname[100];
     Image outputImage(width, height);
@@ -172,6 +196,13 @@ void convertImageFromGray(unsigned char* gray,
     unsigned char glyphIndex;
     fprintf(stderr, "converting rgb frame at time %f\n", time);
     sprintf(bmpFname, "image_%0.4f.ppm", time);
+    
+    if (output_pts)
+    {
+        // write pts to output stream
+        fwrite(&time, sizeof(time), 1, fp_out);
+        fprintf(stderr, "output pts!\n");
+    }
 
     for (int y = 0; y < height; y += dim)
     {
@@ -195,7 +226,7 @@ void convertImageFromGray(unsigned char* gray,
             dctTime += timer.getTime();
             
             timer.start();
-            matching = getMatchingGlyph(dctOutput);
+            matching = getMatchingGlyph(dctOutput, searchRange);
             matchTime += timer.getTime();
             
             glyphIndex = (unsigned char)matching;
@@ -270,7 +301,7 @@ double getDctDiffBetween(double *inputA, double *inputB, double sum_A, double su
     return score;
 }
 
-int getMatchingGlyph(double *dctSearch)
+int getMatchingGlyph(double *dctSearch, int searchRange)
 {
     double lowest = -1;
     double curr_score;
@@ -288,7 +319,6 @@ int getMatchingGlyph(double *dctSearch)
     int lookupIndex = (int)dctSearch[0];
     int sortedIndex = glyphScoreLookup[lookupIndex];
     
-    int searchRange = 30;
     int startIndex = sortedIndex - searchRange;
     if (startIndex < 0)
     {
