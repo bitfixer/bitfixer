@@ -25,7 +25,7 @@ public:
     double getTime()
     {
         std::chrono::high_resolution_clock::time_point now = high_resolution_clock::now();
-        duration<double> dur = duration_cast<duration<double>>(now - startTime);
+        duration<double> dur = duration_cast<duration<double> >(now - startTime);
         return dur.count();
     }
     

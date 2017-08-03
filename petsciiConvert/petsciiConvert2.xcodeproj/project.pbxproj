@@ -41,6 +41,7 @@
 		27BFA569156369A4006E36D9 /* pngwtran.c in Sources */ = {isa = PBXBuildFile; fileRef = 27BFA559156369A4006E36D9 /* pngwtran.c */; };
 		27BFA56A156369A4006E36D9 /* pngwutil.c in Sources */ = {isa = PBXBuildFile; fileRef = 27BFA55A156369A4006E36D9 /* pngwutil.c */; };
 		27BFA573156369C9006E36D9 /* Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27BFA571156369C9006E36D9 /* Utils.cpp */; };
+		650603EE1F32E2CD00D0652D /* timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 650603EC1F32E2CD00D0652D /* timer.cpp */; };
 		8DD76F650486A84900D96B5E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
 /* End PBXBuildFile section */
 
@@ -110,6 +111,8 @@
 		27BFA571156369C9006E36D9 /* Utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Utils.cpp; sourceTree = "<group>"; };
 		27BFA572156369C9006E36D9 /* Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Utils.h; sourceTree = "<group>"; };
 		650603EA1F3040BA00D0652D /* petsciiGlyphs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = petsciiGlyphs.h; sourceTree = "<group>"; };
+		650603EC1F32E2CD00D0652D /* timer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = timer.cpp; path = ../shared/timer.cpp; sourceTree = "<group>"; };
+		650603ED1F32E2CD00D0652D /* timer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = timer.hpp; path = ../shared/timer.hpp; sourceTree = "<group>"; };
 		8DD76F6C0486A84900D96B5E /* petsciiConvert2 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = petsciiConvert2; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -136,6 +139,7 @@
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				650603EB1F32E2B900D0652D /* shared */,
 				650603EA1F3040BA00D0652D /* petsciiGlyphs.h */,
 				27BFA571156369C9006E36D9 /* Utils.cpp */,
 				27BFA572156369C9006E36D9 /* Utils.h */,
@@ -215,6 +219,15 @@
 				27BFA55A156369A4006E36D9 /* pngwutil.c */,
 			);
 			name = libpng;
+			sourceTree = "<group>";
+		};
+		650603EB1F32E2B900D0652D /* shared */ = {
+			isa = PBXGroup;
+			children = (
+				650603EC1F32E2CD00D0652D /* timer.cpp */,
+				650603ED1F32E2CD00D0652D /* timer.hpp */,
+			);
+			name = shared;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -304,6 +317,7 @@
 				27BFA56A156369A4006E36D9 /* pngwutil.c in Sources */,
 				27BFA573156369C9006E36D9 /* Utils.cpp in Sources */,
 				2709E6B31609869E0033FD74 /* dct.cpp in Sources */,
+				650603EE1F32E2CD00D0652D /* timer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

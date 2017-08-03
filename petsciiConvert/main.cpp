@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "dct.h"
+#include "timer.hpp"
+
+#include <array>
 
 double **dctInput;
 double *dctOutput;
@@ -14,6 +17,9 @@ double ****cosLookup;
 double **alphaLookup;
 double *squareLookup;
 double *sigSquareLookup;
+
+int* glyphScoreLookup;
+int* sortedGlyphDctIndices;
 int num_files;
 
 
@@ -211,6 +217,11 @@ void convertImage(char *filename, int dim, float time)
     
     printf("image: %d %d\n",height,width);
     
+    Tools::Timer timer;
+    double dctTime = 0.0;
+    double matchTime = 0.0;
+    double convTime = 0.0;
+    
     for (y = 0; y < height; y += dim)
     {
         for (x = 0; x < width; x+= dim)
@@ -220,12 +231,20 @@ void convertImage(char *filename, int dim, float time)
             {
                 for (xx = 0; xx < dim; xx++)
                 {
+                    timer.start();
                     dctInput[xx][yy] = pixelBrightness(imageData,width,x+xx,y+yy,4);
+                    convTime += timer.getTime();
                 }
             }
             
+            timer.start();
             dctWithInput(dctInput, dctOutput, cosLookup, dim);
+            dctTime += timer.getTime();
+            
+            timer.start();
             matching = getMatchingGlyph(dctOutput);
+            matchTime += timer.getTime();
+            
             glyphIndex = (unsigned char)matching;
             
             fwrite(&glyphIndex, 1, 1, fp);
@@ -250,7 +269,6 @@ void convertImage(char *filename, int dim, float time)
                     if ((glyphString[ind] == '0' && matching < 128) ||
                         (glyphString[ind] == '1' && matching >= 128))
                     {
-                        printf("*");
                         pixel->red = 0;
                         pixel->green = 0;
                         pixel->blue = 0;
@@ -258,7 +276,6 @@ void convertImage(char *filename, int dim, float time)
                     }
                     else 
                     {
-                        printf("$");
                         pixel->red = 255;
                         pixel->green = 255;
                         pixel->blue = 255;
@@ -270,13 +287,15 @@ void convertImage(char *filename, int dim, float time)
             }
         }
     }
-    //save_png_to_file(&outputPng, bmpFname);
+    save_png_to_file(&outputPng, bmpFname);
     
     unsigned char temp[256];
     memset(temp, 0, 256);
     sprintf((char*)temp, "%0.24f", time);
     fwrite(temp, 1, 24, fp);
     fclose(fp);
+    
+    fprintf(stderr, "dct time %lf match time %lf conversion time %lf\n", dctTime, matchTime, convTime);
 }
 
 double getDctDiffBetween(double *inputA, double *inputB, double sum_A, double sum_B, int dim)
@@ -284,9 +303,9 @@ double getDctDiffBetween(double *inputA, double *inputB, double sum_A, double su
     double score, diff;
     int points = dim*dim;
     score = 0;
+    
     for (int i = 0; i < points; i++)
     {
-        
         diff = inputA[i]*inputB[i];
         score += diff;
     }
@@ -296,6 +315,57 @@ double getDctDiffBetween(double *inputA, double *inputB, double sum_A, double su
 }
 
 int getMatchingGlyph(double *dctSearch)
+{
+    double lowest = -1;
+    double curr_score;
+    int matchIndex;
+    
+    double sumOfSquares;
+    sumOfSquares = 0;
+    
+    for (int i = 0; i < 64; i++)
+    {
+        sumOfSquares += (dctSearch[i]*dctSearch[i]);
+    }
+    
+    // get closest index into sorted glyph table
+    int lookupIndex = (int)dctSearch[0];
+    int sortedIndex = glyphScoreLookup[lookupIndex];
+    
+    int searchRange = 30;
+    int startIndex = sortedIndex - searchRange;
+    if (startIndex < 0)
+    {
+        startIndex = 0;
+    }
+    
+    int endIndex = sortedIndex + searchRange;
+    if (endIndex > 255)
+    {
+        endIndex = 255;
+    }
+    
+    for (int d = startIndex; d < endIndex; d++)
+    {
+        int dctIndex = sortedGlyphDctIndices[d];
+        curr_score = getDctDiffBetween(dctSearch, dctSignatures[dctIndex], sumOfSquares, sigSquareLookup[dctIndex], 8);
+        
+        if (lowest == -1)
+        {
+            matchIndex = dctIndex;
+            lowest = curr_score;
+        }
+        else if (curr_score < lowest)
+        {
+            matchIndex = dctIndex;
+            lowest = curr_score;
+        }
+    }
+    
+    return matchIndex;
+}
+
+int getMatchingGlyph2(double *dctSearch)
 {
     double lowest = -1;
     double curr_score;
@@ -327,6 +397,7 @@ int getMatchingGlyph(double *dctSearch)
     
     return matchIndex;
 }
+
 
 void prepareGlyphSignatures()
 {
@@ -380,9 +451,54 @@ void prepareGlyphSignatures()
         }
         sigSquareLookup[ch] = thissig;
     }
+    
+    // create sorted list of indices
+    std::array<int, 256> indices;
+    for (int i = 0; i < 256; i++)
+    {
+        indices[i] = i;
+    }
+    
+    // sort function
+    struct {
+        bool operator()(int a, int b) const
+        {
+            return dctSignatures[a][0] < dctSignatures[b][0];
+        }
+    } compFn;
+    std::sort(indices.begin(), indices.end(), compFn);
+    
+    sortedGlyphDctIndices = new int[256];
+    
+    for (int i = 0; i < 256; i++)
+    {
+        sortedGlyphDctIndices[i] = indices[i];
+    }
+    
+    // create score lookup table
+    glyphScoreLookup = new int[4096];
+    for (int i = 0; i < 4096; i++)
+    {
+        double lookupScore = (double)i;
+        int j = 0;
+        for (j = 0; j < 256; j++)
+        {
+            if (dctSignatures[sortedGlyphDctIndices[j]][0] >= lookupScore)
+            {
+                break;
+            }
+        }
+        
+        if (j < 256)
+        {
+            glyphScoreLookup[i] = j;
+        }
+        else
+        {
+            glyphScoreLookup[i] = 255;
+        }
+    }
 }
-
-
 
 void init()
 {
