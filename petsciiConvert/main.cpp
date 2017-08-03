@@ -3,16 +3,17 @@
 #include <math.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 #include "dct.h"
 #include "timer.hpp"
 #include "Image.hpp"
 
 #include <array>
+#include <algorithm>
 
 double **dctInput;
 double *dctOutput;
 double **dctSignatures;
-double **imagedat;
 double ****cosLookup;
 double **alphaLookup;
 double *squareLookup;
@@ -25,8 +26,20 @@ int num_files;
 
 void init();
 void convertImage(char *filename, int dim, float time = 0.0);
-void convertImageFromRGB(unsigned char* rgb, int width, int height, int dim, float time, FILE* fp_out);
+void convertImageFromRGB(unsigned char* rgb, int width, int height, int dim, float time, FILE* fp_out, bool output_image);
+void convertImageFromGray(unsigned char* gray,
+                          int width,
+                          int height,
+                          int dim,
+                          float time,
+                          FILE* fp_out,
+                          bool output_image);
 int getMatchingGlyph(double *dctSearch);
+
+typedef enum {
+    RGB,
+    GRAY
+} pixelFormat;
 
 int main (int argc, char * const argv[]) {
     init();
@@ -36,6 +49,8 @@ int main (int argc, char * const argv[]) {
     int width = 320;
     int height = 200;
     FILE* fp_in = stdin;
+    pixelFormat pf = RGB;
+    bool output_image = false;
     
     while ((c = getopt(argc, argv, "f:w:h:p:i:")) != -1)
     {
@@ -53,7 +68,14 @@ int main (int argc, char * const argv[]) {
         }
         else if (c == 'p') // pixel format
         {
-            
+            if (strcmp(optarg, "rgb") == 0)
+            {
+                pf = RGB;
+            }
+            else if (strcmp(optarg, "gray") == 0)
+            {
+                pf = GRAY;
+            }
         }
         else if (c == 'i') // input fname
         {
@@ -61,14 +83,26 @@ int main (int argc, char * const argv[]) {
         }
     }
     
-    int framesize = width * height * 3;
+    int framesize = (pf == RGB) ? width * height * 3 : width * height;
     unsigned char* frame = new unsigned char[framesize];
     float frameTime = 0.0;
     float frameInterval = 1.0 / framerate;
     while (fread(frame, 1, framesize, fp_in) == framesize)
     {
-        convertImageFromRGB(frame, width, height, 8, frameTime, stdout);
+        if (pf == RGB)
+        {
+            convertImageFromRGB(frame, width, height, 8, frameTime, stdout, output_image);
+        }
+        else if (pf == GRAY)
+        {
+            convertImageFromGray(frame, width, height, 8, frameTime, stdout, output_image);
+        }
         frameTime += frameInterval;
+    }
+    
+    if (fp_in != stdin)
+    {
+        fclose(fp_in);
     }
     
     return 0;
@@ -90,7 +124,35 @@ double pixelBrightness(unsigned char *imageData, int width, int x, int y, int by
     return dist;
 }
 
-void convertImageFromRGB(unsigned char* rgb, int width, int height, int dim, float time, FILE* fp_out)
+void convertImageFromRGB(unsigned char* rgb,
+                         int width,
+                         int height,
+                         int dim,
+                         float time,
+                         FILE* fp_out,
+                         bool output_image)
+{
+    unsigned char* gray = new unsigned char[width*height];
+    for (int y = 0; y < height; y++)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            gray[y*width + x] = (unsigned char)pixelBrightness(rgb, width, x, y, 3);
+        }
+    }
+    
+    convertImageFromGray(gray, width, height, dim, time, fp_out, output_image);
+    delete[] gray;
+}
+
+
+void convertImageFromGray(unsigned char* gray,
+                          int width,
+                          int height,
+                          int dim,
+                          float time,
+                          FILE* fp_out,
+                          bool output_image)
 {
     char bmpFname[100];
     Image outputImage(width, height);
@@ -113,9 +175,10 @@ void convertImageFromRGB(unsigned char* rgb, int width, int height, int dim, flo
             {
                 for (int xx = 0; xx < dim; xx++)
                 {
-                    timer.start();
-                    dctInput[xx][yy] = pixelBrightness(rgb,width,x+xx,y+yy,3);
-                    convTime += timer.getTime();
+                    //timer.start();
+                    //dctInput[xx][yy] = pixelBrightness(rgb,width,x+xx,y+yy,3);
+                    //convTime += timer.getTime();
+                    dctInput[xx][yy] = gray[(y+yy)*width + (x+xx)];
                 }
             }
             
@@ -131,48 +194,54 @@ void convertImageFromRGB(unsigned char* rgb, int width, int height, int dim, flo
             
             fwrite(&glyphIndex, 1, 1, fp_out);
             
-            // write to png
-            unsigned char *glyphString;
-            int glyphPix = dim*dim;
-            
-            
-            if (matching < 128)
+            if (output_image)
             {
-                glyphString = &glyphs[matching * glyphPix];
-            }
-            else
-            {
-                glyphString = &glyphs[(matching - 128)*glyphPix];
-            }
-            
-            int ind;
-            ind = 0;
-            for (int yy = 0; yy < dim; yy ++)
-            {
-                for (int xx = 0; xx < dim; xx++)
+                // write to png
+                unsigned char *glyphString;
+                int glyphPix = dim*dim;
+                
+                
+                if (matching < 128)
                 {
-                    Pixel* pixel = outputImage.pixelAt(x+xx, y+yy);
-                    
-                    if ((glyphString[ind] == '0' && matching < 128) ||
-                        (glyphString[ind] == '1' && matching >= 128))
+                    glyphString = &glyphs[matching * glyphPix];
+                }
+                else
+                {
+                    glyphString = &glyphs[(matching - 128)*glyphPix];
+                }
+                
+                int ind;
+                ind = 0;
+                for (int yy = 0; yy < dim; yy ++)
+                {
+                    for (int xx = 0; xx < dim; xx++)
                     {
-                        pixel->rgb[0] = 0;
-                        pixel->rgb[1] = 0;
-                        pixel->rgb[2] = 0;
+                        Pixel* pixel = outputImage.pixelAt(x+xx, y+yy);
+                        
+                        if ((glyphString[ind] == '0' && matching < 128) ||
+                            (glyphString[ind] == '1' && matching >= 128))
+                        {
+                            pixel->rgb[0] = 0;
+                            pixel->rgb[1] = 0;
+                            pixel->rgb[2] = 0;
+                        }
+                        else
+                        {
+                            pixel->rgb[0] = 1.0;
+                            pixel->rgb[1] = 1.0;
+                            pixel->rgb[2] = 1.0;
+                        }
+                        
+                        ind++;
                     }
-                    else
-                    {
-                        pixel->rgb[0] = 1.0;
-                        pixel->rgb[1] = 1.0;
-                        pixel->rgb[2] = 1.0;
-                    }
-                    
-                    ind++;
                 }
             }
         }
     }
-    outputImage.writePPM(bmpFname);
+    if (output_image)
+    {
+        outputImage.writePPM(bmpFname);
+    }
     
     fprintf(stderr, "dct time %lf match time %lf conversion time %lf\n", dctTime, matchTime, convTime);
 }
@@ -277,7 +346,6 @@ int getMatchingGlyph2(double *dctSearch)
     return matchIndex;
 }
 
-
 void prepareGlyphSignatures()
 {
     unsigned char *glyphString;
@@ -381,11 +449,13 @@ void prepareGlyphSignatures()
 
 void init()
 {
+    /*
     imagedat = (double **)malloc(sizeof(double *) * 320.0);
     for (int i = 0; i < 320; i++)
     {
         imagedat[i] = (double *)malloc(sizeof(double) * 200.0);
     }
+    */
     
     dctSignatures = (double **)malloc(sizeof(double *) * 256);
     for (int i = 0; i < 256; i++)
