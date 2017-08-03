@@ -228,7 +228,7 @@ int main(void)
             }
         }
         
-        _delay_ms(20);
+        _delay_ms(40);
     }
 }
 

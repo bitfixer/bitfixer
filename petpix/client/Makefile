@@ -1,3 +1,5 @@
+REMOTE := 192.168.1.22
+
 clean:
 	rm -f client_sd.o
 	rm -f petpix.prg
@@ -37,3 +39,6 @@ petpix_fast.wav: petpix_fast.tap
 
 petpix_fast.load: clean petpix_fast.wav
 	afplay petpixfast.wav
+
+petpix_fast.transfer: clean petpix_fast.wav
+	scp petpixfast.wav pi@$(REMOTE):~/petpixfast.wav
