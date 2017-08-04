@@ -1,0 +1,54 @@
+clean:
+	rm -f loader.prg
+	rm -f loader.o
+	rm -f loader.tap
+	rm -f loader_long.wav
+	rm -f loader.wav
+
+	rm -f booter.o
+	rm -f booter.prg
+	rm -f booter.tap
+	rm -f booter_long.wav
+	rm -f booter.wav
+
+test:
+	echo "test"
+
+%.o: %.s
+	ca65 $<
+
+bootstrap:
+	ca65 test.asm
+	ld65 -C linker.cfg test.o
+
+ldtest:
+	cc65 ldtest.c
+	ca65 ldtest.s
+	ld65 -C linker.cfg ldtest.o
+
+loader.prg: clean
+	cl65 -t c64 loader.c asmloaders.c -o loader.prg
+	
+loader.tap: 
+	./prg2wav -s -t loader.tap -m c64ntsc loader.prg
+
+loader.wav: loader.tap
+	./c64tape -f 44100 -r loader.tap > loader_long.wav
+	ffmpeg -ss 7.5 -i loader_long.wav loader.wav
+
+load64: clean loader.wav
+	afplay loader.wav
+
+
+booter.o:
+	ca65 booter.s
+
+booter.prg: booter.o
+	ld65 -o booter.prg -C linker.cfg booter.o
+
+booter.tap: booter.prg
+	./prg2wav -s -t booter.tap -m c64ntsc booter.prg
+
+booter.wav: clean booter.tap
+	./c64tape -f 44100 -r booter.tap > booter_long.wav
+	ffmpeg -ss 7.5 -i booter_long.wav booter.wav
