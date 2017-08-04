@@ -1,0 +1,60 @@
+#include <wiringPi.h>
+#include <wiringPiSPI.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/time.h>
+#include <math.h>
+#include <string.h>
+#include "timer.hpp"
+#include "rpiSoftSpi.h"
+
+int main(int argc, char **argv)
+{
+    const char* fname = argv[1];
+    printf("load %s\n", fname);
+
+    unsigned char buffer[512];
+    Tools::Timer t;
+    int value = 0;
+    rpiSoftSPI spi(1, // clock
+                   0, // chip select
+                   3, // miso
+                   2, // mosi
+                   true
+                   );
+
+    wiringPiSetup();
+    spi.init();
+
+    int bytesToSend = 10;
+    memset(buffer, 0, 512);
+    FILE* fp = fopen(fname, "rb");
+    fread(buffer, 1, bytesToSend, fp);
+    fclose(fp);
+
+    while (!spi.isSelected())
+    {
+        delayMicroseconds(1000);
+    }
+
+    t.start();
+    spi.transfer(buffer, strlen((const char*)buffer));
+    double elapsed = t.getTime();
+    double rate = (double)bytesToSend / elapsed;
+
+    bool dataGood = true;
+    for (int i = 0; i < bytesToSend; i++)
+    {
+        printf("buffer %d: %X\n", i, buffer[i]);
+        if (i % 256 != buffer[i])
+        {
+            dataGood = false;
+            //break;
+        }
+    }
+    printf("done. took %lf seconds, Bps %lf. DataGood: %d\n", elapsed, rate, dataGood);
+
+
+
+    return 1;
+}
