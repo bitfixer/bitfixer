@@ -9,11 +9,13 @@
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include "timer.hpp"
 #include "NetPort.h"
 
 #define PET_FRAME_SIZE 2000
+#define PET_40_FRAME_SIZE 1000
 #define C64_FRAME_SIZE 9216
 
 class Frame
@@ -99,6 +101,10 @@ int main(int argc, char * const argv[]) {
             {
                 frame_size = PET_FRAME_SIZE;
             }
+            else if (strcmp(optarg, "pet40") == 0)
+            {
+                frame_size = PET_40_FRAME_SIZE;
+            }
         }
         else if (c == 'p')
         {
@@ -117,8 +123,12 @@ int main(int argc, char * const argv[]) {
     Frame frame(frame_size);
     Tools::Timer timer;
     NetPort port(ip[0],ip[1],ip[2],ip[3],5555,output_port);
+    NetPort timeListenerPort(127,0,0,1,5556,output_port);
+    
+    unsigned char temp[2000];
     
     float start_pts = -1;
+    double external_offset = 0.0;
     while (frame.read(fp))
     {
         fprintf(stderr, "pts: %f\n", frame.pts());
@@ -129,21 +139,42 @@ int main(int argc, char * const argv[]) {
         }
         
         float rel_pts = frame.pts() - start_pts;
-        while (timer.getTime() < rel_pts)
+        
+        // get current time
+        double currentTime = timer.getTime() + external_offset;
+        fprintf(stderr, "current time: %lf timer %lf offset %lf\n", currentTime, timer.getTime(), external_offset);
+        while (currentTime < rel_pts)
         {
-            float sleepTimeUs = (rel_pts - timer.getTime()) * 1000000.0;
+            float sleepTimeUs = (rel_pts - currentTime) * 1000000.0;
+            
+            // check for timer update
+            uint32_t nTimeUs = 0;
+            int ret = timeListenerPort.recv((unsigned char*)&nTimeUs, sizeof(uint32_t));
+            if (ret == sizeof(uint32_t))
+            {
+                uint32_t timeUs = ntohl(nTimeUs);
+                printf("got time update: %d at time %lf\n", timeUs, timer.getTime());
+                
+                double ext_time = (double)timeUs / 1000000.0;
+                external_offset = ext_time - timer.getTime();
+            }
+            
             if (sleepTimeUs > 1.0)
             {
-                //fprintf(stderr, "sleep for %f us\n", sleepTimeUs);
                 usleep(sleepTimeUs);
             }
+            
+            currentTime = timer.getTime() + external_offset;
         }
         
-        fprintf(stderr, "sending frame at time %lf relpts %f\n", timer.getTime(), rel_pts);
+        fprintf(stderr, "sending frame at time %lf relpts %f error %f\n", currentTime, rel_pts, currentTime-rel_pts);
         
         // write data to output
         //fwrite(frame.data, 1, C64_FRAME_SIZE, fp_out);
-        int ret = port.send(frame.data(), frame.dataSize());
+        memcpy(temp, frame.data(), frame.dataSize());
+        //int ret = port.send(temp, frame.dataSize());
+        int ret = port.send(temp, 2000);
+        printf("send returned %d op %d %d %d %d %d\n", ret, ip[0], ip[1], ip[2], ip[3], output_port);
     }
     
     if (fp != stdin)

@@ -146,6 +146,7 @@ public:
         printf("Waiting for UDP frame..\n");
         // get UDP frame
         int ret = port.recv_sync(frame, frameSize);
+        printf("PET frame\n");
     }
     
     void workForChunk(int chunk, float pts)
@@ -702,6 +703,19 @@ int main(int argc, char **argv)
             const unsigned char *frameChunk = petDataSource.getFrameChunk(0);
             int s = write(spi, frameChunk, 2000);
             printf("sent %d bytes\n", s);
+        }
+        else if (cmd == 0x11)
+        {
+            /*
+            static char a = '0';
+            memset(buffer, a, 1000);
+            a = (a + 1) % 10;
+            int s = write(spi, buffer, 1000);
+            printf("pet40 sent %d bytes\n");
+            */
+            const unsigned char *frameChunk = petDataSource.getFrameChunk(0);
+            int s = write(spi, frameChunk, 1000);
+            printf("pet40 sent %d bytes\n", s);
         }
         
         //printf("waiting for handshake high\n");

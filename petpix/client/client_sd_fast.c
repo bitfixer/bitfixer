@@ -29,11 +29,8 @@ petpix_sdclient
 #include <time.h>
 #include <pet.h>
 #include <string.h>
-//#include "spockw.h"
 
-
-
-
+//#define PET80COL    1
 /*
 original basic program
 
@@ -76,15 +73,18 @@ original basic program
 #define VMEM_START_2    0x8100
 #define VMEM_START_3    0x8200
 
+#ifdef PET80COL
 // for PET 8032
 #define VMEM_START_4    0x8300
 #define VMEM_START_5    0x8400
 #define VMEM_START_6    0x8500
 #define VMEM_START_7    0x8600
 #define VMEM_START_8    0x86D0
+#else
+// for PET 2001
+#define VMEM_START_4    0x82E8
+#endif
 
-
-//#define VMEM_START_4    0x82E8
 #define CURR_KEY        0x0097
 #define Q_KEY           64
 
@@ -285,7 +285,9 @@ int main (void)
         asm("bne %g", jumper3);
         
         // set offset for last section
-        //asm("ldx #$18");
+#ifndef PET80COL
+        asm("ldx #$18");
+#endif
     jumper4:
         
         // set CB2 line low
@@ -314,6 +316,7 @@ int main (void)
         // jump if x != 0
         asm("bne %g", jumper4);
         
+#ifdef PET80COL
     jumper5:
         
         // set CB2 line low
@@ -428,6 +431,7 @@ int main (void)
         asm("inx");
         // jump if x != 0
         asm("bne %g", jumper8);
+#endif
         
         //TEST
         key = PEEK(CURR_KEY);

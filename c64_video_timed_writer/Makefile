@@ -1,4 +1,4 @@
-REMOTE := 192.168.1.29
+REMOTE := 192.168.1.30
 
 all:
 	g++ -o c64_video_timed_writer -std=c++11 main.cpp timer.cpp NetPort.cpp

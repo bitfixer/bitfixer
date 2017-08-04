@@ -1,4 +1,4 @@
-REMOTE := 192.168.1.30
+REMOTE := 192.168.1.22
 
 all:
 	g++ -o pinetrecv -lwiringPi -std=c++11 pinetrecv.cpp CommPort.cpp timer.cpp NetPort.cpp

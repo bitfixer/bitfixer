@@ -41,7 +41,7 @@ int main(int argc, char * const argv[]) {
     std::cout << "Hello, World!\n";
     FILE* fp = stdin;
     
-    int output_port = 5656;
+    int output_port = 5556;
     int input_port = 7777;
     
     int c;
@@ -56,6 +56,7 @@ int main(int argc, char * const argv[]) {
     NetPort port(127,0,0,1,input_port,output_port);
     size_t linesize = 1024;
     char* line = (char*)malloc(linesize);
+    int lastTimeSeconds = -1;
     while (getline(&line, &linesize, fp) > 0)
     {
         char* str = strstr(line, " M:");
@@ -64,15 +65,22 @@ int main(int argc, char * const argv[]) {
             int timeUs;
             sscanf(&str[3], "%d ", &timeUs);
             float timeSec = (float)timeUs / 1000000.0;
-            printf("time %f\n", timeSec);
+            //printf("time %f\n", timeSec);
             
             if (timeUs < 0)
             {
                 timeUs = 0;
             }
             uint32_t t = timeUs;
-            uint32_t nTimeUs = htonl(t);
-            port.send((unsigned char*)&nTimeUs, sizeof(uint32_t));
+            float time = (float)t / 1000000.0;
+            int seconds = (int)time;
+            if (seconds != lastTimeSeconds)
+            {
+                printf("time %f\n", time);
+                uint32_t nTimeUs = htonl(t);
+                port.send((unsigned char*)&nTimeUs, sizeof(uint32_t));
+                lastTimeSeconds = seconds;
+            }
         }
     }
     
