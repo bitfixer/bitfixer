@@ -19,11 +19,14 @@ testpeek:
 	cl65 -t pet testpeek.c -o testpeek.prg
 
 petpix_8032.tap: petpix_8032
-	./prg2wav -s -t petpix8032.tap -m c64ntsc petpix8032.prg
+	prg2wav -s -t petpix8032.tap -m c64ntsc petpix8032.prg
 
 petpix_8032.wav: petpix_8032.tap
-	./c64tape -f 44100 -r petpix8032.tap > petpix8032_long.wav
+	tap2wav -f 44100 -r petpix8032.tap > petpix8032_long.wav
 	ffmpeg -ss 7.5 -i petpix8032_long.wav petpix8032.wav
+
+petpix_8032.load: clean petpix_8032.wav
+	afplay petpix8032.wav
 
 loadpet: clean petpix_8032.wav
 	afplay petpix8032.wav

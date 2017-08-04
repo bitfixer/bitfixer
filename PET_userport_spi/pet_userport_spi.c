@@ -12,7 +12,6 @@
 #include <util/delay.h>
 
 #define PET 1
-//#define PET80COL 1
 
 #define PET_CA1_INPORT  PINA
 #define PET_CA1_OUTPORT PORTA
@@ -33,13 +32,14 @@
 #define SPI_READY_PIN       PB0
 
 #define BUFFER_SIZE         2048
-#ifdef PET80COL
+
+#if PET80COL == 1
     #define SCREEN_BYTES_SIZE   2000
 #else
     #define SCREEN_BYTES_SIZE   1000
 #endif
 
-#ifdef PET80COL
+#if PET80COL == 1
     #define GET_SCREEN_CMD      0x10
 #else
     #define GET_SCREEN_CMD      0x11

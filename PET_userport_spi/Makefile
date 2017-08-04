@@ -18,6 +18,7 @@
 # FUSES ........ Parameters for avrdude to flash the fuses appropriately.
 
 REMOTE := 192.168.1.22
+PET80COL := 0
 
 MASTERPORT = $(shell cat master.port)
 SPAREPORT = $(shell cat spare.port)
@@ -64,7 +65,7 @@ COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE) -std=gnu99
 all:	pet_userport_spi.hex
 
 .c.o:
-	$(COMPILE) -c $< -o $@
+	$(COMPILE) -DPET80COL=$(PET80COL) -c $< -o $@
 
 .S.o:
 	$(COMPILE) -x assembler-with-cpp -c $< -o $@
@@ -122,6 +123,6 @@ ports:
 debug:
 	minicom -D $(SPAREPORT)
 
-transfer: all
+transfer: clean all
 	scp Makefile pi@$(REMOTE):~/PET_userport_spi/
 	scp pet_userport_spi.hex pi@$(REMOTE):~/PET_userport_spi/

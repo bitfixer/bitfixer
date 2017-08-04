@@ -29,11 +29,8 @@ petpix_sdclient
 #include <time.h>
 #include <pet.h>
 #include <string.h>
-//#include "spockw.h"
 
-
-
-
+#define PET80COL    1
 /*
 original basic program
 
@@ -72,10 +69,22 @@ original basic program
 #define CA1_DATA_LATCH  0xE84B
 #define CA1_STATUS      0xE84D
 #define USERPORT_DATA   0xE841
-#define VMEM_START      0x8000  //32768
+#define VMEM_START      0x8000
 #define VMEM_START_2    0x8100
 #define VMEM_START_3    0x8200
+
+#ifdef PET80COL
+// for PET 8032
+#define VMEM_START_4    0x8300
+#define VMEM_START_5    0x8400
+#define VMEM_START_6    0x8500
+#define VMEM_START_7    0x8600
+#define VMEM_START_8    0x86D0
+#else
+// for PET 2001
 #define VMEM_START_4    0x82E8
+#endif
+
 #define CURR_KEY        0x0097
 #define Q_KEY           64
 
@@ -87,9 +96,13 @@ int main (void)
     unsigned char key = 0;
     int x;
     
+    // set uppercase-graphics mode
+    data = 12;
+    POKE(CA1_TRIGGER, data);
+    
     while(key != Q_KEY)
     {
-    
+        
     data = PEEK(CA1_TRIGGER);
     data = data | 0x01;
     POKE(CA1_TRIGGER, data);
@@ -161,6 +174,36 @@ int main (void)
         asm("ora #$E0");
         asm("tay");
         
+        /*
+        // TEST TEST
+        // set CB2 line low
+        asm("tya");
+        asm("and #$DF");
+        asm("sta %w", CA1_TRIGGER);
+        
+        // load byte from userport, save to video memory
+        asm("lda %w", USERPORT_DATA);
+        asm("sta %w,x", VMEM_START);
+        
+        // step video mem pointer
+        asm("inx");
+        
+        // set CB2 line high
+        asm("tya");
+        asm("ora #$E0");
+        asm("sta %w", CA1_TRIGGER);
+        
+        // load byte from userport, save to video memory
+        asm("lda %w", USERPORT_DATA);
+        asm("sta %w,x", VMEM_START);
+        
+        // step video mem pointer
+        asm("inx");
+        
+        key = Q_KEY;
+        */
+        
+    
     jumper:
         
         // set CB2 line low
@@ -242,7 +285,9 @@ int main (void)
         asm("bne %g", jumper3);
         
         // set offset for last section
+#ifndef PET80COL
         asm("ldx #$18");
+#endif
     jumper4:
         
         // set CB2 line low
@@ -271,7 +316,126 @@ int main (void)
         // jump if x != 0
         asm("bne %g", jumper4);
         
+#ifdef PET80COL
+    jumper5:
+        
+        // set CB2 line low
+        asm("tya");
+        asm("and #$DF");
+        asm("sta %w", CA1_TRIGGER);
+        
+        // load byte from userport, save to video memory
+        asm("lda %w", USERPORT_DATA);
+        asm("sta %w,x", VMEM_START_5);
+        
+        // step video mem pointer
+        asm("inx");
+        
+        // set CB2 line high
+        asm("tya");
+        asm("ora #$E0");
+        asm("sta %w", CA1_TRIGGER);
+        
+        // load byte from userport, save to video memory
+        asm("lda %w", USERPORT_DATA);
+        asm("sta %w,x", VMEM_START_5);
+        
+        // step video mem pointer
+        asm("inx");
+        // jump if x != 0
+        asm("bne %g", jumper5);
+    
+    jumper6:
+        
+        // set CB2 line low
+        asm("tya");
+        asm("and #$DF");
+        asm("sta %w", CA1_TRIGGER);
+        
+        // load byte from userport, save to video memory
+        asm("lda %w", USERPORT_DATA);
+        asm("sta %w,x", VMEM_START_6);
+        
+        // step video mem pointer
+        asm("inx");
+        
+        // set CB2 line high
+        asm("tya");
+        asm("ora #$E0");
+        asm("sta %w", CA1_TRIGGER);
+        
+        // load byte from userport, save to video memory
+        asm("lda %w", USERPORT_DATA);
+        asm("sta %w,x", VMEM_START_6);
+        
+        // step video mem pointer
+        asm("inx");
+        // jump if x != 0
+        asm("bne %g", jumper6);
+        
+    jumper7:
+        
+        // set CB2 line low
+        asm("tya");
+        asm("and #$DF");
+        asm("sta %w", CA1_TRIGGER);
+        
+        // load byte from userport, save to video memory
+        asm("lda %w", USERPORT_DATA);
+        asm("sta %w,x", VMEM_START_7);
+        
+        // step video mem pointer
+        asm("inx");
+        
+        // set CB2 line high
+        asm("tya");
+        asm("ora #$E0");
+        asm("sta %w", CA1_TRIGGER);
+        
+        // load byte from userport, save to video memory
+        asm("lda %w", USERPORT_DATA);
+        asm("sta %w,x", VMEM_START_7);
+        
+        // step video mem pointer
+        asm("inx");
+        // jump if x != 0
+        asm("bne %g", jumper7);
+        
+        // set offset for last section
+        asm("ldx #$30");
+        
+    jumper8:
+        
+        // set CB2 line low
+        asm("tya");
+        asm("and #$DF");
+        asm("sta %w", CA1_TRIGGER);
+        
+        // load byte from userport, save to video memory
+        asm("lda %w", USERPORT_DATA);
+        asm("sta %w,x", VMEM_START_8);
+        
+        // step video mem pointer
+        asm("inx");
+        
+        // set CB2 line high
+        asm("tya");
+        asm("ora #$E0");
+        asm("sta %w", CA1_TRIGGER);
+        
+        // load byte from userport, save to video memory
+        asm("lda %w", USERPORT_DATA);
+        asm("sta %w,x", VMEM_START_8);
+        
+        // step video mem pointer
+        asm("inx");
+        // jump if x != 0
+        asm("bne %g", jumper8);
+#endif
+        
+        //TEST
         key = PEEK(CURR_KEY);
+        //key = Q_KEY;
 
     }
 	return EXIT_SUCCESS;
