@@ -118,9 +118,7 @@ int main(int argc, char * const argv[]) {
     Tools::Timer timer;
     NetPort port(ip[0],ip[1],ip[2],ip[3],5555,output_port);
     
-    //int frameSize = frame.size();
     float start_pts = -1;
-    //while (fread(&frame, 1, frameSize, fp) == frameSize)
     while (frame.read(fp))
     {
         fprintf(stderr, "pts: %f\n", frame.pts());

@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		650603FF1F34304400D0652D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 650603FE1F34304400D0652D /* main.cpp */; };
+		650604081F343D2000D0652D /* NetPort.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 650604071F343D2000D0652D /* NetPort.cpp */; };
+		6506040C1F343DDC00D0652D /* timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6506040A1F343DDC00D0652D /* timer.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +27,11 @@
 /* Begin PBXFileReference section */
 		650603FB1F34304400D0652D /* omxplayer_time_reader */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = omxplayer_time_reader; sourceTree = BUILT_PRODUCTS_DIR; };
 		650603FE1F34304400D0652D /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		650604061F343D2000D0652D /* NetPort.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NetPort.h; path = ../../shared/NetPort.h; sourceTree = "<group>"; };
+		650604071F343D2000D0652D /* NetPort.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NetPort.cpp; path = ../../shared/NetPort.cpp; sourceTree = "<group>"; };
+		650604091F343DC500D0652D /* Net.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Net.h; path = ../../external/Net/Net.h; sourceTree = "<group>"; };
+		6506040A1F343DDC00D0652D /* timer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = timer.cpp; path = ../../shared/timer.cpp; sourceTree = "<group>"; };
+		6506040B1F343DDC00D0652D /* timer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = timer.hpp; path = ../../shared/timer.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,9 +64,22 @@
 		650603FD1F34304400D0652D /* omxplayer_time_reader */ = {
 			isa = PBXGroup;
 			children = (
+				650604051F343D0E00D0652D /* shared */,
 				650603FE1F34304400D0652D /* main.cpp */,
 			);
 			path = omxplayer_time_reader;
+			sourceTree = "<group>";
+		};
+		650604051F343D0E00D0652D /* shared */ = {
+			isa = PBXGroup;
+			children = (
+				6506040A1F343DDC00D0652D /* timer.cpp */,
+				6506040B1F343DDC00D0652D /* timer.hpp */,
+				650604091F343DC500D0652D /* Net.h */,
+				650604061F343D2000D0652D /* NetPort.h */,
+				650604071F343D2000D0652D /* NetPort.cpp */,
+			);
+			name = shared;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -119,7 +139,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				650604081F343D2000D0652D /* NetPort.cpp in Sources */,
 				650603FF1F34304400D0652D /* main.cpp in Sources */,
+				6506040C1F343DDC00D0652D /* timer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
