@@ -14,6 +14,12 @@
 *.prg
 *.PRG
 *.d64
+*.tap
+*.jpg
+*.png
+*.3gp
+*.out
+*.raw
 **/xcschememanagement.plist
 **/xcuserdata/*
 **/build/*
