@@ -23,3 +23,6 @@
 **/xcschememanagement.plist
 **/xcuserdata/*
 **/build/*
+binaryDataConvert
+c64tape
+petsciiConvert2
