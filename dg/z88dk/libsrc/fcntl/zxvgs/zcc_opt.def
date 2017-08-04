@@ -1,0 +1,5 @@
+
+IF !NEED_floatpack
+	DEFINE	NEED_floatpack
+ENDIF
+

@@ -1,0 +1,17 @@
+
+IF !DEFINED_startup
+	defc	DEFINED_startup = 1
+	defc startup = 2
+ENDIF
+
+
+IF !DEFINED_NEED1bitsound 
+	defc	DEFINED_NEED1bitsound  = 1
+	defc NEED1bitsound  = 0
+ENDIF
+
+
+IF !NEED_floatpack
+	DEFINE	NEED_floatpack
+ENDIF
+

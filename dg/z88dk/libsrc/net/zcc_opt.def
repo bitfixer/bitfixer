@@ -1,0 +1,12 @@
+
+IF !DEFINED_startup
+	defc	DEFINED_startup = 1
+	defc startup = 1
+ENDIF
+
+
+IF !DEFINED_ministdio
+	defc	DEFINED_ministdio = 1
+	defc ministdio = 0
+ENDIF
+

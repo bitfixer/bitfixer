@@ -1,0 +1,16 @@
+
+IF !DEFINED_ANSIstdio
+	defc	DEFINED_ANSIstdio = 1
+	defc ANSIstdio = 0
+ENDIF
+
+
+IF !NEED_floatpack
+	DEFINE	NEED_floatpack
+ENDIF
+
+
+IF !NEED_mathz88
+	DEFINE	NEED_mathz88
+ENDIF
+

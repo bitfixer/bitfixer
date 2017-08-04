@@ -1,0 +1,2485 @@
+                        ; --------------------------------------
+                        ; zasm: assemble "dgprog.asm"
+                        ; opts: --reqcolon
+                        ; date: 2017-02-17 01:35:18
+                        ; --------------------------------------
+
+
+                        ;#charset ascii
+                        ;#charset map " !" = 0xA0
+                        ;#charset map "#$%&" = 0xA3
+                        ;#charset map "'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~" = 0xA7
+                        
+                        #target bin
+0100:                   #code HEADER,0x0100
+0100: 53                .byte 0x53
+0101: 53                .byte 0x53
+0102: C3                .byte 0xC3
+0103: 00                .byte 0x00
+0104: 00                .byte 0x00
+0105: C3                .byte 0xC3
+0106: 00                .byte 0x00
+0107: 00                .byte 0x00
+0108: C3                .byte 0xC3
+0109: 00                .byte 0x00
+010A: 00                .byte 0x00
+010B: C3                .byte 0xC3
+010C: 00                .byte 0x00
+010D: 00                .byte 0x00
+010E: C3                .byte 0xC3
+010F: 00                .byte 0x00
+0110: 00                .byte 0x00
+0111: C3                .byte 0xC3
+0112: 00                .byte 0x00
+0113: 00                .byte 0x00
+0114: C3                .byte 0xC3
+0115: 00                .byte 0x00
+0116: 00                .byte 0x00
+0117: 1F                .byte 0x1F
+0118: 00                .byte 0x00
+0119: 01                .byte 0x01
+011A: FF                .byte 0xFF  ; end addr L. Will be replaced by dglength.py
+011B: 05                .byte 0x05  ; end addr H
+011C: 00                .byte 0x00
+011D: 00                .byte 0x00
+011E: 00                .byte 0x00
+011F: 00                .byte 0x00
+0120:                   #code OS,0x0120
+0120: CDC80A   [17]     blah:   call _main
+0123: C32301   [10]     loop:   jp loop
+0126:                   #code TEXT
+0126: 58594344          .text "XYCD"
+012A: 00000000          .align 0x0500
+012E: 00...             
+0500:                   #code JUMPER,0x0500
+0500: C32001   [10]     go:     jp blah
+                        ;.align 256
+                        
+0503:                   #code _GSINIT
+052B:                   #code _HOME
+0668:                   #code _CODE
+0DEE:                   #code _CABS,*,0
+0DEE:                   #code _GSFINAL,*,0
+0DEE:                   #code _INITIALIZER
+0000:                   #data _DATA
+0013:                   #data _INITIALIZED
+0016:                   #data _DABS,*,0
+                        
+                        ;#code _HEAP
+                        ;__sdcc_heap_start::
+                        ;.ds 1023
+                        ;#code _HEAP_END
+                        ;__sdcc_heap_end::
+                        ;.ds 1
+                        
+0DF1:                   #code _HEAP
+0DF1:                   __sdcc_heap_start::
+11F1:                   #code _HEAP_END, _HEAP+1024
+11F1:                   __sdcc_heap_end::
+                        
+                        ;#code PADDING
+                        ;pad:    nop
+                        ;.align 256
+                        
+                        #CFLAGS $CFLAGS --nostdinc -I/Users/gubbish/sdcc/include
+                        #include "printf_dg.c"
+                        #local
+                        ;--------------------------------------------------------
+                        ; File Created by SDCC : free open source ANSI-C Compiler
+                        ; Version 3.4.1 #9090 (Nov 13 2014) (Mac OS X x86_64)
+                        ; This file was generated Fri Feb 17 01:35:19 2017
+                        ;--------------------------------------------------------
+                        	.module printf_dg
+                        	.optsdcc -mz80
+                        	
+                        ;--------------------------------------------------------
+                        ; Public variables in this module
+                        ;--------------------------------------------------------
+                        	.globl __ltoa
+                        	.globl _putchar
+                        	.globl _printf_small
+                        ;--------------------------------------------------------
+                        ; special function registers
+                        ;--------------------------------------------------------
+                        ;--------------------------------------------------------
+                        ; ram data
+                        ;--------------------------------------------------------
+                        	.area _DATA
+0000:                   _radix:
+0000: 00                	.ds 1
+0001:                   _str:
+0001: 0000              	.ds 2
+0003:                   _val:
+0003: 00000000          	.ds 4
+0007:                   _printf_small_buffer_4_35:
+0007: 00000000          	.ds 12
+000B: 00...             
+                        ;--------------------------------------------------------
+                        ; ram data
+                        ;--------------------------------------------------------
+                        	.area _INITIALIZED
+0013:                   _long_flag:
+0013: 00                	.ds 1
+0014:                   _string_flag:
+0014: 00                	.ds 1
+0015:                   _char_flag:
+0015: 00                	.ds 1
+                        ;--------------------------------------------------------
+                        ; absolute external ram data
+                        ;--------------------------------------------------------
+                        	.area _DABS (ABS)
+                        ;--------------------------------------------------------
+                        ; global & static initialisations
+                        ;--------------------------------------------------------
+                        	.area _HOME
+                        	.area _GSINIT
+                        	.area _GSFINAL
+                        	.area _GSINIT
+                        ;--------------------------------------------------------
+                        ; Home
+                        ;--------------------------------------------------------
+                        	.area _HOME
+                        	.area _HOME
+                        ;--------------------------------------------------------
+                        ; code
+                        ;--------------------------------------------------------
+                        	.area _CODE
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:61: void printf_small (char * fmt, ... ) __reentrant
+                        ;	---------------------------------
+                        ; Function printf_small
+                        ; ---------------------------------
+0668:                   _printf_small_start::
+0668:                   _printf_small:
+0668: DDE5     [15]     	push	ix
+066A: DD210000 [29]     	ld	ix,#0
+066E: DD39     [44]     	add	ix,sp
+0670: 21FAFF   [54]     	ld	hl,#-6
+0673: 39       [65]     	add	hl,sp
+0674: F9       [71]     	ld	sp,hl
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:65: va_start(ap,fmt);
+0675: 210C00   [81]     	ld	hl,#0x000A+1+1
+0678: 39       [92]     	add	hl,sp
+0679: E3       [111]    	ex	(sp), hl
+067A:                   00133$:
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:67: for (; *fmt ; fmt++ ) {
+067A: DD7E04   [19]     	ld	a,4 (ix)
+067D: DD77FE   [38]     	ld	-2 (ix),a
+0680: DD7E05   [57]     	ld	a,5 (ix)
+0683: DD77FF   [76]     	ld	-1 (ix),a
+0686: DD6EFE   [95]     	ld	l,-2 (ix)
+0689: DD66FF   [114]    	ld	h,-1 (ix)
+068C: 5E       [121]    	ld	e,(hl)
+068D: 7B       [125]    	ld	a,e
+068E: B7       [129]    	or	a, a
+068F: CA6E08   [139|139]	jp	Z,00134$
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:68: if (*fmt == '%') {
+0692: 7B       [143]    	ld	a,e
+0693: D625     [150]    	sub	a, #0x25
+0695: C25B08   [160|160]	jp	NZ,00128$
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:69: long_flag = string_flag = char_flag = 0;
+0698: 211500   [170]    	ld	hl,#_char_flag + 0
+069B: 3600     [180]    	ld	(hl), #0x00
+069D: 211400   [190]    	ld	hl,#_string_flag + 0
+06A0: 3600     [200]    	ld	(hl), #0x00
+06A2: 211300   [210]    	ld	hl,#_long_flag + 0
+06A5: 3600     [220]    	ld	(hl), #0x00
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:70: fmt++ ;
+06A7: DD7EFE   [239]    	ld	a,-2 (ix)
+06AA: C601     [246]    	add	a, #0x01
+06AC: DD7704   [265]    	ld	4 (ix),a
+06AF: DD7EFF   [284]    	ld	a,-1 (ix)
+06B2: CE00     [291]    	adc	a, #0x00
+06B4: DD7705   [310]    	ld	5 (ix),a
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:71: switch (*fmt) {
+06B7: DD5E04   [329]    	ld	e,4 (ix)
+06BA: DD5605   [348]    	ld	d,5 (ix)
+06BD: 1A       [355]    	ld	a,(de)
+06BE: 47       [359]    	ld	b,a
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:74: fmt++;
+06BF: 13       [365]    	inc	de
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:71: switch (*fmt) {
+06C0: 78       [369]    	ld	a,b
+06C1: FE68     [376]    	cp	a,#0x68
+06C3: 2811     [383|388]	jr	Z,00102$
+06C5: D66C     [390]    	sub	a, #0x6C
+06C7: 2018     [397|402]	jr	NZ,00103$
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:73: long_flag = 1;
+06C9: 211300   [407]    	ld	hl,#_long_flag + 0
+06CC: 3601     [417]    	ld	(hl), #0x01
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:74: fmt++;
+06CE: DD7304   [436]    	ld	4 (ix),e
+06D1: DD7205   [455]    	ld	5 (ix),d
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:75: break;
+06D4: 180B     [467]    	jr	00103$
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:76: case 'h':
+06D6:                   00102$:
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:77: char_flag = 1;
+06D6: 211500   [10]     	ld	hl,#_char_flag + 0
+06D9: 3601     [20]     	ld	(hl), #0x01
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:78: fmt++;
+06DB: DD7304   [39]     	ld	4 (ix),e
+06DE: DD7205   [58]     	ld	5 (ix),d
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:79: }
+06E1:                   00103$:
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:81: switch (*fmt) {
+06E1: DD6E04   [19]     	ld	l,4 (ix)
+06E4: DD6605   [38]     	ld	h,5 (ix)
+06E7: 7E       [45]     	ld	a,(hl)
+06E8: DD77FE   [64]     	ld	-2 (ix), a
+06EB: D663     [71]     	sub	a, #0x63
+06ED: 2833     [78|83]  	jr	Z,00107$
+06EF: DD7EFE   [97]     	ld	a,-2 (ix)
+06F2: D664     [104]    	sub	a, #0x64
+06F4: 281E     [111|116]	jr	Z,00105$
+06F6: DD7EFE   [130]    	ld	a,-2 (ix)
+06F9: D66F     [137]    	sub	a, #0x6F
+06FB: 282C     [144|149]	jr	Z,00108$
+06FD: DD7EFE   [163]    	ld	a,-2 (ix)
+0700: D673     [170]    	sub	a, #0x73
+0702: 2809     [177|182]	jr	Z,00104$
+0704: DD7EFE   [196]    	ld	a,-2 (ix)
+0707: D678     [203]    	sub	a, #0x78
+0709: 2810     [210|215]	jr	Z,00106$
+070B: 1821     [222]    	jr	00109$
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:82: case 's':
+070D:                   00104$:
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:83: string_flag = 1;
+070D: 211400   [10]     	ld	hl,#_string_flag + 0
+0710: 3601     [20]     	ld	(hl), #0x01
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:84: break;
+0712: 181A     [32]     	jr	00109$
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:85: case 'd':
+0714:                   00105$:
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:86: radix = 10;
+0714: 210000   [10]     	ld	hl,#_radix + 0
+0717: 360A     [20]     	ld	(hl), #0x0A
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:87: break;
+0719: 1813     [32]     	jr	00109$
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:88: case 'x':
+071B:                   00106$:
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:89: radix = 16;
+071B: 210000   [10]     	ld	hl,#_radix + 0
+071E: 3610     [20]     	ld	(hl), #0x10
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:90: break;
+0720: 180C     [32]     	jr	00109$
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:91: case 'c':
+0722:                   00107$:
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:92: radix = 0;
+0722: 210000   [10]     	ld	hl,#_radix + 0
+0725: 3600     [20]     	ld	(hl), #0x00
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:93: break;
+0727: 1805     [32]     	jr	00109$
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:94: case 'o':
+0729:                   00108$:
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:95: radix = 8;
+0729: 210000   [10]     	ld	hl,#_radix + 0
+072C: 3608     [20]     	ld	(hl), #0x08
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:97: }
+072E:                   00109$:
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:101: str = va_arg(ap, char *);
+072E: D1       [10]     	pop	de
+072F: D5       [21]     	push	de
+0730: 13       [27]     	inc	de
+0731: 13       [33]     	inc	de
+0732: 7B       [37]     	ld	a,e
+0733: C6FE     [44]     	add	a,#0xFE
+0735: DD77FE   [63]     	ld	-2 (ix),a
+0738: 7A       [67]     	ld	a,d
+0739: CEFF     [74]     	adc	a,#0xFF
+073B: DD77FF   [93]     	ld	-1 (ix),a
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:99: if (string_flag)
+073E: 3A1400   [106]    	ld	a,(#_string_flag + 0)
+0741: B7       [110]    	or	a, a
+0742: 2831     [117|122]	jr	Z,00114$
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:101: str = va_arg(ap, char *);
+0744: 33       [123]    	inc	sp
+0745: 33       [129]    	inc	sp
+0746: D5       [140]    	push	de
+0747: DD6EFE   [159]    	ld	l,-2 (ix)
+074A: DD66FF   [178]    	ld	h,-1 (ix)
+074D: 7E       [185]    	ld	a,(hl)
+074E: FD210100 [199]    	ld	iy,#_str
+0752: FD7700   [218]    	ld	0 (iy),a
+0755: 23       [224]    	inc	hl
+0756: 7E       [231]    	ld	a,(hl)
+0757: 320200   [244]    	ld	(#_str + 1),a
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:102: while (*str) putchar(*str++);
+075A:                   00110$:
+075A: 2A0100   [16]     	ld	hl,(_str)
+075D: 56       [23]     	ld	d,(hl)
+075E: 7A       [27]     	ld	a,d
+075F: B7       [31]     	or	a, a
+0760: CA6208   [41|41]  	jp	Z,00130$
+0763: 210100   [51]     	ld	hl, #_str+0
+0766: 34       [62]     	inc	(hl)
+0767: 2004     [69|74]  	jr	NZ,00219$
+0769: 210200   [79]     	ld	hl, #_str+1
+076C: 34       [90]     	inc	(hl)
+076D:                   00219$:
+076D: D5       [11]     	push	de
+076E: 33       [17]     	inc	sp
+076F: CD7308   [34]     	call	_putchar
+0772: 33       [40]     	inc	sp
+0773: 18E5     [52]     	jr	00110$
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:103: continue ;
+0775:                   00114$:
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:106: if (long_flag)
+0775: 3A1300   [13]     	ld	a,(#_long_flag + 0)
+0778: B7       [17]     	or	a, a
+0779: 2847     [24|29]  	jr	Z,00119$
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:107: val = va_arg(ap,long);
+077B: DD7EFA   [43]     	ld	a,-6 (ix)
+077E: C604     [50]     	add	a, #0x04
+0780: 6F       [54]     	ld	l,a
+0781: DD7EFB   [73]     	ld	a,-5 (ix)
+0784: CE00     [80]     	adc	a, #0x00
+0786: 67       [84]     	ld	h,a
+0787: 33       [90]     	inc	sp
+0788: 33       [96]     	inc	sp
+0789: E5       [107]    	push	hl
+078A: 7D       [111]    	ld	a,l
+078B: C6FC     [118]    	add	a,#0xFC
+078D: 6F       [122]    	ld	l,a
+078E: 7C       [126]    	ld	a,h
+078F: CEFF     [133]    	adc	a,#0xFF
+0791: DD75FC   [152]    	ld	-4 (ix), l
+0794: DD77FD   [171]    	ld	-3 (ix), a
+0797: DD6EFC   [190]    	ld	l,-4 (ix)
+079A: DD66FD   [209]    	ld	h,-3 (ix)
+079D: 7E       [216]    	ld	a,(hl)
+079E: FD210300 [230]    	ld	iy,#_val
+07A2: FD7700   [249]    	ld	0 (iy),a
+07A5: 23       [255]    	inc	hl
+07A6: 7E       [262]    	ld	a,(hl)
+07A7: FD210300 [276]    	ld	iy,#_val
+07AB: FD7701   [295]    	ld	1 (iy),a
+07AE: 23       [301]    	inc	hl
+07AF: 7E       [308]    	ld	a,(hl)
+07B0: FD210300 [322]    	ld	iy,#_val
+07B4: FD7702   [341]    	ld	2 (iy),a
+07B7: 23       [347]    	inc	hl
+07B8: 7E       [354]    	ld	a,(hl)
+07B9: FD210300 [368]    	ld	iy,#_val
+07BD: FD7703   [387]    	ld	3 (iy),a
+07C0: 1859     [399]    	jr	00120$
+07C2:                   00119$:
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:109: if (char_flag)
+07C2: 3A1500   [13]     	ld	a,(#_char_flag + 0)
+07C5: B7       [17]     	or	a, a
+07C6: 2828     [24|29]  	jr	Z,00116$
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:110: val = va_arg(ap,char);
+07C8: E1       [34]     	pop	hl
+07C9: E5       [45]     	push	hl
+07CA: 23       [51]     	inc	hl
+07CB: 33       [57]     	inc	sp
+07CC: 33       [63]     	inc	sp
+07CD: E5       [74]     	push	hl
+07CE: 2B       [80]     	dec	hl
+07CF: 7E       [87]     	ld	a,(hl)
+07D0: FD210300 [101]    	ld	iy,#_val
+07D4: FD7700   [120]    	ld	0 (iy),a
+07D7: 17       [124]    	rla
+07D8: 9F       [128]    	sbc	a, a
+07D9: FD210300 [142]    	ld	iy,#_val
+07DD: FD7701   [161]    	ld	1 (iy),a
+07E0: FD210300 [175]    	ld	iy,#_val
+07E4: FD7702   [194]    	ld	2 (iy),a
+07E7: FD210300 [208]    	ld	iy,#_val
+07EB: FD7703   [227]    	ld	3 (iy),a
+07EE: 182B     [239]    	jr	00120$
+07F0:                   00116$:
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:112: val = va_arg(ap,int);
+07F0: 33       [ 6]     	inc	sp
+07F1: 33       [12]     	inc	sp
+07F2: D5       [23]     	push	de
+07F3: DD6EFE   [42]     	ld	l,-2 (ix)
+07F6: DD66FF   [61]     	ld	h,-1 (ix)
+07F9: 5E       [68]     	ld	e,(hl)
+07FA: 23       [74]     	inc	hl
+07FB: 56       [81]     	ld	d,(hl)
+07FC: FD210300 [95]     	ld	iy,#_val
+0800: FD7300   [114]    	ld	0 (iy),e
+0803: FD210300 [128]    	ld	iy,#_val
+0807: FD7201   [147]    	ld	1 (iy),d
+080A: 7A       [151]    	ld	a,d
+080B: 17       [155]    	rla
+080C: 9F       [159]    	sbc	a, a
+080D: FD210300 [173]    	ld	iy,#_val
+0811: FD7702   [192]    	ld	2 (iy),a
+0814: FD210300 [206]    	ld	iy,#_val
+0818: FD7703   [225]    	ld	3 (iy),a
+081B:                   00120$:
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:114: if (radix)
+081B: 3A0000   [13]     	ld	a,(#_radix + 0)
+081E: B7       [17]     	or	a, a
+081F: 282B     [24|29]  	jr	Z,00125$
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:119: _ltoa (val, buffer, radix);
+0821: 110700   [34]     	ld	de,#_printf_small_buffer_4_35
+0824: 3A0000   [47]     	ld	a,(_radix)
+0827: F5       [58]     	push	af
+0828: 33       [64]     	inc	sp
+0829: D5       [75]     	push	de
+082A: 2A0500   [91]     	ld	hl,(_val + 2)
+082D: E5       [102]    	push	hl
+082E: 2A0300   [118]    	ld	hl,(_val)
+0831: E5       [129]    	push	hl
+0832: CD8708   [146]    	call	__ltoa
+0835: 210700   [156]    	ld	hl,#7
+0838: 39       [167]    	add	hl,sp
+0839: F9       [173]    	ld	sp,hl
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:120: stri = buffer;
+083A: 210700   [183]    	ld	hl,#_printf_small_buffer_4_35
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:121: while (*stri)
+083D:                   00121$:
+083D: 7E       [ 7]     	ld	a,(hl)
+083E: B7       [11]     	or	a, a
+083F: 2821     [18|23]  	jr	Z,00130$
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:123: putchar (*stri);
+0841: E5       [29]     	push	hl
+0842: F5       [40]     	push	af
+0843: 33       [46]     	inc	sp
+0844: CD7308   [63]     	call	_putchar
+0847: 33       [69]     	inc	sp
+0848: E1       [79]     	pop	hl
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:124: stri++;
+0849: 23       [85]     	inc	hl
+084A: 18F1     [97]     	jr	00121$
+084C:                   00125$:
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:128: putchar((char)val);
+084C: FD210300 [14]     	ld	iy,#_val
+0850: FD6600   [33]     	ld	h,0 (iy)
+0853: E5       [44]     	push	hl
+0854: 33       [50]     	inc	sp
+0855: CD7308   [67]     	call	_putchar
+0858: 33       [73]     	inc	sp
+0859: 1807     [85]     	jr	00130$
+085B:                   00128$:
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:131: putchar(*fmt);
+085B: 7B       [ 4]     	ld	a,e
+085C: F5       [15]     	push	af
+085D: 33       [21]     	inc	sp
+085E: CD7308   [38]     	call	_putchar
+0861: 33       [44]     	inc	sp
+0862:                   00130$:
+                        ;/Users/gubbish/sdcc/lib/_printf_small.c:67: for (; *fmt ; fmt++ ) {
+0862: DD3404   [23]     	inc	4 (ix)
+0865: C27A06   [33|33]  	jp	NZ,00133$
+0868: DD3405   [56]     	inc	5 (ix)
+086B: C37A06   [66]     	jp	00133$
+086E:                   00134$:
+086E: DDF9     [10]     	ld	sp, ix
+0870: DDE1     [24]     	pop	ix
+0872: C9       [34]     	ret
+0873:                   _printf_small_end::
+                        	.area _CODE
+                        	.area _INITIALIZER
+0DEE:                   __xinit__long_flag:
+0DEE: 00                	.db #0x00	; 0
+0DEF:                   __xinit__string_flag:
+0DEF: 00                	.db #0x00	; 0
+0DF0:                   __xinit__char_flag:
+0DF0: 00                	.db #0x00	; 0
+                        	.area _CABS (ABS)
+                        #endlocal
+                        #include "putchar.s"
+                                .area   _CODE
+0873:                   _putchar::
+0873: 210200   [10]             ld      hl,2
+0876: 39       [21]             add     hl,sp
+0877: 3A4001   [34]             ld      a, (#0x0140)
+087A: 47       [38]             ld      b, a
+087B: 7E       [45]             ld      a,(hl)
+087C: CBFF     [53]             set	    7, a
+087E: CDFA00   [70]             call    #0x00FA
+0881: 78       [74]             ld      a, b
+0882: 3C       [78]             inc     a
+0883: 324001   [91]             ld      (#0x0140), a
+0886: C9       [101]            ret
+                        #include "/Users/gubbish/sdcc/lib/__ltoa.c"
+                        #local
+                        ;--------------------------------------------------------
+                        ; File Created by SDCC : free open source ANSI-C Compiler
+                        ; Version 3.4.1 #9090 (Nov 13 2014) (Mac OS X x86_64)
+                        ; This file was generated Fri Feb 17 01:35:19 2017
+                        ;--------------------------------------------------------
+                        	.module __ltoa
+                        	.optsdcc -mz80
+                        	
+                        ;--------------------------------------------------------
+                        ; Public variables in this module
+                        ;--------------------------------------------------------
+                        	.globl __ltoa
+                        	.globl __ultoa
+                        ;--------------------------------------------------------
+                        ; special function registers
+                        ;--------------------------------------------------------
+                        ;--------------------------------------------------------
+                        ; ram data
+                        ;--------------------------------------------------------
+                        	.area _DATA
+                        ;--------------------------------------------------------
+                        ; ram data
+                        ;--------------------------------------------------------
+                        	.area _INITIALIZED
+                        ;--------------------------------------------------------
+                        ; absolute external ram data
+                        ;--------------------------------------------------------
+                        	.area _DABS (ABS)
+                        ;--------------------------------------------------------
+                        ; global & static initialisations
+                        ;--------------------------------------------------------
+                        	.area _HOME
+                        	.area _GSINIT
+                        	.area _GSFINAL
+                        	.area _GSINIT
+                        ;--------------------------------------------------------
+                        ; Home
+                        ;--------------------------------------------------------
+                        	.area _HOME
+                        	.area _HOME
+                        ;--------------------------------------------------------
+                        ; code
+                        ;--------------------------------------------------------
+                        	.area _CODE
+                        ;/Users/gubbish/sdcc/lib/__ltoa.c:48: void _ltoa(long value, char* string, unsigned char radix)
+                        ;	---------------------------------
+                        ; Function _ltoa
+                        ; ---------------------------------
+0887:                   __ltoa_start::
+0887:                   __ltoa:
+0887: DDE5     [15]     	push	ix
+0889: DD210000 [29]     	ld	ix,#0
+088D: DD39     [44]     	add	ix,sp
+                        ;/Users/gubbish/sdcc/lib/__ltoa.c:50: if (value < 0 && radix == 10) 
+088F: DDCB077E [64]     	bit	7, 7 (ix)
+0893: 2835     [71|76]  	jr	Z,00102$
+0895: DD7E0A   [90]     	ld	a,10 (ix)
+0898: D60A     [97]     	sub	a, #0x0A
+089A: 202E     [104|109]	jr	NZ,00102$
+                        ;/Users/gubbish/sdcc/lib/__ltoa.c:52: *string++ = '-';
+089C: DD6E08   [123]    	ld	l,8 (ix)
+089F: DD6609   [142]    	ld	h,9 (ix)
+08A2: 362D     [152]    	ld	(hl),#0x2D
+08A4: 23       [158]    	inc	hl
+08A5: DD7508   [177]    	ld	8 (ix),l
+08A8: DD7409   [196]    	ld	9 (ix),h
+                        ;/Users/gubbish/sdcc/lib/__ltoa.c:53: value = -value;
+08AB: AF       [200]    	xor	a, a
+08AC: DD9604   [219]    	sub	a, 4 (ix)
+08AF: DD7704   [238]    	ld	4 (ix),a
+08B2: 3E00     [245]    	ld	a, #0x00
+08B4: DD9E05   [264]    	sbc	a, 5 (ix)
+08B7: DD7705   [283]    	ld	5 (ix),a
+08BA: 3E00     [290]    	ld	a, #0x00
+08BC: DD9E06   [309]    	sbc	a, 6 (ix)
+08BF: DD7706   [328]    	ld	6 (ix),a
+08C2: 3E00     [335]    	ld	a, #0x00
+08C4: DD9E07   [354]    	sbc	a, 7 (ix)
+08C7: DD7707   [373]    	ld	7 (ix),a
+08CA:                   00102$:
+                        ;/Users/gubbish/sdcc/lib/__ltoa.c:55: _ultoa(value, string, radix);
+08CA: DD7E0A   [19]     	ld	a,10 (ix)
+08CD: F5       [30]     	push	af
+08CE: 33       [36]     	inc	sp
+08CF: DD6E08   [55]     	ld	l,8 (ix)
+08D2: DD6609   [74]     	ld	h,9 (ix)
+08D5: E5       [85]     	push	hl
+08D6: DD6E06   [104]    	ld	l,6 (ix)
+08D9: DD6607   [123]    	ld	h,7 (ix)
+08DC: E5       [134]    	push	hl
+08DD: DD6E04   [153]    	ld	l,4 (ix)
+08E0: DD6605   [172]    	ld	h,5 (ix)
+08E3: E5       [183]    	push	hl
+08E4: CDEF08   [200]    	call	__ultoa
+08E7: 210700   [210]    	ld	hl,#7
+08EA: 39       [221]    	add	hl,sp
+08EB: F9       [227]    	ld	sp,hl
+08EC: DDE1     [241]    	pop	ix
+08EE: C9       [251]    	ret
+08EF:                   __ltoa_end::
+                        	.area _CODE
+                        	.area _INITIALIZER
+                        	.area _CABS (ABS)
+                        #endlocal
+                        #include "/Users/gubbish/sdcc/lib/__ultoa.c"
+                        #local
+                        ;--------------------------------------------------------
+                        ; File Created by SDCC : free open source ANSI-C Compiler
+                        ; Version 3.4.1 #9090 (Nov 13 2014) (Mac OS X x86_64)
+                        ; This file was generated Fri Feb 17 01:35:19 2017
+                        ;--------------------------------------------------------
+                        	.module __ultoa
+                        	.optsdcc -mz80
+                        	
+                        ;--------------------------------------------------------
+                        ; Public variables in this module
+                        ;--------------------------------------------------------
+                        	.globl __ultoa
+                        ;--------------------------------------------------------
+                        ; special function registers
+                        ;--------------------------------------------------------
+                        ;--------------------------------------------------------
+                        ; ram data
+                        ;--------------------------------------------------------
+                        	.area _DATA
+                        ;--------------------------------------------------------
+                        ; ram data
+                        ;--------------------------------------------------------
+                        	.area _INITIALIZED
+                        ;--------------------------------------------------------
+                        ; absolute external ram data
+                        ;--------------------------------------------------------
+                        	.area _DABS (ABS)
+                        ;--------------------------------------------------------
+                        ; global & static initialisations
+                        ;--------------------------------------------------------
+                        	.area _HOME
+                        	.area _GSINIT
+                        	.area _GSFINAL
+                        	.area _GSINIT
+                        ;--------------------------------------------------------
+                        ; Home
+                        ;--------------------------------------------------------
+                        	.area _HOME
+                        	.area _HOME
+                        ;--------------------------------------------------------
+                        ; code
+                        ;--------------------------------------------------------
+                        	.area _CODE
+                        ;/Users/gubbish/sdcc/lib/__ultoa.c:48: void _ultoa(unsigned long value, char* string, unsigned char radix)
+                        ;	---------------------------------
+                        ; Function _ultoa
+                        ; ---------------------------------
+08EF:                   __ultoa_start::
+08EF:                   __ultoa:
+08EF: DDE5     [15]     	push	ix
+08F1: DD210000 [29]     	ld	ix,#0
+08F5: DD39     [44]     	add	ix,sp
+08F7: 21DBFF   [54]     	ld	hl,#-37
+08FA: 39       [65]     	add	hl,sp
+08FB: F9       [71]     	ld	sp,hl
+                        ;/Users/gubbish/sdcc/lib/__ultoa.c:53: do 
+08FC: 210100   [81]     	ld	hl,#0x0001
+08FF: 39       [92]     	add	hl,sp
+0900: 4D       [96]     	ld	c,l
+0901: 44       [100]    	ld	b,h
+0902: DD36DB20 [119]    	ld	-37 (ix),#0x20
+0906:                   00103$:
+                        ;/Users/gubbish/sdcc/lib/__ultoa.c:55: unsigned char c = '0' + (value % radix);
+0906: DD7E0A   [19]     	ld	a,10 (ix)
+0909: DD77FC   [38]     	ld	-4 (ix),a
+090C: DD36FD00 [57]     	ld	-3 (ix),#0x00
+0910: DD36FE00 [76]     	ld	-2 (ix),#0x00
+0914: DD36FF00 [95]     	ld	-1 (ix),#0x00
+0918: C5       [106]    	push	bc
+0919: DD6EFE   [125]    	ld	l,-2 (ix)
+091C: DD66FF   [144]    	ld	h,-1 (ix)
+091F: E5       [155]    	push	hl
+0920: DD6EFC   [174]    	ld	l,-4 (ix)
+0923: DD66FD   [193]    	ld	h,-3 (ix)
+0926: E5       [204]    	push	hl
+0927: DD6E06   [223]    	ld	l,6 (ix)
+092A: DD6607   [242]    	ld	h,7 (ix)
+092D: E5       [253]    	push	hl
+092E: DD6E04   [272]    	ld	l,4 (ix)
+0931: DD6605   [291]    	ld	h,5 (ix)
+0934: E5       [302]    	push	hl
+0935: CD2B05   [319]    	call	__modulong
+0938: F1       [329]    	pop	af
+0939: F1       [339]    	pop	af
+093A: F1       [349]    	pop	af
+093B: F1       [359]    	pop	af
+093C: C1       [369]    	pop	bc
+093D: 7D       [373]    	ld	a,l
+093E: C630     [380]    	add	a, #0x30
+0940: 57       [384]    	ld	d,a
+                        ;/Users/gubbish/sdcc/lib/__ultoa.c:56: if (c > (unsigned char)'9')
+0941: 3E39     [391]    	ld	a,#0x39
+0943: 92       [395]    	sub	a, d
+0944: 3004     [402|407]	jr	NC,00102$
+                        ;/Users/gubbish/sdcc/lib/__ultoa.c:57: c += 'A' - '9' - 1;
+0946: 7A       [406]    	ld	a,d
+0947: C607     [413]    	add	a, #0x07
+0949: 57       [417]    	ld	d,a
+094A:                   00102$:
+                        ;/Users/gubbish/sdcc/lib/__ultoa.c:58: buffer[--index] = c;
+094A: DD35DB   [23]     	dec	-37 (ix)
+094D: DD6EDB   [42]     	ld	l,-37 (ix)
+0950: 2600     [49]     	ld	h,#0x00
+0952: 09       [60]     	add	hl,bc
+0953: 72       [67]     	ld	(hl),d
+                        ;/Users/gubbish/sdcc/lib/__ultoa.c:59: value /= radix;
+0954: C5       [78]     	push	bc
+0955: DD6EFE   [97]     	ld	l,-2 (ix)
+0958: DD66FF   [116]    	ld	h,-1 (ix)
+095B: E5       [127]    	push	hl
+095C: DD6EFC   [146]    	ld	l,-4 (ix)
+095F: DD66FD   [165]    	ld	h,-3 (ix)
+0962: E5       [176]    	push	hl
+0963: DD6E06   [195]    	ld	l,6 (ix)
+0966: DD6607   [214]    	ld	h,7 (ix)
+0969: E5       [225]    	push	hl
+096A: DD6E04   [244]    	ld	l,4 (ix)
+096D: DD6605   [263]    	ld	h,5 (ix)
+0970: E5       [274]    	push	hl
+0971: CDE805   [291]    	call	__divulong
+0974: F1       [301]    	pop	af
+0975: F1       [311]    	pop	af
+0976: F1       [321]    	pop	af
+0977: F1       [331]    	pop	af
+0978: C1       [341]    	pop	bc
+0979: DD7504   [360]    	ld	4 (ix),l
+097C: DD7405   [379]    	ld	5 (ix),h
+097F: DD7306   [398]    	ld	6 (ix),e
+                        ;/Users/gubbish/sdcc/lib/__ultoa.c:61: while (value);
+0982: DD7207   [417]    	ld	7 (ix), d
+0985: 7A       [421]    	ld	a, d
+0986: DDB606   [440]    	or	a, 6 (ix)
+0989: DDB605   [459]    	or	a, 5 (ix)
+098C: DDB604   [478]    	or	a,4 (ix)
+098F: C20609   [488|488]	jp	NZ,00103$
+                        ;/Users/gubbish/sdcc/lib/__ultoa.c:63: do 
+0992: DD5E08   [507]    	ld	e,8 (ix)
+0995: DD5609   [526]    	ld	d,9 (ix)
+0998: D5       [537]    	push	de
+0999: FDE1     [551]    	pop	iy
+099B: DD56DB   [570]    	ld	d,-37 (ix)
+099E:                   00106$:
+                        ;/Users/gubbish/sdcc/lib/__ultoa.c:65: *string++ = buffer[index];
+099E: 6A       [ 4]     	ld	l,d
+099F: 2600     [11]     	ld	h,#0x00
+09A1: 09       [22]     	add	hl,bc
+09A2: 7E       [29]     	ld	a,(hl)
+09A3: FD7700   [48]     	ld	0 (iy), a
+09A6: FD23     [58]     	inc	iy
+                        ;/Users/gubbish/sdcc/lib/__ultoa.c:67: while ( ++index != NUMBER_OF_DIGITS );
+09A8: 14       [62]     	inc	d
+09A9: 7A       [66]     	ld	a,d
+09AA: D620     [73]     	sub	a, #0x20
+09AC: 20F0     [80|85]  	jr	NZ,00106$
+                        ;/Users/gubbish/sdcc/lib/__ultoa.c:69: *string = 0;  /* string terminator */
+09AE: FD360000 [99]     	ld	0 (iy), #0x00
+09B2: DDF9     [109]    	ld	sp, ix
+09B4: DDE1     [123]    	pop	ix
+09B6: C9       [133]    	ret
+09B7:                   __ultoa_end::
+                        	.area _CODE
+                        	.area _INITIALIZER
+                        	.area _CABS (ABS)
+                        #endlocal
+                        #include "/Users/gubbish/sdcc/lib/__modulong.c"
+                        #local
+                        ;--------------------------------------------------------
+                        ; File Created by SDCC : free open source ANSI-C Compiler
+                        ; Version 3.4.1 #9090 (Nov 13 2014) (Mac OS X x86_64)
+                        ; This file was generated Fri Feb 17 01:35:19 2017
+                        ;--------------------------------------------------------
+                        	.module __modulong
+                        	.optsdcc -mz80
+                        	
+                        ;--------------------------------------------------------
+                        ; Public variables in this module
+                        ;--------------------------------------------------------
+                        	.globl __modulong
+                        ;--------------------------------------------------------
+                        ; special function registers
+                        ;--------------------------------------------------------
+                        ;--------------------------------------------------------
+                        ; ram data
+                        ;--------------------------------------------------------
+                        	.area _DATA
+                        ;--------------------------------------------------------
+                        ; ram data
+                        ;--------------------------------------------------------
+                        	.area _INITIALIZED
+                        ;--------------------------------------------------------
+                        ; absolute external ram data
+                        ;--------------------------------------------------------
+                        	.area _DABS (ABS)
+                        ;--------------------------------------------------------
+                        ; global & static initialisations
+                        ;--------------------------------------------------------
+                        	.area _HOME
+                        	.area _GSINIT
+                        	.area _GSFINAL
+                        	.area _GSINIT
+                        ;--------------------------------------------------------
+                        ; Home
+                        ;--------------------------------------------------------
+                        	.area _HOME
+                        ;/Users/gubbish/sdcc/lib/__modulong.c:36: unsigned long _modulong (unsigned long a, unsigned long b)
+                        ;	---------------------------------
+                        ; Function _modulong
+                        ; ---------------------------------
+052B:                   __modulong_start::
+052B:                   __modulong:
+052B: DDE5     [15]     	push	ix
+052D: DD210000 [29]     	ld	ix,#0
+0531: DD39     [44]     	add	ix,sp
+                        ;/Users/gubbish/sdcc/lib/__modulong.c:38: unsigned char count = 0;
+                        ;/Users/gubbish/sdcc/lib/__modulong.c:40: while (!MSB_SET(b))
+0533: 110000   [54]     	ld	de,#0x0000
+0536:                   00103$:
+0536: DD7E0B   [19]     	ld	a,11 (ix)
+0539: CB07     [27]     	rlc	a
+053B: E601     [34]     	and	a,#0x01
+053D: 2044     [41|46]  	jr	NZ,00117$
+                        ;/Users/gubbish/sdcc/lib/__modulong.c:42: b <<= 1;
+053F: F5       [52]     	push	af
+0540: F1       [62]     	pop	af
+0541: DDCB0826 [85]     	sla	8 (ix)
+0545: DDCB0916 [108]    	rl	9 (ix)
+0549: DDCB0A16 [131]    	rl	10 (ix)
+054D: DDCB0B16 [154]    	rl	11 (ix)
+                        ;/Users/gubbish/sdcc/lib/__modulong.c:43: if (b > a)
+0551: DD7E04   [173]    	ld	a,4 (ix)
+0554: DD9608   [192]    	sub	a, 8 (ix)
+0557: DD7E05   [211]    	ld	a,5 (ix)
+055A: DD9E09   [230]    	sbc	a, 9 (ix)
+055D: DD7E06   [249]    	ld	a,6 (ix)
+0560: DD9E0A   [268]    	sbc	a, 10 (ix)
+0563: DD7E07   [287]    	ld	a,7 (ix)
+0566: DD9E0B   [306]    	sbc	a, 11 (ix)
+0569: 3014     [313|318]	jr	NC,00102$
+                        ;/Users/gubbish/sdcc/lib/__modulong.c:45: b >>=1;
+056B: F5       [324]    	push	af
+056C: F1       [334]    	pop	af
+056D: DDCB0B3E [357]    	srl	11 (ix)
+0571: DDCB0A1E [380]    	rr	10 (ix)
+0575: DDCB091E [403]    	rr	9 (ix)
+0579: DDCB081E [426]    	rr	8 (ix)
+                        ;/Users/gubbish/sdcc/lib/__modulong.c:46: break;
+057D: 1804     [438]    	jr	00117$
+057F:                   00102$:
+                        ;/Users/gubbish/sdcc/lib/__modulong.c:48: count++;
+057F: 1C       [ 4]     	inc	e
+0580: 53       [ 8]     	ld	d,e
+0581: 18B3     [20]     	jr	00103$
+                        ;/Users/gubbish/sdcc/lib/__modulong.c:51: do
+0583:                   00117$:
+0583:                   00108$:
+                        ;/Users/gubbish/sdcc/lib/__modulong.c:53: if (a >= b)
+0583: DD7E04   [19]     	ld	a,4 (ix)
+0586: DD9608   [38]     	sub	a, 8 (ix)
+0589: DD7E05   [57]     	ld	a,5 (ix)
+058C: DD9E09   [76]     	sbc	a, 9 (ix)
+058F: DD7E06   [95]     	ld	a,6 (ix)
+0592: DD9E0A   [114]    	sbc	a, 10 (ix)
+0595: DD7E07   [133]    	ld	a,7 (ix)
+0598: DD9E0B   [152]    	sbc	a, 11 (ix)
+059B: 3824     [159|164]	jr	C,00107$
+                        ;/Users/gubbish/sdcc/lib/__modulong.c:54: a -= b;
+059D: DD7E04   [178]    	ld	a,4 (ix)
+05A0: DD9608   [197]    	sub	a, 8 (ix)
+05A3: DD7704   [216]    	ld	4 (ix),a
+05A6: DD7E05   [235]    	ld	a,5 (ix)
+05A9: DD9E09   [254]    	sbc	a, 9 (ix)
+05AC: DD7705   [273]    	ld	5 (ix),a
+05AF: DD7E06   [292]    	ld	a,6 (ix)
+05B2: DD9E0A   [311]    	sbc	a, 10 (ix)
+05B5: DD7706   [330]    	ld	6 (ix),a
+05B8: DD7E07   [349]    	ld	a,7 (ix)
+05BB: DD9E0B   [368]    	sbc	a, 11 (ix)
+05BE: DD7707   [387]    	ld	7 (ix),a
+05C1:                   00107$:
+                        ;/Users/gubbish/sdcc/lib/__modulong.c:55: b >>= 1;
+05C1: F5       [11]     	push	af
+05C2: F1       [21]     	pop	af
+05C3: DDCB0B3E [44]     	srl	11 (ix)
+05C7: DDCB0A1E [67]     	rr	10 (ix)
+05CB: DDCB091E [90]     	rr	9 (ix)
+05CF: DDCB081E [113]    	rr	8 (ix)
+                        ;/Users/gubbish/sdcc/lib/__modulong.c:57: while (count--);
+05D3: 62       [117]    	ld	h,d
+05D4: 15       [121]    	dec	d
+05D5: 7C       [125]    	ld	a,h
+05D6: B7       [129]    	or	a, a
+05D7: 20AA     [136|141]	jr	NZ,00108$
+                        ;/Users/gubbish/sdcc/lib/__modulong.c:59: return a;
+05D9: DD6E04   [155]    	ld	l,4 (ix)
+05DC: DD6605   [174]    	ld	h,5 (ix)
+05DF: DD5E06   [193]    	ld	e,6 (ix)
+05E2: DD5607   [212]    	ld	d,7 (ix)
+05E5: DDE1     [226]    	pop	ix
+05E7: C9       [236]    	ret
+05E8:                   __modulong_end::
+                        	.area _HOME
+                        ;--------------------------------------------------------
+                        ; code
+                        ;--------------------------------------------------------
+                        	.area _CODE
+                        	.area _CODE
+                        	.area _INITIALIZER
+                        	.area _CABS (ABS)
+                        #endlocal
+                        #include "/Users/gubbish/sdcc/lib/__divulong.c"
+                        #local
+                        ;--------------------------------------------------------
+                        ; File Created by SDCC : free open source ANSI-C Compiler
+                        ; Version 3.4.1 #9090 (Nov 13 2014) (Mac OS X x86_64)
+                        ; This file was generated Fri Feb 17 01:35:19 2017
+                        ;--------------------------------------------------------
+                        	.module __divulong
+                        	.optsdcc -mz80
+                        	
+                        ;--------------------------------------------------------
+                        ; Public variables in this module
+                        ;--------------------------------------------------------
+                        	.globl __divulong
+                        ;--------------------------------------------------------
+                        ; special function registers
+                        ;--------------------------------------------------------
+                        ;--------------------------------------------------------
+                        ; ram data
+                        ;--------------------------------------------------------
+                        	.area _DATA
+                        ;--------------------------------------------------------
+                        ; ram data
+                        ;--------------------------------------------------------
+                        	.area _INITIALIZED
+                        ;--------------------------------------------------------
+                        ; absolute external ram data
+                        ;--------------------------------------------------------
+                        	.area _DABS (ABS)
+                        ;--------------------------------------------------------
+                        ; global & static initialisations
+                        ;--------------------------------------------------------
+                        	.area _HOME
+                        	.area _GSINIT
+                        	.area _GSFINAL
+                        	.area _GSINIT
+                        ;--------------------------------------------------------
+                        ; Home
+                        ;--------------------------------------------------------
+                        	.area _HOME
+                        ;/Users/gubbish/sdcc/lib/__divulong.c:41: unsigned long _divulong (unsigned long x, unsigned long y)
+                        ;	---------------------------------
+                        ; Function _divulong
+                        ; ---------------------------------
+05E8:                   __divulong_start::
+05E8:                   __divulong:
+05E8: DDE5     [15]     	push	ix
+05EA: DD210000 [29]     	ld	ix,#0
+05EE: DD39     [44]     	add	ix,sp
+05F0: 3B       [50]     	dec	sp
+                        ;/Users/gubbish/sdcc/lib/__divulong.c:43: unsigned long reste = 0L;
+05F1: 010000   [60]     	ld	bc,#0x0000
+05F4: 110000   [70]     	ld	de,#0x0000
+                        ;/Users/gubbish/sdcc/lib/__divulong.c:44: unsigned char count = 32;
+05F7: DD36FF20 [89]     	ld	-1 (ix),#0x20
+                        ;/Users/gubbish/sdcc/lib/__divulong.c:47: do
+05FB:                   00105$:
+                        ;/Users/gubbish/sdcc/lib/__divulong.c:50: c = MSB_SET(x);
+05FB: DD7E07   [19]     	ld	a,7 (ix)
+05FE: CB07     [27]     	rlc	a
+0600: E601     [34]     	and	a,#0x01
+0602: 67       [38]     	ld	h,a
+                        ;/Users/gubbish/sdcc/lib/__divulong.c:51: x <<= 1;
+0603: F5       [49]     	push	af
+0604: F1       [59]     	pop	af
+0605: DDCB0426 [82]     	sla	4 (ix)
+0609: DDCB0516 [105]    	rl	5 (ix)
+060D: DDCB0616 [128]    	rl	6 (ix)
+0611: DDCB0716 [151]    	rl	7 (ix)
+                        ;/Users/gubbish/sdcc/lib/__divulong.c:52: reste <<= 1;
+0615: CB20     [159]    	sla	b
+0617: CB11     [167]    	rl	c
+0619: CB13     [175]    	rl	e
+061B: CB12     [183]    	rl	d
+                        ;/Users/gubbish/sdcc/lib/__divulong.c:53: if (c)
+061D: 7C       [187]    	ld	a,h
+061E: B7       [191]    	or	a, a
+061F: 2802     [198|203]	jr	Z,00102$
+                        ;/Users/gubbish/sdcc/lib/__divulong.c:54: reste |= 1L;
+0621: CBC0     [206]    	set	0, b
+0623:                   00102$:
+                        ;/Users/gubbish/sdcc/lib/__divulong.c:56: if (reste >= y)
+0623: 78       [ 4]     	ld	a,b
+0624: DD9608   [23]     	sub	a, 8 (ix)
+0627: 79       [27]     	ld	a,c
+0628: DD9E09   [46]     	sbc	a, 9 (ix)
+062B: 7B       [50]     	ld	a,e
+062C: DD9E0A   [69]     	sbc	a, 10 (ix)
+062F: 7A       [73]     	ld	a,d
+0630: DD9E0B   [92]     	sbc	a, 11 (ix)
+0633: 3818     [99|104] 	jr	C,00106$
+                        ;/Users/gubbish/sdcc/lib/__divulong.c:58: reste -= y;
+0635: 78       [103]    	ld	a,b
+0636: DD9608   [122]    	sub	a, 8 (ix)
+0639: 47       [126]    	ld	b,a
+063A: 79       [130]    	ld	a,c
+063B: DD9E09   [149]    	sbc	a, 9 (ix)
+063E: 4F       [153]    	ld	c,a
+063F: 7B       [157]    	ld	a,e
+0640: DD9E0A   [176]    	sbc	a, 10 (ix)
+0643: 5F       [180]    	ld	e,a
+0644: 7A       [184]    	ld	a,d
+0645: DD9E0B   [203]    	sbc	a, 11 (ix)
+0648: 57       [207]    	ld	d,a
+                        ;/Users/gubbish/sdcc/lib/__divulong.c:60: x |= 1L;
+0649: DDCB04C6 [230]    	set	0, 4 (ix)
+064D:                   00106$:
+                        ;/Users/gubbish/sdcc/lib/__divulong.c:63: while (--count);
+064D: DD7EFF   [19]     	ld	a,-1 (ix)
+0650: C6FF     [26]     	add	a,#0xFF
+0652: DD77FF   [45]     	ld	-1 (ix),a
+0655: B7       [49]     	or	a, a
+0656: 20A3     [56|61]  	jr	NZ,00105$
+                        ;/Users/gubbish/sdcc/lib/__divulong.c:64: return x;
+0658: DD6E04   [75]     	ld	l,4 (ix)
+065B: DD6605   [94]     	ld	h,5 (ix)
+065E: DD5E06   [113]    	ld	e,6 (ix)
+0661: DD5607   [132]    	ld	d,7 (ix)
+0664: 33       [138]    	inc	sp
+0665: DDE1     [152]    	pop	ix
+0667: C9       [162]    	ret
+0668:                   __divulong_end::
+                        	.area _HOME
+                        ;--------------------------------------------------------
+                        ; code
+                        ;--------------------------------------------------------
+                        	.area _CODE
+                        	.area _CODE
+                        	.area _INITIALIZER
+                        	.area _CABS (ABS)
+                        #endlocal
+                        #include "dgprog.c"
+                        #local
+                        ;--------------------------------------------------------
+                        ; File Created by SDCC : free open source ANSI-C Compiler
+                        ; Version 3.4.1 #9090 (Nov 13 2014) (Mac OS X x86_64)
+                        ; This file was generated Fri Feb 17 01:35:20 2017
+                        ;--------------------------------------------------------
+                        	.module dgprog
+                        	.optsdcc -mz80
+                        	
+                        ;--------------------------------------------------------
+                        ; Public variables in this module
+                        ;--------------------------------------------------------
+                        	.globl _main
+                        	.globl _enableReset
+                        	.globl _drawToScreen
+                        	.globl _delay
+                        	.globl _readString
+                        	.globl _readchar_blocking
+                        	.globl _readchar
+                        	.globl _print
+                        	.globl _clear
+                        	.globl _printf_small
+                        	.globl _newline
+                        	.globl _printchar
+                        ;--------------------------------------------------------
+                        ; special function registers
+                        ;--------------------------------------------------------
+                        ;--------------------------------------------------------
+                        ; ram data
+                        ;--------------------------------------------------------
+                        	.area _DATA
+                        ;--------------------------------------------------------
+                        ; ram data
+                        ;--------------------------------------------------------
+                        	.area _INITIALIZED
+                        ;--------------------------------------------------------
+                        ; absolute external ram data
+                        ;--------------------------------------------------------
+                        	.area _DABS (ABS)
+                        ;--------------------------------------------------------
+                        ; global & static initialisations
+                        ;--------------------------------------------------------
+                        	.area _HOME
+                        	.area _GSINIT
+                        	.area _GSFINAL
+                        	.area _GSINIT
+                        ;--------------------------------------------------------
+                        ; Home
+                        ;--------------------------------------------------------
+                        	.area _HOME
+                        	.area _HOME
+                        ;--------------------------------------------------------
+                        ; code
+                        ;--------------------------------------------------------
+                        	.area _CODE
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:12: void clear()
+                        ;	---------------------------------
+                        ; Function clear
+                        ; ---------------------------------
+09B7:                   _clear_start::
+09B7:                   _clear:
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:17: __endasm;
+09B7: CDE600   [17]     	call #0x00E6
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:21: *lctr = 0;
+09BA: 214001   [27]     	ld	hl,#0x0140
+09BD: 3600     [37]     	ld	(hl),#0x00
+09BF: C9       [47]     	ret
+09C0:                   _clear_end::
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:24: void print(unsigned char* str)
+                        ;	---------------------------------
+                        ; Function print
+                        ; ---------------------------------
+09C0:                   _print_start::
+09C0:                   _print:
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:48: __endasm;
+09C0:                   	    loadstack:
+09C0: C1       [10]     	pop bc
+09C1: E1       [20]     	pop hl
+09C2: E5       [31]     	push hl
+09C3: C5       [42]     	push bc
+09C4: 3A4001   [55]     	ld a, (#0x0140)
+09C7: 47       [59]     	ld b, a
+09C8:                   	    printchar:
+09C8: 7E       [ 7]     	ld a,(hl)
+09C9: FE00     [14]     	cp a, #0x00
+09CB: CAD809   [24|24]  	jp z,done
+09CE: CBFF     [32]     	set 7, a
+09D0: CDFA00   [49]     	call #0x00FA
+09D3: 23       [55]     	inc hl
+09D4: 04       [59]     	inc b
+09D5: C3C809   [69]     	jp printchar
+09D8:                   	    done:
+09D8: 78       [ 4]     	ld a, b
+09D9: E63F     [11]     	and a, #0x3F ; mod 64
+09DB: 324001   [24]     	ld (#0x0140), a ; store line counter value
+09DE: C9       [34]     	ret
+09DF:                   _print_end::
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:51: unsigned char readchar()
+                        ;	---------------------------------
+                        ; Function readchar
+                        ; ---------------------------------
+09DF:                   _readchar_start::
+09DF:                   _readchar:
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:58: __endasm;
+09DF: DB00     [11]     	in a, ($00)
+09E1: 325101   [24]     	ld (#0x0151), a
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:60: if ((*temp & 0x80) == 0)
+09E4: 215101   [34]     	ld	hl,#0x0151
+09E7: 6E       [41]     	ld	l,(hl)
+09E8: CB7D     [49]     	bit	7, l
+09EA: C0       [54|60]  	ret	NZ
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:62: return 0;
+09EB: 2E00     [61]     	ld	l,#0x00
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:66: return *temp;
+09ED: C9       [71]     	ret
+09EE:                   _readchar_end::
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:69: unsigned char readchar_blocking()
+                        ;	---------------------------------
+                        ; Function readchar_blocking
+                        ; ---------------------------------
+09EE:                   _readchar_blocking_start::
+09EE:                   _readchar_blocking:
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:73: ch = 0;
+09EE: 2E00     [ 7]     	ld	l,#0x00
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:74: while (ch == 0)
+09F0:                   00101$:
+09F0: 7D       [ 4]     	ld	a,l
+09F1: B7       [ 8]     	or	a, a
+09F2: 2005     [15|20]  	jr	NZ,00103$
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:76: ch = readchar();
+09F4: CDDF09   [32]     	call	_readchar
+09F7: 18F7     [44]     	jr	00101$
+09F9:                   00103$:
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:79: ret = ch & 0x7F;
+09F9: 55       [ 4]     	ld	d,l
+09FA: CBBA     [12]     	res	7, d
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:81: while (ch != 0)
+09FC:                   00104$:
+09FC: 7D       [ 4]     	ld	a,l
+09FD: B7       [ 8]     	or	a, a
+09FE: 2807     [15|20]  	jr	Z,00106$
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:83: ch = readchar();
+0A00: D5       [26]     	push	de
+0A01: CDDF09   [43]     	call	_readchar
+0A04: D1       [53]     	pop	de
+0A05: 18F5     [65]     	jr	00104$
+0A07:                   00106$:
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:86: return ret;
+0A07: 6A       [ 4]     	ld	l,d
+0A08: C9       [14]     	ret
+0A09:                   _readchar_blocking_end::
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:91: void readString(unsigned char* str)
+                        ;	---------------------------------
+                        ; Function readString
+                        ; ---------------------------------
+0A09:                   _readString_start::
+0A09:                   _readString:
+0A09: DDE5     [15]     	push	ix
+0A0B: DD210000 [29]     	ld	ix,#0
+0A0F: DD39     [44]     	add	ix,sp
+0A11: F5       [55]     	push	af
+0A12: F5       [66]     	push	af
+0A13: 3B       [72]     	dec	sp
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:95: cc[1] = 0;
+0A14: 210100   [82]     	ld	hl,#0x0001
+0A17: 39       [93]     	add	hl,sp
+0A18: 4D       [97]     	ld	c,l
+0A19: 44       [101]    	ld	b,h
+0A1A: 23       [107]    	inc	hl
+0A1B: 3600     [117]    	ld	(hl),#0x00
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:96: ch = readchar_blocking();
+0A1D: C5       [128]    	push	bc
+0A1E: CDEE09   [145]    	call	_readchar_blocking
+0A21: C1       [155]    	pop	bc
+0A22: DD75FB   [174]    	ld	-5 (ix),l
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:97: while (ch != 13)
+0A25: DD71FE   [193]    	ld	-2 (ix),c
+0A28: DD70FF   [212]    	ld	-1 (ix),b
+0A2B: DD5E04   [231]    	ld	e,4 (ix)
+0A2E: DD5605   [250]    	ld	d,5 (ix)
+0A31:                   00101$:
+0A31: DD7EFB   [19]     	ld	a,-5 (ix)
+0A34: D60D     [26]     	sub	a, #0x0D
+0A36: 2826     [33|38]  	jr	Z,00103$
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:99: *str = ch;
+0A38: DD7EFB   [52]     	ld	a,-5 (ix)
+0A3B: 12       [59]     	ld	(de),a
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:100: str++;
+0A3C: 13       [65]     	inc	de
+0A3D: DD7304   [84]     	ld	4 (ix),e
+0A40: DD7205   [103]    	ld	5 (ix),d
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:103: cc[0] = ch;
+0A43: DD7EFB   [122]    	ld	a,-5 (ix)
+0A46: 02       [129]    	ld	(bc),a
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:104: print(cc);
+0A47: DD6EFE   [148]    	ld	l,-2 (ix)
+0A4A: DD66FF   [167]    	ld	h,-1 (ix)
+0A4D: C5       [178]    	push	bc
+0A4E: D5       [189]    	push	de
+0A4F: E5       [200]    	push	hl
+0A50: CDC009   [217]    	call	_print
+0A53: F1       [227]    	pop	af
+0A54: CDEE09   [244]    	call	_readchar_blocking
+0A57: D1       [254]    	pop	de
+0A58: C1       [264]    	pop	bc
+0A59: DD75FB   [283]    	ld	-5 (ix),l
+0A5C: 18D3     [295]    	jr	00101$
+0A5E:                   00103$:
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:108: *str = 0;
+0A5E: AF       [ 4]     	xor	a, a
+0A5F: 12       [11]     	ld	(de),a
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:109: newline();
+0A60: CD680A   [28]     	call	_newline
+0A63: DDF9     [38]     	ld	sp, ix
+0A65: DDE1     [52]     	pop	ix
+0A67: C9       [62]     	ret
+0A68:                   _readString_end::
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:112: void newline()
+                        ;	---------------------------------
+                        ; Function newline
+                        ; ---------------------------------
+0A68:                   _newline_start::
+0A68:                   _newline:
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:119: sp = 64 - *lctr;
+0A68: 214001   [10]     	ld	hl,#0x0140
+0A6B: 66       [17]     	ld	h,(hl)
+0A6C: 3E40     [24]     	ld	a,#0x40
+0A6E: 94       [28]     	sub	a, h
+0A6F: 57       [32]     	ld	d,a
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:120: for (c = 0; c < sp; c++)
+0A70: 1E00     [39]     	ld	e,#0x00
+0A72:                   00103$:
+0A72: 7B       [ 4]     	ld	a,e
+0A73: 92       [ 8]     	sub	a, d
+0A74: 300D     [15|20]  	jr	NC,00101$
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:122: print(" ");
+0A76: 21890A   [25]     	ld	hl,#___str_0
+0A79: D5       [36]     	push	de
+0A7A: E5       [47]     	push	hl
+0A7B: CDC009   [64]     	call	_print
+0A7E: F1       [74]     	pop	af
+0A7F: D1       [84]     	pop	de
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:120: for (c = 0; c < sp; c++)
+0A80: 1C       [88]     	inc	e
+0A81: 18EF     [100]    	jr	00103$
+0A83:                   00101$:
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:124: *lctr = 0;
+0A83: 214001   [10]     	ld	hl,#0x0140
+0A86: 3600     [20]     	ld	(hl),#0x00
+0A88: C9       [30]     	ret
+0A89:                   _newline_end::
+0A89:                   ___str_0:
+0A89: 20                	.ascii " "
+0A8A: 00                	.db 0x00
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:127: void printchar(unsigned char c)
+                        ;	---------------------------------
+                        ; Function printchar
+                        ; ---------------------------------
+0A8B:                   _printchar_start::
+0A8B:                   _printchar:
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:141: __endasm;
+0A8B: FD210200 [14]     	ld iy,#2
+0A8F: FD39     [29]     	add iy,sp
+0A91: FD7E00   [48]     	ld a,0 (iy)
+0A94: CDFA00   [65]     	call #0x00FA
+0A97: 3A4001   [78]     	ld a, (#0x0140)
+0A9A: 3C       [82]     	inc a
+0A9B: E63F     [89]     	and a, #0x3F ; mod 64
+0A9D: 324001   [102]    	ld (#0x0140), a ; store line counter value
+0AA0: C9       [112]    	ret
+0AA1:                   _printchar_end::
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:144: void delay(int count)
+                        ;	---------------------------------
+                        ; Function delay
+                        ; ---------------------------------
+0AA1:                   _delay_start::
+0AA1:                   _delay:
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:147: for (i = 0; i < count; i++)
+0AA1: 110000   [10]     	ld	de,#0x0000
+0AA4:                   00103$:
+0AA4: 210200   [10]     	ld	hl,#2
+0AA7: 39       [21]     	add	hl,sp
+0AA8: 7B       [25]     	ld	a,e
+0AA9: 96       [32]     	sub	a, (hl)
+0AAA: 7A       [36]     	ld	a,d
+0AAB: 23       [42]     	inc	hl
+0AAC: 9E       [49]     	sbc	a, (hl)
+0AAD: E2B20A   [59|59]  	jp	PO, 00116$
+0AB0: EE80     [66]     	xor	a, #0x80
+0AB2:                   00116$:
+0AB2: F0       [ 5|11]  	ret	P
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:151: __endasm;
+0AB3: 00       [ 9]     	nop
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:147: for (i = 0; i < count; i++)
+0AB4: 13       [15]     	inc	de
+0AB5: 18ED     [27]     	jr	00103$
+0AB7: C9       [37]     	ret
+0AB8:                   _delay_end::
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:155: void drawToScreen(unsigned char* scrbuf)
+                        ;	---------------------------------
+                        ; Function drawToScreen
+                        ; ---------------------------------
+0AB8:                   _drawToScreen_start::
+0AB8:                   _drawToScreen:
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:158: print(scrbuf);
+0AB8: C1       [10]     	pop	bc
+0AB9: E1       [20]     	pop	hl
+0ABA: E5       [31]     	push	hl
+0ABB: C5       [42]     	push	bc
+0ABC: E5       [53]     	push	hl
+0ABD: CDC009   [70]     	call	_print
+0AC0: F1       [80]     	pop	af
+0AC1: C9       [90]     	ret
+0AC2:                   _drawToScreen_end::
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:161: void enableReset()
+                        ;	---------------------------------
+                        ; Function enableReset
+                        ; ---------------------------------
+0AC2:                   _enableReset_start::
+0AC2:                   _enableReset:
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:166: *marker = 0;
+0AC2: 210001   [10]     	ld	hl,#0x0100
+0AC5: 3600     [20]     	ld	(hl),#0x00
+0AC7: C9       [30]     	ret
+0AC8:                   _enableReset_end::
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:241: void main()
+                        ;	---------------------------------
+                        ; Function main
+                        ; ---------------------------------
+0AC8:                   _main_start::
+0AC8:                   _main:
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:245: enableReset();
+0AC8: CDC20A   [17]     	call	_enableReset
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:247: clear();
+0ACB: CDB709   [34]     	call	_clear
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:251: for (x = 0; x < 10; x++)
+0ACE: 210000   [44]     	ld	hl,#0x0000
+0AD1:                   00102$:
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:253: printf_small("Hello! %d", x);
+0AD1: 11ED0A   [10]     	ld	de,#___str_1
+0AD4: E5       [21]     	push	hl
+0AD5: E5       [32]     	push	hl
+0AD6: D5       [43]     	push	de
+0AD7: CD6806   [60]     	call	_printf_small
+0ADA: F1       [70]     	pop	af
+0ADB: F1       [80]     	pop	af
+0ADC: CD680A   [97]     	call	_newline
+0ADF: E1       [107]    	pop	hl
+                        ;/Users/gubbish/bitfixer/bitfixer/dg/dgprogram/dgprog.c:251: for (x = 0; x < 10; x++)
+0AE0: 23       [113]    	inc	hl
+0AE1: 7D       [117]    	ld	a,l
+0AE2: D60A     [124]    	sub	a, #0x0A
+0AE4: 7C       [128]    	ld	a,h
+0AE5: 17       [132]    	rla
+0AE6: 3F       [136]    	ccf
+0AE7: 1F       [140]    	rra
+0AE8: DE80     [147]    	sbc	a, #0x80
+0AEA: 38E5     [154|159]	jr	C,00102$
+0AEC: C9       [164]    	ret
+0AED:                   _main_end::
+0AED:                   ___str_1:
+0AED: 48656C6C          	.ascii "Hello! %d"
+0AF1: 6F212025          
+0AF5: 64                
+0AF6: 00                	.db 0x00
+                        	.area _CODE
+                        	.area _INITIALIZER
+                        	.area _CABS (ABS)
+                        #endlocal
+                        ;#include "/Users/gubbish/sdcc/lib/_sqrtf.c"
+                        ;#include "/Users/gubbish/sdcc/lib/___fseq.c"
+                        ;#include "/Users/gubbish/sdcc/lib/___fslt.c"
+                        ;#include "/Users/gubbish/sdcc/lib/_errno.c"
+                        ;#include "/Users/gubbish/sdcc/lib/_frexpf.c"
+                        ;#include "/Users/gubbish/sdcc/lib/___fsmul.c"
+                        ;#include "/Users/gubbish/sdcc/lib/___fsadd.c"
+                        ;#include "/Users/gubbish/sdcc/lib/___fsdiv.c"
+                        ;#include "/Users/gubbish/sdcc/lib/___fssub.c"
+                        ;#include "/Users/gubbish/sdcc/lib/___fsgt.c"
+                        ;#include "/Users/gubbish/sdcc/lib/___uint2fs.c"
+                        ;#include "/Users/gubbish/sdcc/lib/_ldexpf.c"
+                        ;#include "/Users/gubbish/sdcc/lib/__mullong.c"
+                        ;#include "/Users/gubbish/sdcc/lib/__mulint.s"
+                        ;#include "/Users/gubbish/sdcc/lib/___ulong2fs.c"
+                        ;#include "/Users/gubbish/sdcc/lib/__moduchar.s"
+                        ;#include "/Users/gubbish/sdcc/lib/__divsint.s"
+                        ;#include "/Users/gubbish/sdcc/lib/__divu8.s"
+                        ;#include "/Users/gubbish/sdcc/lib/__divu16.s"
+                        #include "/Users/gubbish/sdcc/lib/__uitoa.c"
+                        #local
+                        ;--------------------------------------------------------
+                        ; File Created by SDCC : free open source ANSI-C Compiler
+                        ; Version 3.4.1 #9090 (Nov 13 2014) (Mac OS X x86_64)
+                        ; This file was generated Fri Feb 17 01:35:20 2017
+                        ;--------------------------------------------------------
+                        	.module __uitoa
+                        	.optsdcc -mz80
+                        	
+                        ;--------------------------------------------------------
+                        ; Public variables in this module
+                        ;--------------------------------------------------------
+                        	.globl __uitoa
+                        ;--------------------------------------------------------
+                        ; special function registers
+                        ;--------------------------------------------------------
+                        ;--------------------------------------------------------
+                        ; ram data
+                        ;--------------------------------------------------------
+                        	.area _DATA
+                        ;--------------------------------------------------------
+                        ; ram data
+                        ;--------------------------------------------------------
+                        	.area _INITIALIZED
+                        ;--------------------------------------------------------
+                        ; absolute external ram data
+                        ;--------------------------------------------------------
+                        	.area _DABS (ABS)
+                        ;--------------------------------------------------------
+                        ; global & static initialisations
+                        ;--------------------------------------------------------
+                        	.area _HOME
+                        	.area _GSINIT
+                        	.area _GSFINAL
+                        	.area _GSINIT
+                        ;--------------------------------------------------------
+                        ; Home
+                        ;--------------------------------------------------------
+                        	.area _HOME
+                        	.area _HOME
+                        ;--------------------------------------------------------
+                        ; code
+                        ;--------------------------------------------------------
+                        	.area _CODE
+                        ;/Users/gubbish/sdcc/lib/__uitoa.c:37: void _uitoa(unsigned int value, char* string, unsigned char radix)
+                        ;	---------------------------------
+                        ; Function _uitoa
+                        ; ---------------------------------
+0AF7:                   __uitoa_start::
+0AF7:                   __uitoa:
+0AF7: DDE5     [15]     	push	ix
+0AF9: DD210000 [29]     	ld	ix,#0
+0AFD: DD39     [44]     	add	ix,sp
+0AFF: F5       [55]     	push	af
+0B00: 3B       [61]     	dec	sp
+                        ;/Users/gubbish/sdcc/lib/__uitoa.c:42: do 
+0B01: 0E00     [68]     	ld	c,#0x00
+0B03:                   00103$:
+                        ;/Users/gubbish/sdcc/lib/__uitoa.c:44: string[index] = '0' + (value % radix);
+0B03: DD6E06   [19]     	ld	l,6 (ix)
+0B06: DD6607   [38]     	ld	h,7 (ix)
+0B09: 0600     [45]     	ld	b,#0x00
+0B0B: 09       [56]     	add	hl, bc
+0B0C: DD5E08   [75]     	ld	e,8 (ix)
+0B0F: 1600     [82]     	ld	d,#0x00
+0B11: E5       [93]     	push	hl
+0B12: C5       [104]    	push	bc
+0B13: D5       [115]    	push	de
+0B14: D5       [126]    	push	de
+0B15: DD6E04   [145]    	ld	l,4 (ix)
+0B18: DD6605   [164]    	ld	h,5 (ix)
+0B1B: E5       [175]    	push	hl
+0B1C: CDBC0B   [192]    	call	__moduint
+0B1F: F1       [202]    	pop	af
+0B20: F1       [212]    	pop	af
+0B21: DD74FF   [231]    	ld	-1 (ix),h
+0B24: DD75FE   [250]    	ld	-2 (ix),l
+0B27: D1       [260]    	pop	de
+0B28: C1       [270]    	pop	bc
+0B29: E1       [280]    	pop	hl
+0B2A: DD7EFE   [299]    	ld	a,-2 (ix)
+0B2D: C630     [306]    	add	a, #0x30
+0B2F: 47       [310]    	ld	b,a
+0B30: 70       [317]    	ld	(hl),b
+                        ;/Users/gubbish/sdcc/lib/__uitoa.c:45: if (string[index] > '9')
+0B31: 3E39     [324]    	ld	a,#0x39
+0B33: 90       [328]    	sub	a, b
+0B34: E2390B   [338|338]	jp	PO, 00133$
+0B37: EE80     [345]    	xor	a, #0x80
+0B39:                   00133$:
+0B39: F2400B   [10|10]  	jp	P,00102$
+                        ;/Users/gubbish/sdcc/lib/__uitoa.c:46: string[index] += 'A' - '9' - 1;
+0B3C: 7E       [17]     	ld	a,(hl)
+0B3D: C607     [24]     	add	a, #0x07
+0B3F: 77       [31]     	ld	(hl),a
+0B40:                   00102$:
+                        ;/Users/gubbish/sdcc/lib/__uitoa.c:47: value /= radix;
+0B40: C5       [11]     	push	bc
+0B41: D5       [22]     	push	de
+0B42: DD6E04   [41]     	ld	l,4 (ix)
+0B45: DD6605   [60]     	ld	h,5 (ix)
+0B48: E5       [71]     	push	hl
+0B49: CDC70B   [88]     	call	__divuint
+0B4C: F1       [98]     	pop	af
+0B4D: F1       [108]    	pop	af
+0B4E: C1       [118]    	pop	bc
+0B4F: DD7504   [137]    	ld	4 (ix),l
+0B52: DD7405   [156]    	ld	5 (ix),h
+                        ;/Users/gubbish/sdcc/lib/__uitoa.c:48: ++index;
+0B55: 0C       [160]    	inc	c
+                        ;/Users/gubbish/sdcc/lib/__uitoa.c:50: while (value != 0);
+0B56: DD7E05   [179]    	ld	a,5 (ix)
+0B59: DDB604   [198]    	or	a,4 (ix)
+0B5C: 20A5     [205|210]	jr	NZ,00103$
+                        ;/Users/gubbish/sdcc/lib/__uitoa.c:53: string[index--] = '\0';
+0B5E: 51       [209]    	ld	d,c
+0B5F: 15       [213]    	dec	d
+0B60: DD6E06   [232]    	ld	l,6 (ix)
+0B63: DD6607   [251]    	ld	h,7 (ix)
+0B66: 0600     [258]    	ld	b,#0x00
+0B68: 09       [269]    	add	hl, bc
+0B69: 3600     [279]    	ld	(hl),#0x00
+                        ;/Users/gubbish/sdcc/lib/__uitoa.c:56: while (index > i) 
+0B6B: 1E00     [286]    	ld	e,#0x00
+0B6D:                   00106$:
+0B6D: 7B       [ 4]     	ld	a,e
+0B6E: 92       [ 8]     	sub	a, d
+0B6F: E2740B   [18|18]  	jp	PO, 00134$
+0B72: EE80     [25]     	xor	a, #0x80
+0B74:                   00134$:
+0B74: F2AB0B   [10|10]  	jp	P,00109$
+                        ;/Users/gubbish/sdcc/lib/__uitoa.c:58: char tmp = string[i];
+0B77: DD7E06   [29]     	ld	a,6 (ix)
+0B7A: 83       [33]     	add	a, e
+0B7B: 4F       [37]     	ld	c,a
+0B7C: DD7E07   [56]     	ld	a,7 (ix)
+0B7F: CE00     [63]     	adc	a, #0x00
+0B81: 47       [67]     	ld	b,a
+0B82: 0A       [74]     	ld	a,(bc)
+0B83: DD77FD   [93]     	ld	-3 (ix),a
+                        ;/Users/gubbish/sdcc/lib/__uitoa.c:59: string[i] = string[index];
+0B86: DD7E06   [112]    	ld	a,6 (ix)
+0B89: 82       [116]    	add	a, d
+0B8A: DD77FE   [135]    	ld	-2 (ix),a
+0B8D: DD7E07   [154]    	ld	a,7 (ix)
+0B90: CE00     [161]    	adc	a, #0x00
+0B92: DD77FF   [180]    	ld	-1 (ix),a
+0B95: DD6EFE   [199]    	ld	l,-2 (ix)
+0B98: DD66FF   [218]    	ld	h,-1 (ix)
+0B9B: 7E       [225]    	ld	a,(hl)
+0B9C: 02       [232]    	ld	(bc),a
+                        ;/Users/gubbish/sdcc/lib/__uitoa.c:60: string[index] = tmp;
+0B9D: DD6EFE   [251]    	ld	l,-2 (ix)
+0BA0: DD66FF   [270]    	ld	h,-1 (ix)
+0BA3: DD7EFD   [289]    	ld	a,-3 (ix)
+0BA6: 77       [296]    	ld	(hl),a
+                        ;/Users/gubbish/sdcc/lib/__uitoa.c:61: ++i;
+0BA7: 1C       [300]    	inc	e
+                        ;/Users/gubbish/sdcc/lib/__uitoa.c:62: --index;
+0BA8: 15       [304]    	dec	d
+0BA9: 18C2     [316]    	jr	00106$
+0BAB:                   00109$:
+0BAB: DDF9     [10]     	ld	sp, ix
+0BAD: DDE1     [24]     	pop	ix
+0BAF: C9       [34]     	ret
+0BB0:                   __uitoa_end::
+                        	.area _CODE
+                        	.area _INITIALIZER
+                        	.area _CABS (ABS)
+                        #endlocal
+                        #include "/Users/gubbish/sdcc/lib/__moduint.s"
+                        ;--------------------------------------------------------------------------
+                        ;  modunsigned.s
+                        ;
+                        ;  Copyright (C) 2009-2010, Philipp Klaus Krause
+                        ;
+                        ;  This library is free software; you can redistribute it and/or modify it
+                        ;  under the terms of the GNU General Public License as published by the
+                        ;  Free Software Foundation; either version 2, or (at your option) any
+                        ;  later version.
+                        ;
+                        ;  This library is distributed in the hope that it will be useful,
+                        ;  but WITHOUT ANY WARRANTY; without even the implied warranty of
+                        ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+                        ;  GNU General Public License for more details.
+                        ;
+                        ;  You should have received a copy of the GNU General Public License 
+                        ;  along with this library; see the file COPYING. If not, write to the
+                        ;  Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+                        ;   MA 02110-1301, USA.
+                        ;
+                        ;  As a special exception, if you link this library with other files,
+                        ;  some of which are compiled with SDCC, to produce an executable,
+                        ;  this library does not by itself cause the resulting executable to
+                        ;  be covered by the GNU General Public License. This exception does
+                        ;  not however invalidate any other reasons why the executable file
+                        ;   might be covered by the GNU General Public License.
+                        ;--------------------------------------------------------------------------
+                        
+                        .area   _CODE
+                        
+                        .globl	__moduchar
+                        .globl	__moduint
+                        
+0BB0:                   __moduchar:
+0BB0: 210300   [10]             ld      hl,#2+1
+0BB3: 39       [21]             add     hl,sp
+                        
+0BB4: 5E       [28]             ld      e,(hl)
+0BB5: 2B       [34]             dec     hl
+0BB6: 6E       [41]             ld      l,(hl)
+                        
+0BB7: CDD60B   [58]             call    __divu8
+                        
+0BBA: EB       [62]     	ex	de,hl
+                        
+0BBB: C9       [72]             ret
+                        
+0BBC:                   __moduint:
+0BBC: F1       [10]             pop     af
+0BBD: E1       [20]             pop     hl
+0BBE: D1       [30]             pop     de
+0BBF: D5       [41]             push    de
+0BC0: E5       [52]             push    hl
+0BC1: F5       [63]             push    af
+                        
+0BC2: CDD90B   [80]             call    __divu16
+                        
+0BC5: EB       [84]             ex      de,hl
+                        
+0BC6: C9       [94]             ret
+                        
+                        #include "/Users/gubbish/sdcc/lib/__divuint.s"
+                        ;--------------------------------------------------------------------------
+                        ;  divuint and divuchar
+                        ;
+                        ;  Copyright (C) 2000-2012, Michael Hope, Philipp Klaus Krause, Marco Bodrato
+                        ;
+                        ;  This library is free software; you can redistribute it and/or modify it
+                        ;  under the terms of the GNU General Public License as published by the
+                        ;  Free Software Foundation; either version 2, or (at your option) any
+                        ;  later version.
+                        ;
+                        ;  This library is distributed in the hope that it will be useful,
+                        ;  but WITHOUT ANY WARRANTY; without even the implied warranty of
+                        ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+                        ;  GNU General Public License for more details.
+                        ;
+                        ;  You should have received a copy of the GNU General Public License 
+                        ;  along with this library; see the file COPYING. If not, write to the
+                        ;  Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+                        ;   MA 02110-1301, USA.
+                        ;
+                        ;  As a special exception, if you link this library with other files,
+                        ;  some of which are compiled with SDCC, to produce an executable,
+                        ;  this library does not by itself cause the resulting executable to
+                        ;  be covered by the GNU General Public License. This exception does
+                        ;  not however invalidate any other reasons why the executable file
+                        ;   might be covered by the GNU General Public License.
+                        ;--------------------------------------------------------------------------
+                        
+                                ;; Originally from GBDK by Pascal Felber.
+                        		;; last mods: kio 2014-11-15
+                        
+                        
+                        		.area   _CODE
+                        
+                        		.globl	__divuint
+                        		.globl	__divuchar
+                        		.globl	__divu8
+                        		.globl	__divu16
+                        
+0BC7:                   __divuint:
+0BC7: F1       [10]             pop     af
+0BC8: E1       [20]             pop     hl
+0BC9: D1       [30]             pop     de
+0BCA: D5       [41]             push    de
+0BCB: E5       [52]             push    hl
+0BCC: F5       [63]             push    af
+                        
+0BCD: 180A     [75]             jr      __divu16
+                        
+0BCF:                   __divuchar:
+0BCF: 210300   [10]             ld      hl,2+1
+0BD2: 39       [21]             add     hl,sp
+                        
+0BD3: 5E       [28]             ld      e,(hl)
+0BD4: 2B       [34]             dec     hl
+0BD5: 6E       [41]             ld      l,(hl)
+                        
+                                ;; Fall through
+                        
+0BD6:                   __divu8::
+0BD6: 2600     [ 7]             ld      h,0
+0BD8: 54       [11]             ld      d,h
+                                ; Fall through to __divu16
+                        
+                                ;; unsigned 16-bit division
+                                ;;
+                                ;; Entry conditions
+                                ;;   HL = dividend
+                                ;;   DE = divisor
+                                ;;
+                                ;; Exit conditions
+                                ;;   HL = quotient
+                                ;;   DE = remainder
+                                ;;   carry = 0
+                                ;;   If divisor is 0, quotient is set to "infinity", i.e HL = 0xFFFF.
+                                ;;
+                                ;; Register used: AF,B,DE,HL
+                        
+0BD9:                   __divu16::
+                                ;; Two algorithms: one assumes divisor <2^7, the second
+                                ;; assumes divisor >=2^7; choose the applicable one.
+0BD9: 7B       [ 4]             ld      a,e
+0BDA: E680     [11]             and     a,$80
+0BDC: B2       [15]             or      a,d
+0BDD: 2010     [22|27]          jr      NZ,morethan7bits
+                                ;; Both algorithms "rotate" 24 bits (H,L,A) but roles change.
+                        
+                                ;; unsigned 16/7-bit division
+0BDF:                   atmost7bits:
+0BDF: 0610     [ 7]             ld      b,16            ; bits in dividend and possible quotient
+                                ;; Carry cleared by AND/OR, this "0" bit will pass trough HL.[*]
+0BE1: ED6A     [22]             adc     hl,hl
+0BE3:                   dvloop7:
+                                ;; HL holds both dividend and quotient. While we shift a bit from
+                                ;;  MSB of dividend, we shift next bit of quotient in from carry.
+                                ;; A holds remainder.
+0BE3: 17       [ 4]             rla
+                        
+                                ;; If remainder is >= divisor, next bit of quotient is 1.  We try
+                                ;;  to compute the difference.
+0BE4: 93       [ 8]             sub     a,e
+0BE5: 3001     [15|20]          jr      nc,nodrop7      ; Jump if remainder is >= dividend
+0BE7: 83       [19]             add     a,e             ; Otherwise, restore remainder
+                                ;; The add above sets the carry, because sbc a,e did set it.
+0BE8:                   nodrop7:
+0BE8: 3F       [ 4]             ccf                     ; Complement borrow so 1 indicates a
+                                                        ;  successful substraction (this is the
+                                                        ;  next bit of quotient)
+0BE9: ED6A     [19]             adc     hl,hl
+0BEB: 10F6     [27|32]          djnz    dvloop7
+                                ;; Carry now contains the same value it contained before
+                                ;; entering dvloop7[*]: "0" = valid result.
+0BED: 5F       [31]             ld      e,a             ; DE = remainder, HL = quotient
+0BEE: C9       [41]             ret
+                        
+0BEF:                   morethan7bits:
+0BEF: 0609     [ 7]             ld      b,9             ; at most 9 bits in quotient.
+0BF1: 7D       [11]             ld      a,l             ; precompute the first 7 shifts, by
+0BF2: 6C       [15]             ld      l,h             ;  doing 8
+0BF3: 2600     [22]             ld      h,0
+0BF5: CB1D     [30]             rr      l               ;  undoing 1
+0BF7:                   dvloop:
+                                ;; Shift next bit of quotient into bit 0 of dividend
+                                ;; Shift next MSB of dividend into LSB of remainder
+                                ;; A holds both dividend and quotient. While we shift a bit from
+                                ;;  MSB of dividend, we shift next bit of quotient in from carry
+                                ;; HL holds remainder
+0BF7: ED6A     [15]             adc     hl,hl           ; HL < 2^(7+9), no carry, ever.
+                        
+                                ;; If remainder is >= divisor, next bit of quotient is 1. We try
+                                ;;  to compute the difference.
+0BF9: ED52     [30]             sbc     hl,de
+0BFB: 3001     [37|42]          jr      nc,nodrop       ; Jump if remainder is >= dividend
+0BFD: 19       [48]             add     hl,de           ; Otherwise, restore remainder
+                        	;; The add above sets the carry, because sbc hl,de did set it.
+0BFE:                   nodrop:
+0BFE: 3F       [ 4]             ccf                     ; Complement borrow so 1 indicates a
+                                                        ;  successful substraction (this is the
+                                                        ;  next bit of quotient)
+0BFF: 17       [ 8]             rla
+0C00: 10F5     [16|21]          djnz    dvloop
+                                ;; Take care of the ninth quotient bit! after the loop B=0.
+0C02: CB10     [24]             rl      b               ; BA = quotient
+                                ;; Carry now contains "0" = valid result.
+0C04: 50       [28]             ld      d,b
+0C05: 5F       [32]             ld      e,a             ; DE = quotient, HL = remainder
+0C06: EB       [36]             ex      de,hl           ; HL = quotient, DE = remainder
+0C07: C9       [46]             ret
+                        
+                        #include "/Users/gubbish/sdcc/lib/_malloc.c"
+                        #local
+                        ;--------------------------------------------------------
+                        ; File Created by SDCC : free open source ANSI-C Compiler
+                        ; Version 3.4.1 #9090 (Nov 13 2014) (Mac OS X x86_64)
+                        ; This file was generated Fri Feb 17 01:35:20 2017
+                        ;--------------------------------------------------------
+                        	.module _malloc
+                        	.optsdcc -mz80
+                        	
+                        ;--------------------------------------------------------
+                        ; Public variables in this module
+                        ;--------------------------------------------------------
+                        	.globl _malloc
+                        ;--------------------------------------------------------
+                        ; special function registers
+                        ;--------------------------------------------------------
+                        ;--------------------------------------------------------
+                        ; ram data
+                        ;--------------------------------------------------------
+                        	.area _DATA
+                        ;--------------------------------------------------------
+                        ; ram data
+                        ;--------------------------------------------------------
+                        	.area _INITIALIZED
+                        ;--------------------------------------------------------
+                        ; absolute external ram data
+                        ;--------------------------------------------------------
+                        	.area _DABS (ABS)
+                        ;--------------------------------------------------------
+                        ; global & static initialisations
+                        ;--------------------------------------------------------
+                        	.area _HOME
+                        	.area _GSINIT
+                        	.area _GSFINAL
+                        	.area _GSINIT
+                        ;--------------------------------------------------------
+                        ; Home
+                        ;--------------------------------------------------------
+                        	.area _HOME
+                        	.area _HOME
+                        ;--------------------------------------------------------
+                        ; code
+                        ;--------------------------------------------------------
+                        	.area _CODE
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:60: void * malloc (unsigned int size)
+                        ;	---------------------------------
+                        ; Function malloc
+                        ; ---------------------------------
+0C08:                   _malloc_start::
+0C08:                   _malloc:
+0C08: DDE5     [15]     	push	ix
+0C0A: DD210000 [29]     	ld	ix,#0
+0C0E: DD39     [44]     	add	ix,sp
+0C10: 21F6FF   [54]     	ld	hl,#-10
+0C13: 39       [65]     	add	hl,sp
+0C14: F9       [71]     	ld	sp,hl
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:66: if (size>(0xFFFF-HEADER_SIZE))
+0C15: 3EF9     [78]     	ld	a,#0xF9
+0C17: DDBE04   [97]     	cp	a, 4 (ix)
+0C1A: 3EFF     [104]    	ld	a,#0xFF
+0C1C: DD9E05   [123]    	sbc	a, 5 (ix)
+0C1F: 3006     [130|135]	jr	NC,00102$
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:68: return NULL; //To prevent overflow in next line
+0C21: 210000   [140]    	ld	hl,#0x0000
+0C24: C3830D   [150]    	jp	00117$
+0C27:                   00102$:
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:71: size += HEADER_SIZE; //We need a memory for header too
+0C27: DD7E04   [19]     	ld	a,4 (ix)
+0C2A: C606     [26]     	add	a, #0x06
+0C2C: DD7704   [45]     	ld	4 (ix),a
+0C2F: DD7E05   [64]     	ld	a,5 (ix)
+0C32: CE00     [71]     	adc	a, #0x00
+0C34: DD7705   [90]     	ld	5 (ix),a
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:72: current_header = &_sdcc_heap_start;
+0C37: DD36F8F1 [109]    	ld	-8 (ix),#<(__sdcc_heap_start)
+0C3B: DD36F90D [128]    	ld	-7 (ix),#>(__sdcc_heap_start)
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:121: }
+0C3F: ED57     [137]    	ld	a,i
+0C41: F3       [141]    	di
+0C42: F5       [152]    	push	af
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:76: while (1)
+0C43:                   00108$:
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:85: if ((((unsigned int)current_header->next) -
+0C43: DD6EF8   [19]     	ld	l,-8 (ix)
+0C46: DD66F9   [38]     	ld	h,-7 (ix)
+0C49: 7E       [45]     	ld	a,(hl)
+0C4A: DD77FE   [64]     	ld	-2 (ix),a
+0C4D: 23       [70]     	inc	hl
+0C4E: 7E       [77]     	ld	a,(hl)
+0C4F: DD77FF   [96]     	ld	-1 (ix),a
+0C52: DD7EFE   [115]    	ld	a,-2 (ix)
+0C55: DD77FC   [134]    	ld	-4 (ix),a
+0C58: DD7EFF   [153]    	ld	a,-1 (ix)
+0C5B: DD77FD   [172]    	ld	-3 (ix),a
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:86: ((unsigned int)current_header) -
+0C5E: DD7EF8   [191]    	ld	a,-8 (ix)
+0C61: DD77FA   [210]    	ld	-6 (ix),a
+0C64: DD7EF9   [229]    	ld	a,-7 (ix)
+0C67: DD77FB   [248]    	ld	-5 (ix),a
+0C6A: DD7EFC   [267]    	ld	a,-4 (ix)
+0C6D: DD96FA   [286]    	sub	a, -6 (ix)
+0C70: DD77FA   [305]    	ld	-6 (ix),a
+0C73: DD7EFD   [324]    	ld	a,-3 (ix)
+0C76: DD9EFB   [343]    	sbc	a, -5 (ix)
+0C79: DD77FB   [362]    	ld	-5 (ix),a
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:87: current_header->len) >= size)
+0C7C: DD7EF8   [381]    	ld	a,-8 (ix)
+0C7F: DD77FC   [400]    	ld	-4 (ix),a
+0C82: DD7EF9   [419]    	ld	a,-7 (ix)
+0C85: DD77FD   [438]    	ld	-3 (ix),a
+0C88: DD6EFC   [457]    	ld	l,-4 (ix)
+0C8B: DD66FD   [476]    	ld	h,-3 (ix)
+0C8E: 110400   [486]    	ld	de, #0x0004
+0C91: 19       [497]    	add	hl, de
+0C92: 7E       [504]    	ld	a,(hl)
+0C93: DD77FC   [523]    	ld	-4 (ix),a
+0C96: 23       [529]    	inc	hl
+0C97: 7E       [536]    	ld	a,(hl)
+0C98: DD77FD   [555]    	ld	-3 (ix),a
+0C9B: DD7EFA   [574]    	ld	a,-6 (ix)
+0C9E: DD96FC   [593]    	sub	a, -4 (ix)
+0CA1: DD77FA   [612]    	ld	-6 (ix),a
+0CA4: DD7EFB   [631]    	ld	a,-5 (ix)
+0CA7: DD9EFD   [650]    	sbc	a, -3 (ix)
+0CAA: DD77FB   [669]    	ld	-5 (ix),a
+0CAD: DD7EFA   [688]    	ld	a,-6 (ix)
+0CB0: DD9604   [707]    	sub	a, 4 (ix)
+0CB3: DD7EFB   [726]    	ld	a,-5 (ix)
+0CB6: DD9E05   [745]    	sbc	a, 5 (ix)
+0CB9: 381E     [752|757]	jr	C,00104$
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:89: ret = &current_header->mem;
+0CBB: DD7EF8   [771]    	ld	a,-8 (ix)
+0CBE: C606     [778]    	add	a, #0x06
+0CC0: DD77FA   [797]    	ld	-6 (ix),a
+0CC3: DD7EF9   [816]    	ld	a,-7 (ix)
+0CC6: CE00     [823]    	adc	a, #0x00
+0CC8: DD77FB   [842]    	ld	-5 (ix),a
+0CCB: DD7EFA   [861]    	ld	a,-6 (ix)
+0CCE: DD77F6   [880]    	ld	-10 (ix),a
+0CD1: DD7EFB   [899]    	ld	a,-5 (ix)
+0CD4: DD77F7   [918]    	ld	-9 (ix),a
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:90: break;
+0CD7: 1829     [930]    	jr	00109$
+0CD9:                   00104$:
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:92: current_header = current_header->next;    //else try next
+0CD9: DD66FE   [19]     	ld	h,-2 (ix)
+0CDC: DD6EFF   [38]     	ld	l,-1 (ix)
+0CDF: DD74F8   [57]     	ld	-8 (ix),h
+0CE2: DD75F9   [76]     	ld	-7 (ix),l
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:85: if ((((unsigned int)current_header->next) -
+0CE5: DD6EF8   [95]     	ld	l,-8 (ix)
+0CE8: DD66F9   [114]    	ld	h,-7 (ix)
+0CEB: 7E       [121]    	ld	a,(hl)
+0CEC: DD77FE   [140]    	ld	-2 (ix),a
+0CEF: 23       [146]    	inc	hl
+0CF0: 7E       [153]    	ld	a,(hl)
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:93: if (!current_header->next)
+0CF1: DD77FF   [172]    	ld	-1 (ix), a
+0CF4: DDB6FE   [191]    	or	a,-2 (ix)
+0CF7: C2430C   [201|201]	jp	NZ,00108$
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:95: ret = NULL;
+0CFA: DD36F600 [220]    	ld	-10 (ix),#0x00
+0CFE: DD36F700 [239]    	ld	-9 (ix),#0x00
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:96: break;
+0D02:                   00109$:
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:100: if (ret)
+0D02: DD7EF7   [19]     	ld	a,-9 (ix)
+0D05: DDB6F6   [38]     	or	a,-10 (ix)
+0D08: 2872     [45|50]  	jr	Z,00116$
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:102: if (!current_header->len)
+0D0A: DD7EF8   [64]     	ld	a,-8 (ix)
+0D0D: C604     [71]     	add	a, #0x04
+0D0F: 6F       [75]     	ld	l,a
+0D10: DD7EF9   [94]     	ld	a,-7 (ix)
+0D13: CE00     [101]    	adc	a, #0x00
+0D15: 67       [105]    	ld	h,a
+0D16: E5       [116]    	push	hl
+0D17: 5E       [123]    	ld	e,(hl)
+0D18: 23       [129]    	inc	hl
+0D19: 56       [136]    	ld	d,(hl)
+0D1A: E1       [146]    	pop	hl
+0D1B: 7A       [150]    	ld	a,d
+0D1C: B3       [154]    	or	a,e
+0D1D: 200B     [161|166]	jr	NZ,00113$
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:104: current_header->len = size; //for first allocation
+0D1F: DD7E04   [180]    	ld	a,4 (ix)
+0D22: 77       [187]    	ld	(hl),a
+0D23: 23       [193]    	inc	hl
+0D24: DD7E05   [212]    	ld	a,5 (ix)
+0D27: 77       [219]    	ld	(hl),a
+0D28: 1852     [231]    	jr	00116$
+0D2A:                   00113$:
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:109: new_header = (MEMHEADER * )((char *)current_header + current_header->len);
+0D2A: DD6EF8   [19]     	ld	l,-8 (ix)
+0D2D: DD66F9   [38]     	ld	h,-7 (ix)
+0D30: 19       [49]     	add	hl,de
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:110: new_header->next = current_header->next; //and plug it into the chain
+0D31: 4D       [53]     	ld	c,l
+0D32: 44       [57]     	ld	b,h
+0D33: DD7EFE   [76]     	ld	a,-2 (ix)
+0D36: 77       [83]     	ld	(hl),a
+0D37: 23       [89]     	inc	hl
+0D38: DD7EFF   [108]    	ld	a,-1 (ix)
+0D3B: 77       [115]    	ld	(hl),a
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:111: new_header->prev = current_header;
+0D3C: 69       [119]    	ld	l, c
+0D3D: 60       [123]    	ld	h, b
+0D3E: 23       [129]    	inc	hl
+0D3F: 23       [135]    	inc	hl
+0D40: DD7EF8   [154]    	ld	a,-8 (ix)
+0D43: 77       [161]    	ld	(hl),a
+0D44: 23       [167]    	inc	hl
+0D45: DD7EF9   [186]    	ld	a,-7 (ix)
+0D48: 77       [193]    	ld	(hl),a
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:112: current_header->next  = new_header;
+0D49: DD6EF8   [212]    	ld	l,-8 (ix)
+0D4C: DD66F9   [231]    	ld	h,-7 (ix)
+0D4F: 71       [238]    	ld	(hl),c
+0D50: 23       [244]    	inc	hl
+0D51: 70       [251]    	ld	(hl),b
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:113: if (new_header->next)
+0D52: 69       [255]    	ld	l, c
+0D53: 60       [259]    	ld	h, b
+0D54: 5E       [266]    	ld	e,(hl)
+0D55: 23       [272]    	inc	hl
+0D56: 56       [279]    	ld	d,(hl)
+0D57: DD7EFF   [298]    	ld	a,-1 (ix)
+0D5A: DDB6FE   [317]    	or	a,-2 (ix)
+0D5D: 2806     [324|329]	jr	Z,00111$
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:115: new_header->next->prev = new_header;
+0D5F: EB       [328]    	ex	de,hl
+0D60: 23       [334]    	inc	hl
+0D61: 23       [340]    	inc	hl
+0D62: 71       [347]    	ld	(hl),c
+0D63: 23       [353]    	inc	hl
+0D64: 70       [360]    	ld	(hl),b
+0D65:                   00111$:
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:117: new_header->len  = size; //mark as used
+0D65: 210400   [10]     	ld	hl,#0x0004
+0D68: 09       [21]     	add	hl,bc
+0D69: DD7E04   [40]     	ld	a,4 (ix)
+0D6C: 77       [47]     	ld	(hl),a
+0D6D: 23       [53]     	inc	hl
+0D6E: DD7E05   [72]     	ld	a,5 (ix)
+0D71: 77       [79]     	ld	(hl),a
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:118: ret = &new_header->mem;
+0D72: 210600   [89]     	ld	hl,#0x0006
+0D75: 09       [100]    	add	hl,bc
+0D76: DD75F6   [119]    	ld	-10 (ix),l
+0D79: DD74F7   [138]    	ld	-9 (ix),h
+0D7C:                   00116$:
+0D7C: F1       [10]     	pop	af
+0D7D: E2810D   [20|20]  	jp	PO,00148$
+0D80: FB       [24]     	ei
+0D81:                   00148$:
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:122: return ret;
+0D81: E1       [10]     	pop	hl
+0D82: E5       [21]     	push	hl
+0D83:                   00117$:
+0D83: DDF9     [10]     	ld	sp, ix
+0D85: DDE1     [24]     	pop	ix
+0D87: C9       [34]     	ret
+0D88:                   _malloc_end::
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:146: static void z(void) __naked
+                        ;	---------------------------------
+                        ; Function z
+                        ; ---------------------------------
+0D88:                   _z:
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:148: __asm__(".area _GSINIT\n");		/* #pragma GSINIT can't be used because it works on the whole file :-( */
+                        	.area _GSINIT
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:151: static void sdcc_heap_init(void) __naked
+                        ;	---------------------------------
+                        ; Function sdcc_heap_init
+                        ; ---------------------------------
+0503:                   _sdcc_heap_init:
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:153: MEMHEADER * pbase = &_sdcc_heap_start;
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:154: unsigned int size = &_sdcc_heap_end - (char*)pbase;
+0503: 21F111   [10]     	ld	hl,#__sdcc_heap_end+0
+0506: 11F10D   [20]     	ld	de,#__sdcc_heap_start
+0509: BF       [24]     	cp	a, a
+050A: ED52     [39]     	sbc	hl, de
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:156: pbase->next = (MEMHEADER*) ((char*)pbase + size - HEADER_SIZE);
+050C: 19       [50]     	add	hl,de
+050D: 7D       [54]     	ld	a,l
+050E: C6FA     [61]     	add	a,#0xFA
+0510: 5F       [65]     	ld	e,a
+0511: 7C       [69]     	ld	a,h
+0512: CEFF     [76]     	adc	a,#0xFF
+0514: 57       [80]     	ld	d,a
+0515: ED53F10D [100]    	ld	(__sdcc_heap_start), de
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:157: pbase->next->next = NULL; 	/* And mark it as last		*/
+0519: 3E00     [107]    	ld	a,#0x00
+051B: 12       [114]    	ld	(de),a
+051C: 13       [120]    	inc	de
+051D: 3E00     [127]    	ld	a,#0x00
+051F: 12       [134]    	ld	(de),a
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:158: pbase->prev       = NULL; 	/* and mark first as first	*/
+0520: 210000   [144]    	ld	hl,#0x0000
+0523: 22F30D   [160]    	ld	((__sdcc_heap_start + 0x0002)), hl
+                        ;/Users/gubbish/sdcc/lib/_malloc.c:159: pbase->len        = 0;    	/* Empty and ready.			*/
+0526: 2E00     [167]    	ld	l, #0x00
+0528: 22F50D   [183]    	ld	((__sdcc_heap_start + 0x0004)), hl
+                        	.area _CODE
+                        	.area _INITIALIZER
+                        	.area _CABS (ABS)
+                        #endlocal
+                        #include "/Users/gubbish/sdcc/lib/_free.c"
+                        #local
+                        ;--------------------------------------------------------
+                        ; File Created by SDCC : free open source ANSI-C Compiler
+                        ; Version 3.4.1 #9090 (Nov 13 2014) (Mac OS X x86_64)
+                        ; This file was generated Fri Feb 17 01:35:20 2017
+                        ;--------------------------------------------------------
+                        	.module _free
+                        	.optsdcc -mz80
+                        	
+                        ;--------------------------------------------------------
+                        ; Public variables in this module
+                        ;--------------------------------------------------------
+                        	.globl _free
+                        ;--------------------------------------------------------
+                        ; special function registers
+                        ;--------------------------------------------------------
+                        ;--------------------------------------------------------
+                        ; ram data
+                        ;--------------------------------------------------------
+                        	.area _DATA
+                        ;--------------------------------------------------------
+                        ; ram data
+                        ;--------------------------------------------------------
+                        	.area _INITIALIZED
+                        ;--------------------------------------------------------
+                        ; absolute external ram data
+                        ;--------------------------------------------------------
+                        	.area _DABS (ABS)
+                        ;--------------------------------------------------------
+                        ; global & static initialisations
+                        ;--------------------------------------------------------
+                        	.area _HOME
+                        	.area _GSINIT
+                        	.area _GSFINAL
+                        	.area _GSINIT
+                        ;--------------------------------------------------------
+                        ; Home
+                        ;--------------------------------------------------------
+                        	.area _HOME
+                        	.area _HOME
+                        ;--------------------------------------------------------
+                        ; code
+                        ;--------------------------------------------------------
+                        	.area _CODE
+                        ;/Users/gubbish/sdcc/lib/_free.c:59: void free (void *p)
+                        ;	---------------------------------
+                        ; Function free
+                        ; ---------------------------------
+0D88:                   _free_start::
+0D88:                   _free:
+0D88: DDE5     [15]     	push	ix
+0D8A: DD210000 [29]     	ld	ix,#0
+0D8E: DD39     [44]     	add	ix,sp
+0D90: F5       [55]     	push	af
+                        ;/Users/gubbish/sdcc/lib/_free.c:63: if ( p ) //For allocated pointers only!
+0D91: DD7E05   [74]     	ld	a,5 (ix)
+0D94: DDB604   [93]     	or	a,4 (ix)
+0D97: 2850     [100|105]	jr	Z,00108$
+                        ;/Users/gubbish/sdcc/lib/_free.c:80: }
+0D99: ED57     [109]    	ld	a,i
+0D9B: F3       [113]    	di
+0D9C: F5       [124]    	push	af
+                        ;/Users/gubbish/sdcc/lib/_free.c:66: pthis = (MEMHEADER * )((char *)  p - HEADER_SIZE); //to start of header
+0D9D: DD7E04   [143]    	ld	a, 4 (ix)
+0DA0: DD6E05   [162]    	ld	l, 5 (ix)
+0DA3: C6FA     [169]    	add	a,#0xFA
+0DA5: 4F       [173]    	ld	c,a
+0DA6: 7D       [177]    	ld	a,l
+0DA7: CEFF     [184]    	adc	a,#0xFF
+0DA9: 47       [188]    	ld	b,a
+                        ;/Users/gubbish/sdcc/lib/_free.c:67: if ( pthis->prev ) // For the regular header
+0DAA: 69       [192]    	ld	l, c
+0DAB: 60       [196]    	ld	h, b
+0DAC: 23       [202]    	inc	hl
+0DAD: 23       [208]    	inc	hl
+0DAE: 5E       [215]    	ld	e,(hl)
+0DAF: 23       [221]    	inc	hl
+0DB0: 56       [228]    	ld	d,(hl)
+0DB1: 7A       [232]    	ld	a,d
+0DB2: B3       [236]    	or	a,e
+0DB3: 2827     [243|248]	jr	Z,00104$
+                        ;/Users/gubbish/sdcc/lib/_free.c:69: prev_header = pthis->prev;
+                        ;/Users/gubbish/sdcc/lib/_free.c:70: prev_header->next = pthis->next;
+0DB5: 0A       [250]    	ld	a,(bc)
+0DB6: DD77FE   [269]    	ld	-2 (ix),a
+0DB9: 03       [275]    	inc	bc
+0DBA: 0A       [282]    	ld	a,(bc)
+0DBB: DD77FF   [301]    	ld	-1 (ix),a
+0DBE: 0B       [307]    	dec	bc
+0DBF: 6B       [311]    	ld	l, e
+0DC0: 62       [315]    	ld	h, d
+0DC1: DD7EFE   [334]    	ld	a,-2 (ix)
+0DC4: 77       [341]    	ld	(hl),a
+0DC5: 23       [347]    	inc	hl
+0DC6: DD7EFF   [366]    	ld	a,-1 (ix)
+0DC9: 77       [373]    	ld	(hl),a
+                        ;/Users/gubbish/sdcc/lib/_free.c:71: if (pthis->next)
+0DCA: 69       [377]    	ld	l, c
+0DCB: 60       [381]    	ld	h, b
+0DCC: 4E       [388]    	ld	c,(hl)
+0DCD: 23       [394]    	inc	hl
+0DCE: 46       [401]    	ld	b,(hl)
+0DCF: 78       [405]    	ld	a,b
+0DD0: B1       [409]    	or	a,c
+0DD1: 2811     [416|421]	jr	Z,00105$
+                        ;/Users/gubbish/sdcc/lib/_free.c:73: pthis->next->prev = prev_header;
+0DD3: 69       [420]    	ld	l,c
+0DD4: 60       [424]    	ld	h,b
+0DD5: 23       [430]    	inc	hl
+0DD6: 23       [436]    	inc	hl
+0DD7: 73       [443]    	ld	(hl),e
+0DD8: 23       [449]    	inc	hl
+0DD9: 72       [456]    	ld	(hl),d
+0DDA: 1808     [468]    	jr	00105$
+0DDC:                   00104$:
+                        ;/Users/gubbish/sdcc/lib/_free.c:78: pthis->len = 0; //For the first header
+0DDC: 210400   [10]     	ld	hl,#0x0004
+0DDF: 09       [21]     	add	hl,bc
+0DE0: AF       [25]     	xor	a, a
+0DE1: 77       [32]     	ld	(hl), a
+0DE2: 23       [38]     	inc	hl
+0DE3: 77       [45]     	ld	(hl), a
+0DE4:                   00105$:
+0DE4: F1       [10]     	pop	af
+0DE5: E2E90D   [20|20]  	jp	PO,00123$
+0DE8: FB       [24]     	ei
+0DE9:                   00123$:
+0DE9:                   00108$:
+0DE9: DDF9     [10]     	ld	sp, ix
+0DEB: DDE1     [24]     	pop	ix
+0DED: C9       [34]     	ret
+0DEE:                   _free_end::
+                        	.area _CODE
+                        	.area _INITIALIZER
+                        	.area _CABS (ABS)
+                        #endlocal
+                        ;#include "/Users/gubbish/sdcc/lib/OTHER/heap .s"
+
+
+; +++ segments +++
+
+#CODE HEADER:       start=256   len=32   
+#CODE OS:           start=288   len=6    
+#CODE TEXT:         start=294   len=986  
+#CODE JUMPER:       start=1280  len=3    
+#CODE _GSINIT:      start=1283  len=40   
+#CODE _HOME:        start=1323  len=317  
+#CODE _CODE:        start=1640  len=1926 
+#CODE _CABS:        start=3566  len=0    
+#CODE _GSFINAL:     start=3566  len=0    
+#CODE _INITIALIZER: start=3566  len=3    
+#CODE _HEAP:        start=3569  len=0    
+#CODE _HEAP_END:    start=4593  len=0    
+#DATA _DATA:        start=0     len=19   
+#DATA _INITIALIZED: start=19    len=3    
+#DATA _DABS:        start=22    len=0    
+
+; +++ global symbols +++
+
+HEADER             = $0100 =    256  HEADER       dgprog.asm:6 (unused)
+JUMPER             = $0500 =   1280  JUMPER       dgprog.asm:45 (unused)
+OS                 = $0120 =    288  OS           dgprog.asm:39 (unused)
+TEXT               = $0126 =    294  TEXT         dgprog.asm:42 (unused)
+_CABS              = $0DEE =   3566  _CABS        dgprog.asm:52 (unused)
+_CODE              = $0668 =   1640  _CODE        dgprog.asm:51 (unused)
+_DABS              = $0016 =     22  _DABS        dgprog.asm:57 (unused)
+_DATA              = $0000 =      0  _DATA        dgprog.asm:55 (unused)
+_GSFINAL           = $0DEE =   3566  _GSFINAL     dgprog.asm:53 (unused)
+_GSINIT            = $0503 =   1283  _GSINIT      dgprog.asm:49 (unused)
+_HEAP              = $0DF1 =   3569  _HEAP        dgprog.asm:66
+_HEAP_END          = $11F1 =   4593  _HEAP_END    dgprog.asm:68 (unused)
+_HOME              = $052B =   1323  _HOME        dgprog.asm:50 (unused)
+_INITIALIZED       = $0013 =     19  _INITIALIZED dgprog.asm:56 (unused)
+_INITIALIZER       = $0DEE =   3566  _INITIALIZER dgprog.asm:54 (unused)
+__divu16           = $0BD9 =   3033  _CODE        __divuint.s:79
+__divu8            = $0BD6 =   3030  _CODE        __divuint.s:60
+__divuchar         = $0BCF =   3023  _CODE        __divuint.s:50 (unused)
+__divuint          = $0BC7 =   3015  _CODE        __divuint.s:40
+__divulong         = $05E8 =   1512  _HOME        __divulong.s:44
+__divulong_end     = $0668 =   1640  _HOME        __divulong.s:120 (unused)
+__divulong_start   = $05E8 =   1512  _HOME        __divulong.s:43 (unused)
+__ltoa             = $0887 =   2183  _CODE        __ltoa.s:50
+__ltoa_end         = $08EF =   2287  _CODE        __ltoa.s:100 (unused)
+__ltoa_start       = $0887 =   2183  _CODE        __ltoa.s:49 (unused)
+__moduchar         = $0BB0 =   2992  _CODE        __moduint.s:34 (unused)
+__moduint          = $0BBC =   3004  _CODE        __moduint.s:48
+__modulong         = $052B =   1323  _HOME        __modulong.s:44
+__modulong_end     = $05E8 =   1512  _HOME        __modulong.s:134 (unused)
+__modulong_start   = $052B =   1323  _HOME        __modulong.s:43 (unused)
+__sdcc_heap_end    = $11F1 =   4593  _HEAP_END    dgprog.asm:70
+__sdcc_heap_start  = $0DF1 =   3569  _HEAP        dgprog.asm:68
+__uitoa            = $0AF7 =   2807  _CODE        __uitoa.s:49 (unused)
+__uitoa_end        = $0BB0 =   2992  _CODE        __uitoa.s:165 (unused)
+__uitoa_start      = $0AF7 =   2807  _CODE        __uitoa.s:48 (unused)
+__ultoa            = $08EF =   2287  _CODE        __ultoa.s:49
+__ultoa_end        = $09B7 =   2487  _CODE        __ultoa.s:160 (unused)
+__ultoa_start      = $08EF =   2287  _CODE        __ultoa.s:48 (unused)
+_clear             = $09B7 =   2487  _CODE        dgprog.s:60
+_clear_end         = $09C0 =   2496  _CODE        dgprog.s:67 (unused)
+_clear_start       = $09B7 =   2487  _CODE        dgprog.s:59 (unused)
+_delay             = $0AA1 =   2721  _CODE        dgprog.s:276 (unused)
+_delay_end         = $0AB8 =   2744  _CODE        dgprog.s:297 (unused)
+_delay_start       = $0AA1 =   2721  _CODE        dgprog.s:275 (unused)
+_drawToScreen      = $0AB8 =   2744  _CODE        dgprog.s:303 (unused)
+_drawToScreen_end  = $0AC2 =   2754  _CODE        dgprog.s:313 (unused)
+_drawToScreen_start = $0AB8 =   2744  _CODE        dgprog.s:302 (unused)
+_enableReset       = $0AC2 =   2754  _CODE        dgprog.s:319
+_enableReset_end   = $0AC8 =   2760  _CODE        dgprog.s:324 (unused)
+_enableReset_start = $0AC2 =   2754  _CODE        dgprog.s:318 (unused)
+_free              = $0D88 =   3464  _CODE        _free.s:49 (unused)
+_free_end          = $0DEE =   3566  _CODE        _free.s:131 (unused)
+_free_start        = $0D88 =   3464  _CODE        _free.s:48 (unused)
+_main              = $0AC8 =   2760  _CODE        dgprog.s:330
+_main_end          = $0AED =   2797  _CODE        dgprog.s:359 (unused)
+_main_start        = $0AC8 =   2760  _CODE        dgprog.s:329 (unused)
+_malloc            = $0C08 =   3080  _CODE        _malloc.s:49 (unused)
+_malloc_end        = $0D88 =   3464  _CODE        _malloc.s:262 (unused)
+_malloc_start      = $0C08 =   3080  _CODE        _malloc.s:48 (unused)
+_newline           = $0A68 =   2664  _CODE        dgprog.s:222
+_newline_end       = $0A89 =   2697  _CODE        dgprog.s:250 (unused)
+_newline_start     = $0A68 =   2664  _CODE        dgprog.s:221 (unused)
+_print             = $09C0 =   2496  _CODE        dgprog.s:73
+_print_end         = $09DF =   2527  _CODE        dgprog.s:96 (unused)
+_print_start       = $09C0 =   2496  _CODE        dgprog.s:72 (unused)
+_printchar         = $0A8B =   2699  _CODE        dgprog.s:259 (unused)
+_printchar_end     = $0AA1 =   2721  _CODE        dgprog.s:270 (unused)
+_printchar_start   = $0A8B =   2699  _CODE        dgprog.s:258 (unused)
+_printf_small      = $0668 =   1640  _CODE        printf_dg.s:65
+_printf_small_end  = $0873 =   2163  _CODE        printf_dg.s:386 (unused)
+_printf_small_start = $0668 =   1640  _CODE        printf_dg.s:64 (unused)
+_putchar           = $0873 =   2163  _CODE        putchar.s:2
+_readString        = $0A09 =   2569  _CODE        dgprog.s:156 (unused)
+_readString_end    = $0A68 =   2664  _CODE        dgprog.s:216 (unused)
+_readString_start  = $0A09 =   2569  _CODE        dgprog.s:155 (unused)
+_readchar          = $09DF =   2527  _CODE        dgprog.s:102
+_readchar_blocking = $09EE =   2542  _CODE        dgprog.s:121
+_readchar_blocking_end = $0A09 =   2569  _CODE        dgprog.s:150 (unused)
+_readchar_blocking_start = $09EE =   2542  _CODE        dgprog.s:120 (unused)
+_readchar_end      = $09EE =   2542  _CODE        dgprog.s:115 (unused)
+_readchar_start    = $09DF =   2527  _CODE        dgprog.s:101 (unused)
+_reqcolon_         = $0001 =      1               :1 (unused)
+atmost7bits        = $0BDF =   3039  _CODE        __divuint.s:89 (unused)
+blah               = $0120 =    288  OS           dgprog.asm:41
+dvloop             = $0BF7 =   3063  _CODE        __divuint.s:122
+dvloop7            = $0BE3 =   3043  _CODE        __divuint.s:93
+go                 = $0500 =   1280  JUMPER       dgprog.asm:47 (unused)
+loop               = $0123 =    291  OS           dgprog.asm:42
+morethan7bits      = $0BEF =   3055  _CODE        __divuint.s:116
+nodrop             = $0BFE =   3070  _CODE        __divuint.s:136
+nodrop7            = $0BE8 =   3048  _CODE        __divuint.s:105
+
+; +++ local symbols +++
+
+__xinit__char_flag   = $0DF0 =   3568  _INITIALIZER printf_dg.s:393 (unused)
+__xinit__long_flag   = $0DEE =   3566  _INITIALIZER printf_dg.s:389 (unused)
+__xinit__string_flag = $0DEF =   3567  _INITIALIZER printf_dg.s:391 (unused)
+_char_flag           = $0015 =     21  _INITIALIZED printf_dg.s:38
+_long_flag           = $0013 =     19  _INITIALIZED printf_dg.s:34
+_printf_small$00102  = $06D6 =   1750  _CODE        printf_dg.s:128
+_printf_small$00103  = $06E1 =   1761  _CODE        printf_dg.s:136
+_printf_small$00104  = $070D =   1805  _CODE        printf_dg.s:158
+_printf_small$00105  = $0714 =   1812  _CODE        printf_dg.s:165
+_printf_small$00106  = $071B =   1819  _CODE        printf_dg.s:172
+_printf_small$00107  = $0722 =   1826  _CODE        printf_dg.s:179
+_printf_small$00108  = $0729 =   1833  _CODE        printf_dg.s:186
+_printf_small$00109  = $072E =   1838  _CODE        printf_dg.s:191
+_printf_small$00110  = $075A =   1882  _CODE        printf_dg.s:220
+_printf_small$00114  = $0775 =   1909  _CODE        printf_dg.s:238
+_printf_small$00116  = $07F0 =   2032  _CODE        printf_dg.s:303
+_printf_small$00119  = $07C2 =   1986  _CODE        printf_dg.s:278
+_printf_small$00120  = $081B =   2075  _CODE        printf_dg.s:324
+_printf_small$00121  = $083D =   2109  _CODE        printf_dg.s:346
+_printf_small$00125  = $084C =   2124  _CODE        printf_dg.s:360
+_printf_small$00128  = $085B =   2139  _CODE        printf_dg.s:369
+_printf_small$00130  = $0862 =   2146  _CODE        printf_dg.s:376
+_printf_small$00133  = $067A =   1658  _CODE        printf_dg.s:76
+_printf_small$00134  = $086E =   2158  _CODE        printf_dg.s:382
+_printf_small$00219  = $076D =   1901  _CODE        printf_dg.s:231
+_printf_small_buffer_4_35 = $0007 =      7  _DATA        printf_dg.s:28
+_radix               = $0000 =      0  _DATA        printf_dg.s:22
+_str                 = $0001 =      1  _DATA        printf_dg.s:24
+_string_flag         = $0014 =     20  _INITIALIZED printf_dg.s:36
+_val                 = $0003 =      3  _DATA        printf_dg.s:26
+
+; +++ local symbols +++
+
+__ltoa$00102 = $08CA =   2250  _CODE        __ltoa.s:80
+
+; +++ local symbols +++
+
+__ultoa$00102 = $094A =   2378  _CODE        __ultoa.s:99
+__ultoa$00103 = $0906 =   2310  _CODE        __ultoa.s:62
+__ultoa$00106 = $099E =   2462  _CODE        __ultoa.s:142
+
+; +++ local symbols +++
+
+__modulong$00102 = $057F =   1407  _HOME        __modulong.s:82
+__modulong$00103 = $0536 =   1334  _HOME        __modulong.s:51
+__modulong$00107 = $05C1 =   1473  _HOME        __modulong.s:113
+__modulong$00108 = $0583 =   1411  _HOME        __modulong.s:89
+__modulong$00117 = $0583 =   1411  _HOME        __modulong.s:88
+
+; +++ local symbols +++
+
+__divulong$00102 = $0623 =   1571  _HOME        __divulong.s:79
+__divulong$00105 = $05FB =   1531  _HOME        __divulong.s:55
+__divulong$00106 = $064D =   1613  _HOME        __divulong.s:105
+
+; +++ local symbols +++
+
+___str_0                 = $0A89 =   2697  _CODE        dgprog.s:251
+___str_1                 = $0AED =   2797  _CODE        dgprog.s:360
+_delay$00103             = $0AA4 =   2724  _CODE        dgprog.s:279
+_delay$00116             = $0AB2 =   2738  _CODE        dgprog.s:289
+_main$00102              = $0AD1 =   2769  _CODE        dgprog.s:337
+_newline$00101           = $0A83 =   2691  _CODE        dgprog.s:245
+_newline$00103           = $0A72 =   2674  _CODE        dgprog.s:231
+_readString$00101        = $0A31 =   2609  _CODE        dgprog.s:180
+_readString$00103        = $0A5E =   2654  _CODE        dgprog.s:207
+_readchar_blocking$00101 = $09F0 =   2544  _CODE        dgprog.s:125
+_readchar_blocking$00103 = $09F9 =   2553  _CODE        dgprog.s:132
+_readchar_blocking$00104 = $09FC =   2556  _CODE        dgprog.s:137
+_readchar_blocking$00106 = $0A07 =   2567  _CODE        dgprog.s:146
+done                     = $09D8 =   2520  _CODE        dgprog.s:91
+loadstack                = $09C0 =   2496  _CODE        dgprog.s:75 (unused)
+printchar                = $09C8 =   2504  _CODE        dgprog.s:82
+
+; +++ local symbols +++
+
+__uitoa$00102 = $0B40 =   2880  _CODE        __uitoa.s:95
+__uitoa$00103 = $0B03 =   2819  _CODE        __uitoa.s:57
+__uitoa$00106 = $0B6D =   2925  _CODE        __uitoa.s:124
+__uitoa$00109 = $0BAB =   2987  _CODE        __uitoa.s:161
+__uitoa$00133 = $0B39 =   2873  _CODE        __uitoa.s:89
+__uitoa$00134 = $0B74 =   2932  _CODE        __uitoa.s:129
+
+; +++ local symbols +++
+
+_malloc$00102   = $0C27 =   3111  _CODE        _malloc.s:65
+_malloc$00104   = $0CD9 =   3289  _CODE        _malloc.s:143
+_malloc$00108   = $0C43 =   3139  _CODE        _malloc.s:81
+_malloc$00109   = $0D02 =   3330  _CODE        _malloc.s:164
+_malloc$00111   = $0D65 =   3429  _CODE        _malloc.s:236
+_malloc$00113   = $0D2A =   3370  _CODE        _malloc.s:191
+_malloc$00116   = $0D7C =   3452  _CODE        _malloc.s:250
+_malloc$00117   = $0D83 =   3459  _CODE        _malloc.s:258
+_malloc$00148   = $0D81 =   3457  _CODE        _malloc.s:254
+_sdcc_heap_init = $0503 =   1283  _GSINIT      _malloc.s:274 (unused)
+_z              = $0D88 =   3464  _CODE        _malloc.s:267 (unused)
+
+; +++ local symbols +++
+
+_free$00104 = $0DDC =   3548  _CODE        _free.s:114
+_free$00105 = $0DE4 =   3556  _CODE        _free.s:122
+_free$00108 = $0DE9 =   3561  _CODE        _free.s:127
+_free$00123 = $0DE9 =   3561  _CODE        _free.s:126
+
+
+total time: 1.8045 sec.
+no errors

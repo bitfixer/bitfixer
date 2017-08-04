@@ -1,0 +1,6 @@
+
+IF !DEFINED_startup
+	defc	DEFINED_startup = 1
+	defc startup = 1
+ENDIF
+
