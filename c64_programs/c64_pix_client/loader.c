@@ -307,7 +307,6 @@ int main(void)
         *addr = 0x11;
     }
     
-    /*
     // send command
     while (1)
     {
@@ -338,8 +337,8 @@ int main(void)
         if (currpage > 1)
             currpage = 0;
     }
-    */
     
+    /*
     // TEST switching between text and graphics modes
     while (1)
     {
@@ -361,6 +360,7 @@ int main(void)
         
         send_command(0);
     }
+    */
      
     set_vic_bank(0);
     return 1;
