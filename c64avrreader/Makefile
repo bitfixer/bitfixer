@@ -23,7 +23,7 @@ SPAREPORT = $(shell cat spare.port)
 DEVICE     = atmega644
 CLOCK      = 8000000
 PROGRAMMER = -c stk500v2 -P $(MASTERPORT)
-OBJECTS    = upserial.o UART_routines.o utils.o
+OBJECTS    = upserial.o ../shared/avr/spi_data_protocol.o
 #FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0x24:m
 FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0xe2:m
 
@@ -53,15 +53,19 @@ PORTS = $(shell ls /dev/tty.usb*)
 
 
 # Tune the lines below only if you know what you are doing:
-
+INCLUDE = -I../shared/avr
 AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
 COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE) -std=gnu99
+COMPILECPP = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE) -std=c++11 $(INCLUDE)
 
 # symbolic targets:
 all:	upserial.hex
 
 .c.o:
 	$(COMPILE) -c $< -o $@
+
+.cpp.o:
+	$(COMPILECPP) -c $< -o $@
 
 .S.o:
 	$(COMPILE) -x assembler-with-cpp -c $< -o $@
@@ -112,7 +116,7 @@ disasm:	upserial.elf
 cpp:
 	$(COMPILE) -E upserial.c UART_routines.c utils.c
 
-ports: 
+ports:
 	python ../shared/getports.py
 
 debug:
@@ -120,4 +124,3 @@ debug:
 
 transfer: all
 	scp upserial.hex pi@$(REMOTE):~/c64_avr/
-

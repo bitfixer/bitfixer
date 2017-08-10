@@ -37,19 +37,24 @@ int main(int argc, char **argv)
 
     while (!done)
     {
-        printf("waiting for handshake.\n");
-
         int recv_size = spi_data.receive(pkt);
-        pkt[recv_size] = 0;
-        printf("%d bytes: %s\n", recv_size, pkt);
+        if (recv_size > 0)
+        {
+            pkt[recv_size] = 0;
+            printf("%d bytes: %s\n", recv_size, pkt);
 
-        FILE* fp = fopen("test.txt", "rb");
-        fread(pkt, 1, 1024, fp);
-        fclose(fp);
+            FILE* fp = fopen("test.txt", "rb");
+            fread(pkt, 1, 1024, fp);
+            fclose(fp);
 
-        int send_size = 1024;
-        spi_data.send(pkt, send_size);
-        printf("sent %d bytes.\n", send_size);
+            int send_size = 1024;
+            spi_data.send(pkt, send_size);
+            printf("sent %d bytes.\n", send_size);
+        }
+        else
+        {
+            delayMicroseconds(500);
+        }
     }
 
     return 1;

@@ -23,7 +23,7 @@ public:
     {};
 
     ~SPIData() {};
-    
+
     int sendAndRecvPacket(unsigned char* data, int send_size);
     void spi_init();
 

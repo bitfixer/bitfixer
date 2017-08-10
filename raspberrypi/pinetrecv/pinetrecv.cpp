@@ -6,6 +6,7 @@
 #include <math.h>
 #include <string.h>
 #include "NetPort.h"
+#include "rpiSpiData.h"
 
 class Timer
 {
@@ -18,7 +19,7 @@ public:
     {
         gettimeofday(&endTime, NULL);
     }
-    
+
     void report(const char *infostr)
     {
         double start = (double)startTime.tv_sec + ((double)startTime.tv_usec / 1000000.0);
@@ -26,7 +27,7 @@ public:
         double elapsed = end-start;
         printf("timer %s: %lf\n", infostr, elapsed);
     }
-    
+
     float getCurrentElapsedTime()
     {
         double start = (double)startTime.tv_sec + ((double)startTime.tv_usec / 1000000.0);
@@ -34,7 +35,7 @@ public:
         float elapsed = end-start;
         return elapsed;
     }
-    
+
 private:
     struct timeval startTime;
     struct timeval endTime;
@@ -55,17 +56,17 @@ public:
     {
         memset(frame, 0, 9216);
     }
-    
+
     ~DummyDataSource()
     {
     }
-    
+
     bool seekToTime(float pts, bool doConvert = false)
     {
         memset(frame, 0, frameSize);
         printf("cleared frame..\n");
     }
-    
+
     void workForChunk(int chunk, float pts)
     {
         if (chunk == 8)
@@ -73,7 +74,7 @@ public:
             seekToTime(pts);
         }
     }
-    
+
     const unsigned char* getFrameChunk(int chunk)
     {
         printf("getting frame chunk %d\n", chunk);
@@ -94,11 +95,11 @@ public:
     {
         memset(frame, 0, 9216);
     }
-    
+
     ~NetworkFrameDataSource()
     {
     }
-    
+
     bool seekToTime(float pts, bool doConvert = false)
     {
         memset(frame, 0, frameSize);
@@ -106,7 +107,7 @@ public:
         int ret = port.recv_sync(frame, frameSize);
         fprintf(stderr, "Received Network Frame\n");
     }
-    
+
     void workForChunk(int chunk, float pts)
     {
         if (chunk == 8)
@@ -114,7 +115,7 @@ public:
             seekToTime(pts);
         }
     }
-    
+
     const unsigned char* getFrameChunk(int chunk)
     {
         return &frame[chunk*chunksize];
@@ -135,11 +136,11 @@ public:
     {
         memset(frame, 0, frameSize);
     }
-    
+
     ~PETNetworkFrameDataSource()
     {
     }
-    
+
     bool seekToTime(float pts, bool doConvert = false)
     {
         memset(frame, 0, frameSize);
@@ -148,7 +149,7 @@ public:
         int ret = port.recv_sync(frame, frameSize);
         printf("PET frame\n");
     }
-    
+
     void workForChunk(int chunk, float pts)
     {
         /*
@@ -158,7 +159,7 @@ public:
         }
         */
     }
-    
+
     const unsigned char* getFrameChunk(int chunk)
     {
         seekToTime(0);
@@ -178,7 +179,7 @@ public:
     {
         fp = fopen(fname, "rb");
     }
-    
+
     ~C64FrameDataSource()
     {
         if (fp)
@@ -187,16 +188,16 @@ public:
             fp = NULL;
         }
     }
-    
+
     bool seekToTime(float pts, bool doConvert = false)
     {
         if (!fp)
             return false;
-        
+
         printf("seek to %f\n", pts);
         //float currpts = 0.0;
         bool newFrame = false;
-        
+
         // TEST
         //currpts = -1.0;
         while (currpts < pts && fp)
@@ -204,7 +205,7 @@ public:
             newFrame = true;
             float thispts;
             size_t res = fread(&thispts, 1, sizeof(float), fp);
-            
+
             if (thispts < lastpts)
             {
                 currpts += thispts;
@@ -215,8 +216,8 @@ public:
                 currpts += diff;
             }
             lastpts = thispts;
-            
-            
+
+
             printf("res %d\n", res);
             if (res != sizeof(float))
             {
@@ -238,14 +239,14 @@ public:
                 }
             }
         }
-        
+
         if (newFrame)
         {
             fread(frame, 1, 9216, fp);
         }
         return true;
     }
-    
+
     void workForChunk(int chunk, float pts)
     {
         if (chunk == 8)
@@ -253,12 +254,12 @@ public:
             seekToTime(pts);
         }
     }
-    
+
     const unsigned char *getFrameChunk(int chunk)
     {
         return &frame[chunk*chunksize];
     }
-    
+
 private:
     FILE *fp = NULL;
     float currpts = -1.0;
@@ -280,63 +281,63 @@ void get_64_colors(color *c64_colors)
     c64_colors[0].r = 0;
     c64_colors[0].g = 0;
     c64_colors[0].b = 0;
-    
+
     c64_colors[1].r = 255;
     c64_colors[1].g = 255;
     c64_colors[1].b = 255;
-    
+
     c64_colors[2].r = 104;
     c64_colors[2].g = 55;
     c64_colors[2].b = 43;
-    
+
     c64_colors[3].r = 112;
     c64_colors[3].g = 164;
     c64_colors[3].b = 178;
-    
+
     c64_colors[4].r = 111;
     c64_colors[4].g = 61;
     c64_colors[4].b = 134;
-    
+
     c64_colors[5].r = 88;
     c64_colors[5].g = 141;
     c64_colors[5].b = 67;
-    
+
     c64_colors[6].r = 53;
     c64_colors[6].g = 40;
     c64_colors[6].b = 121;
-    
+
     c64_colors[7].r = 184;
     c64_colors[7].g = 199;
     c64_colors[7].b = 111;
-    
+
     c64_colors[8].r = 111;
     c64_colors[8].g = 79;
     c64_colors[8].b = 37;
-    
+
     c64_colors[9].r = 67;
     c64_colors[9].g = 57;
     c64_colors[9].b = 0;
-    
+
     c64_colors[10].r = 154;
     c64_colors[10].g = 103;
     c64_colors[10].b = 89;
-    
+
     c64_colors[11].r = 68;
     c64_colors[11].g = 68;
     c64_colors[11].b = 68;
-    
+
     c64_colors[12].r = 108;
     c64_colors[12].g = 108;
     c64_colors[12].b = 108;
-    
+
     c64_colors[13].r = 154;
     c64_colors[13].g = 210;
     c64_colors[13].b = 132;
-    
+
     c64_colors[14].r = 108;
     c64_colors[14].g = 94;
     c64_colors[14].b = 181;
-    
+
     c64_colors[15].r = 149;
     c64_colors[15].g = 149;
     c64_colors[15].b = 149;
@@ -359,12 +360,12 @@ void read_rgb_from_ppm(unsigned char *dest, const char *fname)
             // look for "255"
             *t = 0x00;
             printf("got: %s\n", temp);
-            
+
             if (strcmp(temp, "255") == 0)
             {
                 done = true;
             }
-            
+
             t = temp;
         }
         else
@@ -372,12 +373,12 @@ void read_rgb_from_ppm(unsigned char *dest, const char *fname)
             t++;
         }
     }
-    
+
     // now read all the pixels
     int width = 320;
     int height = 200;
     int colors = 3;
-    
+
     int bytes = width*height*colors;
     fread(dest, 1, bytes, fp);
     fclose(fp);
@@ -389,7 +390,7 @@ void bitmap_from_rgb(unsigned char *bitmap, unsigned char *rgb, unsigned char *c
     int ncolors = 3;
     int rows = height/8;
     int columns = width/8;
-    
+
     for (int h = 0; h < height; h++)
     {
         for (int w = 0; w < width; w++)
@@ -398,31 +399,31 @@ void bitmap_from_rgb(unsigned char *bitmap, unsigned char *rgb, unsigned char *c
             int col = w/8;
             int colormap_index = row*columns + col;
             unsigned char colorbyte = colormap[colormap_index];
-            
+
             int c1 = (colorbyte & 0xF0) >> 4;
             int c2 = (colorbyte & 0x0F);
-            
+
             int index = h*width*ncolors + w*ncolors;
             int bitmap_index = h*width + w;
             unsigned char r = rgb[index];
             unsigned char g = rgb[index+1];
             unsigned char b = rgb[index+2];
-            
+
             float dr1 = (float)colors[c1].r-(float)r;
             float dg1 = (float)colors[c1].g-(float)g;
             float db1 = (float)colors[c1].b-(float)b;
-            
+
             float dr2 = (float)colors[c2].r-(float)r;
             float dg2 = (float)colors[c2].g-(float)g;
             float db2 = (float)colors[c2].b-(float)b;
-            
+
             float err1 = dr1*dr1 + dg1*dg1 + db1*db1;
             float err2 = dr2*dr2 + dg2*dg2 + db2*db2;
-            
+
             if (err1 < err2)
             {
                 bitmap[bitmap_index] = 1;
-                
+
                 mod_rgb[index] = colors[c1].r;
                 mod_rgb[index+1] = colors[c1].g;
                 mod_rgb[index+2] = colors[c1].b;
@@ -441,24 +442,24 @@ void bitmap_from_rgb(unsigned char *bitmap, unsigned char *rgb, unsigned char *c
 unsigned char color_byte_for_block(unsigned char *rgb, int xstart, int ystart, int width, int height, color *colors)
 {
     //return 0x10;
-    
+
     //printf("block at %d %d\n", xstart, ystart);
-    
+
     int c1_min = 0;
     int c2_min = 0;
     int ncolors = 3;
     float minerror = 999999.0;
-    
+
 #ifdef TESTCOLOR
     c1_min = 0;
     c2_min = 1;
 #else
-    
+
      float rtotal;
      float gtotal;
      float btotal;
     float mincolorerror = 999999.0;
-    
+
      // get avg color
      for (int y = ystart; y < ystart+8; y++)
      {
@@ -468,17 +469,17 @@ unsigned char color_byte_for_block(unsigned char *rgb, int xstart, int ystart, i
              unsigned char r = rgb[index];
              unsigned char g = rgb[index+1];
              unsigned char b = rgb[index+2];
-             
+
              rtotal += (float)r;
              gtotal += (float)g;
              btotal += (float)b;
          }
      }
-     
+
      rtotal /= 64.0;
      gtotal /= 64.0;
      btotal /= 64.0;
-    
+
     c1_min = 0;
     for (int c = 0; c < 15; c++)
     {
@@ -486,14 +487,14 @@ unsigned char color_byte_for_block(unsigned char *rgb, int xstart, int ystart, i
         float dg1 = (float)colors[c].g-(float)gtotal;
         float db1 = (float)colors[c].b-(float)btotal;
         float err1 = dr1*dr1 + dg1*dg1 + db1*db1;
-        
+
         if (err1 < mincolorerror)
         {
             mincolorerror = err1;
             c1_min = c;
         }
     }
-    
+
     //for (int c1 = 0; c1 < 15; c1++)
     //{
         //for (int c2 = c1+1; c2 < 16; c2++)
@@ -508,7 +509,7 @@ unsigned char color_byte_for_block(unsigned char *rgb, int xstart, int ystart, i
             int increment = 4;
             //int startpixel = 0;
             //int increment = 1;
-            
+
             for (int y = ystart+startpixel; y < ystart+8; y+=increment)
             {
                 for (int x = xstart+startpixel; x < xstart+8; x+=increment)
@@ -517,23 +518,23 @@ unsigned char color_byte_for_block(unsigned char *rgb, int xstart, int ystart, i
                     unsigned char r = rgb[index];
                     unsigned char g = rgb[index+1];
                     unsigned char b = rgb[index+2];
-                    
+
                     float dr1 = (float)colors[c1_min].r-(float)r;
                     float dg1 = (float)colors[c1_min].g-(float)g;
                     float db1 = (float)colors[c1_min].b-(float)b;
-                    
+
                     float dr2 = (float)colors[c2].r-(float)r;
                     float dg2 = (float)colors[c2].g-(float)g;
                     float db2 = (float)colors[c2].b-(float)b;
-                    
+
                     float err1 = dr1*dr1 + dg1*dg1 + db1*db1;
                     float err2 = dr2*dr2 + dg2*dg2 + db2*db2;
-                    
+
                     float minerr = (err1 < err2) ? err1 : err2;
                     totalerror += minerr;
                 }
             }
-            
+
             if (totalerror < minerror)
             {
                 //c1_min = c1;
@@ -544,9 +545,9 @@ unsigned char color_byte_for_block(unsigned char *rgb, int xstart, int ystart, i
     }
     //}
 #endif
-    
+
     //printf("colors %d %d\n", c1_min, c2_min);
-    
+
     // create color byte
     unsigned char colorbyte = (c1_min << 4) + c2_min;
     return colorbyte;
@@ -556,7 +557,7 @@ void colormap_from_rgb(unsigned char *colormap, unsigned char *rgb, int width, i
 {
     int rows = height/8;
     int columns = width/8;
-    
+
     for (int r = 0; r < rows; r++)
     {
         for (int c = 0; c < columns; c++)
@@ -564,7 +565,7 @@ void colormap_from_rgb(unsigned char *colormap, unsigned char *rgb, int width, i
             int x = c*8;
             int y = r*8;
             int colormap_index = r*columns + c;
-            
+
             unsigned char colorbyte = color_byte_for_block(rgb, x, y, width, height, colors);
             colormap[colormap_index] = colorbyte;
         }
@@ -579,7 +580,7 @@ void create_c64_bitmap(unsigned char *dest, unsigned char *src, int width, int h
     int c64bytes = (width/8) * (height/8) * 8;
     // clear
     memset(dest, 0, c64bytes);
-    
+
     for (int h = 0; h < height; h++)
     {
         for (int w = 0; w < width; w++)
@@ -592,10 +593,10 @@ void create_c64_bitmap(unsigned char *dest, unsigned char *src, int width, int h
                 int line = h & 7;
                 int bit = 7 - (w & 7);
                 int byte = row*320 + c*8 + line;
-                
+
                 //printf("h %d w %d: row %d col %d line %d bit %d byte %d\n",
                 //       h,w,row,c,line,bit,byte);
-                
+
                 unsigned char b = dest[byte];
                 unsigned char mask = 1 << bit;
                 b = b | mask;
@@ -612,10 +613,10 @@ int main(int argc, char **argv)
     unsigned char bitmap[8192];
     char temp[256];
     Timer playbackTimer;
-    
+
     int frameSkip = 5;
     memset(buffer, 0, 1024);
-    
+
     FrameDataSource* source = NULL;
     if (argc >= 2)
     {
@@ -628,47 +629,89 @@ int main(int argc, char **argv)
         source = new NetworkFrameDataSource();
         //source = new DummyDataSource();
     }
-    
+
     PETNetworkFrameDataSource petDataSource;
     int resetPin = 3;
-    
+
     wiringPiSetup();
     pinMode(0, INPUT);
     pullUpDnControl(0, PUD_UP);
-    
+
     pinMode(resetPin, OUTPUT);
     pullUpDnControl(resetPin, PUD_OFF);
     digitalWrite(resetPin, LOW); // reset MCU
-    
+
     int spi = wiringPiSPISetup(0, 2000000);
-    
+    rpiSpiData spi_data(0, spi);
+
     delayMicroseconds(100000);
     digitalWrite(resetPin, HIGH);
-    
+
     printf("checking for commands2..\n");
-    
+
     int frames = 0;
     unsigned char *imgptr = NULL;
     bool done = false;
     bool started = false;
-    
+
+    while (!done)
+    {
+        printf("checking for command\n");
+        int recv_size = spi_data.receive(buffer);
+        if (recv_size > 0)
+        {
+            unsigned char cmd = buffer[0];
+            printf("got command %d\n", cmd);
+            // start a frame
+            if (cmd == 0)
+            {
+                printf("cmd0\n");
+                if (!started)
+                {
+                    started = true;
+                    playbackTimer.start();
+                }
+
+                playbackTimer.end();
+
+                const unsigned char *frameChunk = source->getFrameChunk(cmd);
+                //int s = write(spi, frameChunk, 1024);
+                spi_data.send((unsigned char*)frameChunk, 1024);
+
+                float currTime = playbackTimer.getCurrentElapsedTime();
+                float currFps = (float)frames / currTime;
+
+            }
+            else if (cmd < 9)
+            {
+                printf("cmd chunk\n");
+                const unsigned char *frameChunk = source->getFrameChunk(cmd);
+                //int s = write(spi, frameChunk, 1024);
+                spi_data.send((unsigned char*)frameChunk, 1024);
+            }
+
+            printf("sent.\n");
+            float curr_playback_time = playbackTimer.getCurrentElapsedTime();
+            source->workForChunk(cmd, curr_playback_time);
+        }
+        else
+        {
+            delayMicroseconds(500);
+        }
+    }
+
+    /*
     while (!done)
     {
         // loop - check for updates
         unsigned char cmd;
-        //printf("waiting for handshake.\n");
-        
         while (digitalRead(0) == HIGH)
         {
             delayMicroseconds(10);
         }
-        //printf("got handshake.\n");
-        
         // get byte
         int r = read(spi, &cmd, 1);
-        
-        //printf("got command: %d %02X\n", cmd, cmd);
-        
+
         // start a frame
         if (cmd == 0)
         {
@@ -677,15 +720,15 @@ int main(int argc, char **argv)
                 started = true;
                 playbackTimer.start();
             }
-            
+
             playbackTimer.end();
-            
+
             const unsigned char *frameChunk = source->getFrameChunk(cmd);
             int s = write(spi, frameChunk, 1024);
-            
+
             float currTime = playbackTimer.getCurrentElapsedTime();
             float currFps = (float)frames / currTime;
-            
+
         }
         else if (cmd < 9)
         {
@@ -695,24 +738,12 @@ int main(int argc, char **argv)
         // PET frame
         else if (cmd == 0x10)
         {
-            /*
-            const unsigned char *frameChunk = petDataSource.getFrameChunk(cmd);
-            int s = write(spi, frameChunk, 2000);
-            printf("sent frame\n");
-            */
             const unsigned char *frameChunk = petDataSource.getFrameChunk(0);
             int s = write(spi, frameChunk, 2000);
             printf("sent %d bytes\n", s);
         }
         else if (cmd == 0x11)
         {
-            /*
-            static char a = '0';
-            memset(buffer, a, 1000);
-            a = (a + 1) % 10;
-            int s = write(spi, buffer, 1000);
-            printf("pet40 sent %d bytes\n");
-            */
             const unsigned char *frameChunk = petDataSource.getFrameChunk(0);
             int s = write(spi, frameChunk, 1000);
             printf("pet40 sent %d bytes\n", s);
@@ -730,7 +761,7 @@ int main(int argc, char **argv)
             }
             buf[len] = 0;
             printf("got search string %s\n", buf);
-            
+
             int s = write(spi, &cmd, 1);
         }
         else if (cmd == 0x81)
@@ -740,19 +771,18 @@ int main(int argc, char **argv)
             a = (a + 1) % 10;
             int s = write(spi, buffer, 1024);
         }
-        
-        //printf("waiting for handshake high\n");
+
         // wait for deassert
         while (digitalRead(0) == LOW)
         {
             delayMicroseconds(10);
         }
-        //printf("handshake went high\n");
-        
+
         float curr_playback_time = playbackTimer.getCurrentElapsedTime();
         source->workForChunk(cmd, curr_playback_time);
     }
-    
+    */
+
     delete source;
     return 1;
 }

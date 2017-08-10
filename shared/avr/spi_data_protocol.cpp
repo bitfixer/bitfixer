@@ -70,6 +70,16 @@ int SPIData::sendAndRecvPacket(unsigned char* data, int send_size)
     size_bytes[0] = (send_size & 0xFF00) >> 8;
     size_bytes[1] = send_size & 0x00FF;
 
+    /*
+    // send ready byte
+    tmp = 0x12;
+    spi_transmit(tmp);
+    spi_transmit(tmp);
+    spi_transmit(tmp);
+    tmp = 0;
+    spi_transmit(tmp);
+    */
+
     *_readyOutPort = port;
     spi_transmit(size_bytes[0]);
     spi_transmit(size_bytes[1]);
