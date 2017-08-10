@@ -1,6 +1,6 @@
 //
 //  spi_data_protocol.cpp
-//  
+//
 //
 //  Created by Michael Hill on 8/8/17.
 //
@@ -16,11 +16,11 @@ unsigned char SPIData::spi_receive(void)
 {
     unsigned char data;
     // Wait for reception complete
-    
+
     SPDR = 0xff;
     while(!(SPSR & (1<<SPIF)));
     data = SPDR;
-    
+
     // Return data register
     return data;
 }
@@ -29,11 +29,11 @@ unsigned char SPIData::spi_transmit(unsigned char data)
 {
     // Start transmission
     SPDR = data;
-    
+
     // Wait for transmission complete
     while(!(SPSR & (1<<SPIF)));
     data = SPDR;
-    
+
     return(data);
 }
 
@@ -43,64 +43,57 @@ void SPIData::spi_init()
     unsigned char reg = *_readyReg;
     reg |= _readyPinMask;
     *_readyReg = reg;
-     
+
     // enable MISO as output
     reg = DDR_SPI;
     reg |= 1<<DD_MISO;
     DDR_SPI = reg;
-    
+
     unsigned char port = *_readyOutPort;
     port |= _readyPinMask;
     *_readyOutPort = port;
-    
+
     SPCR = (1<<SPE); // slave, fosc/4 (2MHz)
     SPSR = 0x00;
 }
 
-void SPIData::sendAndRecvPacket(unsigned char* data, int size)
+int SPIData::sendAndRecvPacket(unsigned char* data, int send_size)
 {
-    /*
-    unsigned char port = *_readyOutPort;
-    port &= ~_readyPinMask;
-    
-    SPDR = data[0];
-    
-    *_readyOutPort = port;
-    while (!(SPSR & (1<<SPIF)));
-    //data = SPDR;
-    
-    port |= _readyPinMask;
-    *_readyOutPort = port;
-    */
-    
     // lower ready line
     unsigned char tmp;
+    int recv_size;
+    unsigned char size_bytes[2];
     unsigned char port = *_readyOutPort;
     port &= ~_readyPinMask;
-    
-    /*
-    SPDR = 'A';
+
+    // send size of send packet
+    size_bytes[0] = (send_size & 0xFF00) >> 8;
+    size_bytes[1] = send_size & 0x00FF;
+
     *_readyOutPort = port;
-    while(!(SPSR & (1<<SPIF)));
-    tmp = SPDR;
-    
-    SPDR = 'B';
-    while(!(SPSR & (1<<SPIF)));
-    */
-    
-    *_readyOutPort = port;
-    for (int i = 0; i < size; i++)
+    spi_transmit(size_bytes[0]);
+    spi_transmit(size_bytes[1]);
+
+    for (int i = 0; i < send_size; i++)
     {
         SPDR = data[i];
         while(!(SPSR & (1<<SPIF)));
         tmp = SPDR;
     }
-    
-    for (int i = 0; i < size; i++)
+
+    size_bytes[0] = spi_receive();
+    size_bytes[1] = spi_receive();
+    recv_size = (size_bytes[0] << 8) + size_bytes[1];
+    for (int i = 0; i < recv_size; i++)
     {
         data[i] = spi_receive();
     }
-    
+
     port |= _readyPinMask;
+    // raise ready line
     *_readyOutPort = port;
+
+    // wait for one byte for sync
+    tmp = spi_receive();
+    return recv_size;
 }

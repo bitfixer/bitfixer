@@ -1,6 +1,6 @@
 //
 //  spi_data_protocol.h
-//  
+//
 //
 //  Created by Michael Hill on 8/8/17.
 //
@@ -21,17 +21,17 @@ public:
     , _readyReg(readyReg)
     , _readyPinMask(1<<readyPin)
     {};
-    
+
     ~SPIData() {};
     
-    void sendAndRecvPacket(unsigned char* data, int size);
+    int sendAndRecvPacket(unsigned char* data, int send_size);
     void spi_init();
-    
+
 private:
     volatile unsigned char* _readyOutPort;
     volatile unsigned char* _readyReg;
     unsigned char _readyPinMask;
-    
+
     unsigned char spi_receive(void);
     unsigned char spi_transmit(unsigned char data);
 };
