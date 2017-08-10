@@ -1,1 +1,1 @@
-./stream.sh $1 10 640 200 pet $2
+./stream.sh $1 15 640 200 pet $2

@@ -76,9 +76,7 @@ int SPIData::sendAndRecvPacket(unsigned char* data, int send_size)
 
     for (int i = 0; i < send_size; i++)
     {
-        SPDR = data[i];
-        while(!(SPSR & (1<<SPIF)));
-        tmp = SPDR;
+        spi_transmit(data[i]);
     }
 
     size_bytes[0] = spi_receive();

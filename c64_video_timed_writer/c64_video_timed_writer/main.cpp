@@ -171,10 +171,10 @@ int main(int argc, char * const argv[]) {
         
         // write data to output
         //fwrite(frame.data, 1, C64_FRAME_SIZE, fp_out);
-        memcpy(temp, frame.data(), frame.dataSize());
-        //int ret = port.send(temp, frame.dataSize());
-        int ret = port.send(temp, 2000);
-        printf("send returned %d op %d %d %d %d %d\n", ret, ip[0], ip[1], ip[2], ip[3], output_port);
+        //memcpy(temp, frame.data(), frame.dataSize());
+        int ret = port.send(frame.data(), frame.dataSize());
+        //int ret = port.send(temp, 2000);
+        //printf("send returned %d op %d %d %d %d %d\n", ret, ip[0], ip[1], ip[2], ip[3], output_port);
     }
     
     if (fp != stdin)

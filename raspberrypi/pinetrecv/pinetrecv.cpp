@@ -645,7 +645,7 @@ int main(int argc, char **argv)
     delayMicroseconds(100000);
     digitalWrite(resetPin, HIGH);
     
-    //printf("checking for commands2..\n");
+    printf("checking for commands2..\n");
     
     int frames = 0;
     unsigned char *imgptr = NULL;
@@ -716,6 +716,29 @@ int main(int argc, char **argv)
             const unsigned char *frameChunk = petDataSource.getFrameChunk(0);
             int s = write(spi, frameChunk, 1000);
             printf("pet40 sent %d bytes\n", s);
+        }
+        else if (cmd == 0x80)
+        {
+            unsigned char len;
+            char buf[256];
+            int r = read(spi, &len, 1);
+            printf("search command! got %d\n", len);
+            for (int x = 0; x < len; x++)
+            {
+                r = read(spi, &buf[x], 1);
+                printf("%d got %c %X\n", x, buf[x], buf[x]);
+            }
+            buf[len] = 0;
+            printf("got search string %s\n", buf);
+            
+            int s = write(spi, &cmd, 1);
+        }
+        else if (cmd == 0x81)
+        {
+            static char a = '0';
+            memset(buffer, a, 1024);
+            a = (a + 1) % 10;
+            int s = write(spi, buffer, 1024);
         }
         
         //printf("waiting for handshake high\n");

@@ -16,7 +16,7 @@
 #                   default_programmer = "stk500v2"
 #                   default_serial = "avrdoper"
 # FUSES ........ Parameters for avrdude to flash the fuses appropriately.
-
+REMOTE := 192.168.1.30
 MASTERPORT = $(shell cat master.port)
 SPAREPORT = $(shell cat spare.port)
 
@@ -117,3 +117,7 @@ ports:
 
 debug:
 	minicom -D $(SPAREPORT)
+
+transfer: all
+	scp upserial.hex pi@$(REMOTE):~/c64_avr/
+
