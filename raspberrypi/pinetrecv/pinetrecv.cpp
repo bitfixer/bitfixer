@@ -661,7 +661,7 @@ int main(int argc, char **argv)
         if (recv_size > 0)
         {
             unsigned char cmd = buffer[0];
-            printf("got command %d\n", cmd);
+            //printf("got command %d\n", cmd);
             // start a frame
             if (cmd == 0)
             {
@@ -684,13 +684,13 @@ int main(int argc, char **argv)
             }
             else if (cmd < 9)
             {
-                printf("cmd chunk\n");
+                //printf("cmd chunk\n");
                 const unsigned char *frameChunk = source->getFrameChunk(cmd);
                 //int s = write(spi, frameChunk, 1024);
                 spi_data.send((unsigned char*)frameChunk, 1024);
             }
 
-            printf("sent.\n");
+            //printf("sent.\n");
             float curr_playback_time = playbackTimer.getCurrentElapsedTime();
             source->workForChunk(cmd, curr_playback_time);
         }
