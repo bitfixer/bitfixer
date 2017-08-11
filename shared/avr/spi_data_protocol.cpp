@@ -9,9 +9,6 @@
 #include "spi_data_protocol.h"
 #include <avr/io.h>
 
-#define DDR_SPI     DDRB
-#define DD_MISO     DDB6
-
 unsigned char SPIData::spi_receive(void)
 {
     unsigned char data;
@@ -45,10 +42,15 @@ void SPIData::spi_init()
     *_readyReg = reg;
 
     // enable MISO as output
+    /*
     reg = DDR_SPI;
     reg |= 1<<DD_MISO;
     DDR_SPI = reg;
-
+    */
+    reg = *_spiReg;
+    reg |= _spiMisoMask;
+    *_spiReg = reg;
+     
     unsigned char port = *_readyOutPort;
     port |= _readyPinMask;
     *_readyOutPort = port;

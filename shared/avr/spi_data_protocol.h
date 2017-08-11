@@ -16,10 +16,14 @@ class SPIData
 public:
     SPIData(volatile unsigned char* readyOutPort,
             volatile unsigned char* readyReg,
-            int readyPin)
+            int readyPin,
+            volatile unsigned char* spiReg,
+            int spiMisoPin)
     : _readyOutPort(readyOutPort)
     , _readyReg(readyReg)
     , _readyPinMask(1<<readyPin)
+    , _spiReg(spiReg)
+    , _spiMisoMask(1<<spiMisoPin)
     {};
 
     ~SPIData() {};
@@ -31,6 +35,9 @@ private:
     volatile unsigned char* _readyOutPort;
     volatile unsigned char* _readyReg;
     unsigned char _readyPinMask;
+    
+    volatile unsigned char* _spiReg;
+    unsigned char _spiMisoMask;
 
     unsigned char spi_receive(void);
     unsigned char spi_transmit(unsigned char data);

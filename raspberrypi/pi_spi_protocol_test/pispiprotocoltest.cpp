@@ -41,8 +41,14 @@ int main(int argc, char **argv)
         if (recv_size > 0)
         {
             pkt[recv_size] = 0;
-            printf("%d bytes: %s\n", recv_size, pkt);
+            //printf("%d bytes: %s\n", recv_size, pkt);
 
+            for (int i = 0; i < recv_size; i++)
+            {
+                printf("%d: %c %d %X\n", i, pkt[i], pkt[i], pkt[i]);
+            }
+            
+            /*
             FILE* fp = fopen("test.txt", "rb");
             fread(pkt, 1, 1024, fp);
             fclose(fp);
@@ -50,10 +56,18 @@ int main(int argc, char **argv)
             int send_size = 1024;
             spi_data.send(pkt, send_size);
             printf("sent %d bytes.\n", send_size);
+            */
+            
+            pkt[0] = 'A';
+            int send_size = 1;
+            spi_data.send(pkt, 1);
+            //printf("sent %d bytes.\n", send_size);
         }
         else
         {
-            delayMicroseconds(500);
+            printf("gotit.\n");
+            //delayMicroseconds(500);
+            done = true;
         }
     }
 
