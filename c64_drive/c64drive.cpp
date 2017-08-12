@@ -71,9 +71,23 @@ public:
         while ((*_iecInPort & _atnPinMask) == 0);
     }
     
-    void waitForClk()
+    bool waitForClk(int timeoutUs = -1)
     {
-        while ((*_iecInPort & _clkPinMask) != 0);
+        //while ((*_iecInPort & _clkPinMask) != 0);
+        
+        int timeUs = 0;
+        while ((*_iecInPort & _clkPinMask) != 0)
+        {
+            if (timeoutUs > 0 && timeUs > timeoutUs)
+            {
+                return false;
+            }
+            
+            _delay_us(10);
+            timeUs += 10;
+        }
+        
+        return true;
     }
     
     void waitForNotClk()
@@ -151,8 +165,9 @@ int main(void)
     spi_data.spi_init();
     
     c64iec iec(&PORTC, &PINC, &DDRC, PC0, PC1, PC2);
-    log("initialized.");
+    //log("initialized.");
     
+    unsigned char bb;
     while (1)
     {
         iec.waitForAtn();
@@ -170,39 +185,60 @@ int main(void)
         // signal ready by releasing data line
         iec.setDataFalse();
         
-        // wait for clock to be set again
+        // talker will pull clock to true in < 200us
+        // if not, need to perform EOI (last byte)
         iec.waitForClk();
-        
-        buffer[0] = iec.readDataByte();
+         
+        bb = iec.readDataByte();
         
         // signal byte received
         iec.setDataTrue();
         
-        // get a byte
-        iec.waitForNotClk();
+        if (bb == 0x3F)
+        {
+            // unlisten
+            spi_data.sendAndRecvPacket(&bb, 1);
+            iec.setDataFalse();
+            continue;
+        }
+        else
+        {
+            spi_data.sendAndRecvPacket(&bb, 1);
+        }
         
-        // respond by releasing data line
+        //iec.waitForNotAtn();
+        
+        bool done = false;
+        int bytes = 0;
+        while (!done)
+        {
+            // wait for talker to signal that a byte is coming
+            iec.waitForNotClk();
+            
+            // respond by releasing data line
+            iec.setDataFalse();
+            
+            if (!iec.waitForClk(200))
+            {
+                // timed out waiting for clock to be set true
+                // this is an EOI signaled by the talker (last byte)
+                // pull data line true for at least 60 ms
+                iec.setDataTrue();
+                done = true;
+                _delay_us(60);
+                iec.setDataFalse();
+            }
+            
+            bb = iec.readDataByte();
+            
+            // signal byte received
+            iec.setDataTrue();
+            spi_data.sendAndRecvPacket(&bb, 1);
+        }
+        
+        // delay and release data line, transmission is finished
+        _delay_us(60);
         iec.setDataFalse();
-        
-        iec.waitForClk();
-        
-        buffer[1] = iec.readDataByte();
-        
-        
-        
-        // signal byte received
-        iec.setDataTrue();
-        
-        // get a byte
-        iec.waitForNotClk();
-        
-        // respond by releasing data line
-        iec.setDataFalse();
-        
-        iec.waitForClk();
-        buffer[2] = iec.readDataByte();
-        
-        spi_data.sendAndRecvPacket(buffer, 3);
     }
     
 }
