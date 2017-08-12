@@ -71,6 +71,11 @@ public:
         while ((*_iecInPort & _atnPinMask) == 0);
     }
     
+    bool atnTrue()
+    {
+        return ((*_iecInPort & _atnPinMask) == 0);
+    }
+    
     bool waitForClk(int timeoutUs = -1)
     {
         //while ((*_iecInPort & _clkPinMask) != 0);
@@ -93,6 +98,17 @@ public:
     void waitForNotClk()
     {
         while ((*_iecInPort & _clkPinMask) == 0);
+    }
+    
+    bool clkTrue()
+    {
+        return ((*_iecInPort & _clkPinMask) == 0);
+    }
+    
+    // wait for either the ATN or CLK line to be released
+    void waitForNotAtnOrNotClk()
+    {
+        while (atnTrue() && clkTrue());
     }
     
     void setDataTrue()
@@ -131,6 +147,38 @@ public:
         return byte;
     }
     
+    unsigned char readByteWithHandshake(bool& lastByte)
+    {
+        unsigned char byte;
+        lastByte = false;
+        // wait for talker to be ready
+        //waitForNotClk();
+        
+        // signal ready by releasing data line
+        setDataFalse();
+        
+        // talker will pull clock to true in < 200us
+        // if not, need to perform EOI (last byte)
+        //waitForClk();
+        if (!waitForClk(200))
+        {
+            // timed out waiting for clock to be set true
+            // this is an EOI signaled by the talker (last byte)
+            // pull data line true for at least 60 ms
+            setDataTrue();
+            lastByte = true;
+            _delay_us(60);
+            setDataFalse();
+        }
+        
+        byte = readDataByte();
+        
+        // signal byte received
+        setDataTrue();
+        
+        return byte;
+    }
+    
 private:
     volatile unsigned char* _iecOutPort;
     volatile unsigned char* _iecInPort;
@@ -159,6 +207,15 @@ void init_devices(void)
     port_init();
 }
 
+typedef enum
+{
+    WaitingForAtn,
+    ReadingAtn,
+    Listening,
+    Talking,
+    Unlisten
+} DeviceState;
+
 int main(void)
 {
     unsigned char buffer[512];
@@ -168,6 +225,82 @@ int main(void)
     //log("initialized.");
     
     unsigned char bb;
+    unsigned char temp;
+    int byteCount;
+    bool isLastByte;
+    DeviceState state = WaitingForAtn;
+    
+    while (1)
+    {
+        if (state == WaitingForAtn)
+        {
+            byteCount = 0;
+            iec.waitForAtn();
+            iec.waitForClk();
+            iec.setDataTrue();
+            state = ReadingAtn;
+        }
+        else if (state == ReadingAtn)
+        {
+            // wait for either another byte to be sent or atn to be released
+            //iec.waitForNotClk();
+            iec.waitForNotAtnOrNotClk();
+            
+            // check if ATN is still asserted
+            if (!iec.atnTrue())
+            {
+                temp = buffer[byteCount-1];
+                spi_data.sendAndRecvPacket(buffer, byteCount);
+                
+                // determine next state
+                if (temp == 0x3F)
+                {
+                    state = Unlisten;
+                }
+                else if (temp == 0xF1)
+                {
+                    byteCount = 0;
+                    state = Listening;
+                }
+                else if (temp == 0x61)
+                {
+                    byteCount = 0;
+                    state = Listening;
+                }
+                else
+                {
+                    state = Unlisten;
+                }
+            }
+            else
+            {
+                buffer[byteCount++] = iec.readByteWithHandshake(isLastByte);
+            }
+        }
+        else if (state == Listening)
+        {
+            iec.waitForNotClk();
+            buffer[byteCount++] = iec.readByteWithHandshake(isLastByte);
+            if (isLastByte)
+            {
+                // release data line
+                spi_data.sendAndRecvPacket(buffer, byteCount);
+                state = Unlisten;
+            }
+        }
+        else if (state == Talking)
+        {
+            
+        }
+        else if (state == Unlisten)
+        {
+            _delay_us(60);
+            iec.setDataFalse();
+            state = WaitingForAtn;
+        }
+    }
+    
+    
     while (1)
     {
         iec.waitForAtn();
@@ -206,9 +339,8 @@ int main(void)
             spi_data.sendAndRecvPacket(&bb, 1);
         }
         
-        //iec.waitForNotAtn();
-        
         bool done = false;
+        bool saving = false;
         int bytes = 0;
         while (!done)
         {
@@ -229,14 +361,34 @@ int main(void)
                 iec.setDataFalse();
             }
             
+            //buffer[bytes++] = iec.readDataByte();
             bb = iec.readDataByte();
             
             // signal byte received
             iec.setDataTrue();
-            spi_data.sendAndRecvPacket(&bb, 1);
+            temp = bb;
+            spi_data.sendAndRecvPacket(&temp, 1);
+            
+            if (saving)
+            {
+                buffer[bytes++] = bb;
+            }
+            
+            if (bb == 0x61)
+            {
+                saving = true;
+            }
+            else if (bb == 0x60)
+            {
+                
+            }
         }
         
         // delay and release data line, transmission is finished
+        if (bytes > 0)
+        {
+            spi_data.sendAndRecvPacket(buffer, bytes);
+        }
         _delay_us(60);
         iec.setDataFalse();
     }
