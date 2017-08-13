@@ -15,6 +15,8 @@ typedef struct
     bool isAtn;
     unsigned char size;
     unsigned char buffer[256];
+    unsigned char atn_size;
+    unsigned char atn_buffer[64];
 } dataPacket;
 
 typedef enum
@@ -59,9 +61,15 @@ int main(int argc, char **argv)
         if (recv_size > 0)
         {
             dataPacket* dpkt = (dataPacket*)pkt;
-            printf("ATN: %d\n", dpkt->isAtn);
+            //printf("ATN: %d\n", dpkt->isAtn);
             //printf("state: %d %d\n", dpkt->state, dpkt->ss);
             //printf("Size: %d\n", dpkt->size);
+            
+            for (int i = 0; i < dpkt->atn_size; i++)
+            {
+                printf("ATN %d: %c %d %X\n", i, dpkt->atn_buffer[i], dpkt->atn_buffer[i], dpkt->atn_buffer[i]);
+            }
+            
             for (int i = 0; i < dpkt->size; i++)
             {
                 printf("%d: %c %d %X\n", i, dpkt->buffer[i], dpkt->buffer[i], dpkt->buffer[i]);

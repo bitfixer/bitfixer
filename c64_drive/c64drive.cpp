@@ -161,7 +161,6 @@ public:
         
         // talker will pull clock to true in < 200us
         // if not, need to perform EOI (last byte)
-        //waitForClk();
         if (!waitForClk(200))
         {
             // timed out waiting for clock to be set true
@@ -225,6 +224,8 @@ typedef struct
     bool isAtn;
     unsigned char size;
     unsigned char buffer[256];
+    unsigned char atn_size;
+    unsigned char atn_buffer[64];
 } dataPacket;
 
 int main(void)
@@ -241,7 +242,7 @@ int main(void)
     bool isLastByte;
     DeviceState state = WaitingForAtn;
     pkt.size = 0;
-    
+    pkt.atn_size = 0;
     
     while (1)
     {
@@ -266,14 +267,16 @@ int main(void)
                 pkt.ss = state;
                 spi_data.sendAndRecvPacket((unsigned char*)&pkt, sizeof(pkt));
                 pkt.size = 0;
+                pkt.atn_size = 0;
             }
             
-            //pkt.isAtn = iec.atnTrue();
-            //pkt.buffer[0] = iec.readByteWithHandshake(isLastByte);
-            //pkt.size = 1;
-            
             temp = iec.readByteWithHandshake(isLastByte);
-            if (!isAtn)
+            if (isAtn)
+            {
+                // this is an atn byte, not data
+                pkt.atn_buffer[pkt.atn_size++] = temp;
+            }
+            else
             {
                 // this is a data byte
                 pkt.buffer[pkt.size++] = temp;
@@ -297,182 +300,4 @@ int main(void)
             state = WaitingForAtn;
         }
     }
-    
-    /*
-    while (1)
-    {
-        if (state == WaitingForAtn)
-        {
-            iec.waitForAtn();
-            iec.waitForClk();
-            iec.setDataTrue();
-            state = ReadingAtn;
-        }
-        else if (state == ReadingAtn)
-        {
-            iec.waitForNotAtnOrNotClk();
-            
-            if (iec.atnTrue())
-            {
-                
-                if (pkt.size > 0)
-                {
-                    pkt.ss = state;
-                    spi_data.sendAndRecvPacket((unsigned char*)&pkt, sizeof(pkt));
-                }
-                
-                pkt.buffer[0] = iec.readByteWithHandshake(isLastByte);
-                pkt.size = 1;
-                pkt.isAtn = true;
-                pkt.state = state;
-            }
-            else
-            {
-                if (pkt.buffer[0] == 0x3F)
-                {
-                    state = Unlisten;
-                }
-                else
-                {
-                    state = Listening;
-                }
-            }
-        }
-        else if (state == Listening)
-        {
-            iec.waitForNotClk();
-            
-            if (pkt.size > 0)
-            {
-                pkt.ss = state;
-                spi_data.sendAndRecvPacket((unsigned char*)&pkt, sizeof(pkt));
-            }
-            
-            //pkt.buffer[pkt.size] = iec.readByteWithHandshake(isLastByte);
-            pkt.isAtn = false;
-            pkt.buffer[0] = iec.readByteWithHandshake(isLastByte);
-            pkt.size = 1;
-            //pkt.isAtn = false;
-            if (isLastByte)
-            {
-                pkt.state = state + 10;
-            }
-            else
-            {
-                pkt.state = state;
-            }
-            
-            if (isLastByte || pkt.buffer[0] == 0x3F)
-            {
-                // release data line
-                state = Unlisten;
-            }
-        }
-        else if (state == Talking)
-        {
-            
-        }
-        else if (state == Unlisten)
-        {
-            _delay_us(10);
-            iec.setDataFalse();
-            state = WaitingForAtn;
-        }
-    }
-    */
-    
-    /*
-    unsigned char buffer[512];
-    while (1)
-    {
-        iec.waitForAtn();
-        // got ATN
-        
-        // wait for talker to lower CLK
-        iec.waitForClk();
-        
-        // lower data to signal ready
-        iec.setDataTrue();
-        
-        // wait for talker to be ready
-        iec.waitForNotClk();
-        
-        // signal ready by releasing data line
-        iec.setDataFalse();
-        
-        // talker will pull clock to true in < 200us
-        // if not, need to perform EOI (last byte)
-        iec.waitForClk();
-         
-        bb = iec.readDataByte();
-        
-        // signal byte received
-        iec.setDataTrue();
-        
-        if (bb == 0x3F)
-        {
-            // unlisten
-            spi_data.sendAndRecvPacket(&bb, 1);
-            iec.setDataFalse();
-            continue;
-        }
-        else
-        {
-            spi_data.sendAndRecvPacket(&bb, 1);
-        }
-        
-        bool done = false;
-        bool saving = false;
-        int bytes = 0;
-        while (!done)
-        {
-            // wait for talker to signal that a byte is coming
-            iec.waitForNotClk();
-            
-            // respond by releasing data line
-            iec.setDataFalse();
-            
-            if (!iec.waitForClk(200))
-            {
-                // timed out waiting for clock to be set true
-                // this is an EOI signaled by the talker (last byte)
-                // pull data line true for at least 60 ms
-                iec.setDataTrue();
-                done = true;
-                _delay_us(60);
-                iec.setDataFalse();
-            }
-            
-            //buffer[bytes++] = iec.readDataByte();
-            bb = iec.readDataByte();
-            
-            // signal byte received
-            iec.setDataTrue();
-            temp = bb;
-            spi_data.sendAndRecvPacket(&temp, 1);
-            
-            if (saving)
-            {
-                buffer[bytes++] = bb;
-            }
-            
-            if (bb == 0x61)
-            {
-                saving = true;
-            }
-            else if (bb == 0x60)
-            {
-                
-            }
-        }
-        
-        // delay and release data line, transmission is finished
-        if (bytes > 0)
-        {
-            spi_data.sendAndRecvPacket(buffer, bytes);
-        }
-        _delay_us(60);
-        iec.setDataFalse();
-    }
-    */
 }
