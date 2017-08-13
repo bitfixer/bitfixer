@@ -171,7 +171,7 @@ public:
             lastByte = true;
             _delay_us(60);
             setDataFalse();
-            //waitForClk();
+            waitForClk();
         }
         
         byte = readDataByte();
