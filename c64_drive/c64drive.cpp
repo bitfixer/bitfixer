@@ -34,6 +34,8 @@ extern "C" {
 #define SPI_CTL  DDRB
 #define MISO     0x10
 
+#define UNLISTEN 0x3F
+
 SPIData spi_data(&PORTB, &DDRB, PB0, &DDRB, PB4);
 
 class c64iec
@@ -169,11 +171,11 @@ public:
             lastByte = true;
             _delay_us(60);
             setDataFalse();
+            //waitForClk();
         }
         
         byte = readDataByte();
         
-        // signal byte received
         setDataTrue();
         
         return byte;
@@ -209,88 +211,84 @@ void init_devices(void)
 
 typedef enum
 {
-    WaitingForAtn,
-    ReadingAtn,
-    Listening,
-    Talking,
-    Unlisten
+    WaitingForAtn = 0,
+    ReadingAtn = 1,
+    Listening = 2,
+    Talking = 3,
+    Unlisten = 4
 } DeviceState;
+
+typedef struct
+{
+    unsigned char state;
+    unsigned char ss;
+    bool isAtn;
+    unsigned char size;
+    unsigned char buffer[256];
+} dataPacket;
 
 int main(void)
 {
-    unsigned char buffer[512];
+    DDRD = 0x80;
+    PORTD = 0x00;
+    dataPacket pkt;
     spi_data.spi_init();
     
     c64iec iec(&PORTC, &PINC, &DDRC, PC0, PC1, PC2);
-    //log("initialized.");
     
     unsigned char bb;
     unsigned char temp;
-    int byteCount;
     bool isLastByte;
     DeviceState state = WaitingForAtn;
+    pkt.size = 0;
+    
     
     while (1)
     {
         if (state == WaitingForAtn)
         {
-            byteCount = 0;
+            PORTD = 0x00;
             iec.waitForAtn();
             iec.waitForClk();
             iec.setDataTrue();
-            state = ReadingAtn;
-        }
-        else if (state == ReadingAtn)
-        {
-            // wait for either another byte to be sent or atn to be released
-            //iec.waitForNotClk();
-            iec.waitForNotAtnOrNotClk();
-            
-            // check if ATN is still asserted
-            if (!iec.atnTrue())
-            {
-                temp = buffer[byteCount-1];
-                spi_data.sendAndRecvPacket(buffer, byteCount);
-                
-                // determine next state
-                if (temp == 0x3F)
-                {
-                    state = Unlisten;
-                }
-                else if (temp == 0xF1)
-                {
-                    byteCount = 0;
-                    state = Listening;
-                }
-                else if (temp == 0x61)
-                {
-                    byteCount = 0;
-                    state = Listening;
-                }
-                else
-                {
-                    state = Unlisten;
-                }
-            }
-            else
-            {
-                buffer[byteCount++] = iec.readByteWithHandshake(isLastByte);
-            }
+            state = Listening;
         }
         else if (state == Listening)
         {
+            PORTD = 0x80;
             iec.waitForNotClk();
-            buffer[byteCount++] = iec.readByteWithHandshake(isLastByte);
-            if (isLastByte)
+            
+            // if there is data in the packet, and we are about to receive an ATN command,
+            // flush remaining data
+            bool isAtn = iec.atnTrue();
+            if (pkt.size > 0 && isAtn)
             {
-                // release data line
-                spi_data.sendAndRecvPacket(buffer, byteCount);
+                pkt.ss = state;
+                spi_data.sendAndRecvPacket((unsigned char*)&pkt, sizeof(pkt));
+                pkt.size = 0;
+            }
+            
+            //pkt.isAtn = iec.atnTrue();
+            //pkt.buffer[0] = iec.readByteWithHandshake(isLastByte);
+            //pkt.size = 1;
+            
+            temp = iec.readByteWithHandshake(isLastByte);
+            if (!isAtn)
+            {
+                // this is a data byte
+                pkt.buffer[pkt.size++] = temp;
+            }
+            
+            if (isLastByte || temp == UNLISTEN)
+            {
                 state = Unlisten;
             }
-        }
-        else if (state == Talking)
-        {
             
+            // about to unlisten the bus, wait for atn to deassert
+            if (temp == UNLISTEN)
+            {
+                iec.waitForNotAtn();
+            }
         }
         else if (state == Unlisten)
         {
@@ -300,7 +298,91 @@ int main(void)
         }
     }
     
+    /*
+    while (1)
+    {
+        if (state == WaitingForAtn)
+        {
+            iec.waitForAtn();
+            iec.waitForClk();
+            iec.setDataTrue();
+            state = ReadingAtn;
+        }
+        else if (state == ReadingAtn)
+        {
+            iec.waitForNotAtnOrNotClk();
+            
+            if (iec.atnTrue())
+            {
+                
+                if (pkt.size > 0)
+                {
+                    pkt.ss = state;
+                    spi_data.sendAndRecvPacket((unsigned char*)&pkt, sizeof(pkt));
+                }
+                
+                pkt.buffer[0] = iec.readByteWithHandshake(isLastByte);
+                pkt.size = 1;
+                pkt.isAtn = true;
+                pkt.state = state;
+            }
+            else
+            {
+                if (pkt.buffer[0] == 0x3F)
+                {
+                    state = Unlisten;
+                }
+                else
+                {
+                    state = Listening;
+                }
+            }
+        }
+        else if (state == Listening)
+        {
+            iec.waitForNotClk();
+            
+            if (pkt.size > 0)
+            {
+                pkt.ss = state;
+                spi_data.sendAndRecvPacket((unsigned char*)&pkt, sizeof(pkt));
+            }
+            
+            //pkt.buffer[pkt.size] = iec.readByteWithHandshake(isLastByte);
+            pkt.isAtn = false;
+            pkt.buffer[0] = iec.readByteWithHandshake(isLastByte);
+            pkt.size = 1;
+            //pkt.isAtn = false;
+            if (isLastByte)
+            {
+                pkt.state = state + 10;
+            }
+            else
+            {
+                pkt.state = state;
+            }
+            
+            if (isLastByte || pkt.buffer[0] == 0x3F)
+            {
+                // release data line
+                state = Unlisten;
+            }
+        }
+        else if (state == Talking)
+        {
+            
+        }
+        else if (state == Unlisten)
+        {
+            _delay_us(10);
+            iec.setDataFalse();
+            state = WaitingForAtn;
+        }
+    }
+    */
     
+    /*
+    unsigned char buffer[512];
     while (1)
     {
         iec.waitForAtn();
@@ -392,5 +474,5 @@ int main(void)
         _delay_us(60);
         iec.setDataFalse();
     }
-    
+    */
 }

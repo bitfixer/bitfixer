@@ -9,7 +9,7 @@ int rpiSpiData::receive(unsigned char* buffer)
     // wait for device to signal ready
     while (digitalRead(_deviceReadyPin) == HIGH)
     {
-        delayMicroseconds(10);
+        delayMicroseconds(5);
     }
 
     /*
@@ -33,7 +33,7 @@ int rpiSpiData::receive(unsigned char* buffer)
     unsigned char size_bytes[2];
     read(_spi, &size_bytes[0], 1);
     read(_spi, &size_bytes[1], 1);
-    printf("got %X %X\n", size_bytes[0], size_bytes[1]);
+    //printf("got %X %X\n", size_bytes[0], size_bytes[1]);
     
     int size = (size_bytes[0] << 8) + size_bytes[1];
 
@@ -58,7 +58,7 @@ void rpiSpiData::send(unsigned char* buffer, int send_size)
     // wait for device to deassert ready
     while (digitalRead(_deviceReadyPin) == LOW)
     {
-        delayMicroseconds(10);
+        delayMicroseconds(5);
     }
 
     // write one byte for sync

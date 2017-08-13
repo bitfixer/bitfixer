@@ -8,6 +8,24 @@
 #include "timer.hpp"
 #include "rpiSpiData.h"
 
+typedef struct
+{
+    unsigned char state;
+    unsigned char ss;
+    bool isAtn;
+    unsigned char size;
+    unsigned char buffer[256];
+} dataPacket;
+
+typedef enum
+{
+    WaitingForAtn = 0,
+    ReadingAtn = 1,
+    Listening = 2,
+    Talking = 3,
+    Unlisten = 4
+} DeviceState;
+
 // test - watch for input
 int main(int argc, char **argv)
 {
@@ -40,35 +58,48 @@ int main(int argc, char **argv)
         int recv_size = spi_data.receive(pkt);
         if (recv_size > 0)
         {
-            pkt[recv_size] = 0;
-            //printf("%d bytes: %s\n", recv_size, pkt);
-
-            for (int i = 0; i < recv_size; i++)
+            dataPacket* dpkt = (dataPacket*)pkt;
+            printf("ATN: %d\n", dpkt->isAtn);
+            //printf("state: %d %d\n", dpkt->state, dpkt->ss);
+            //printf("Size: %d\n", dpkt->size);
+            for (int i = 0; i < dpkt->size; i++)
             {
-                printf("%d: %c %d %X\n", i, pkt[i], pkt[i], pkt[i]);
+                printf("%d: %c %d %X\n", i, dpkt->buffer[i], dpkt->buffer[i], dpkt->buffer[i]);
             }
             
-            /*
-            FILE* fp = fopen("test.txt", "rb");
-            fread(pkt, 1, 1024, fp);
-            fclose(fp);
-
-            int send_size = 1024;
-            spi_data.send(pkt, send_size);
-            printf("sent %d bytes.\n", send_size);
-            */
+            unsigned char cmd = dpkt->buffer[dpkt->size-1];
+            if (cmd == 0xF1)
+            {
+                //printf("Now Listening.\n");
+                dpkt->state = Listening;
+            }
+            else if (cmd == 0x61)
+            {
+                //printf("Now Listening.\n");
+                dpkt->state = Listening;
+            }
+            else if (cmd == 0x3F)
+            {
+                //printf("Unlisten.\n");
+                dpkt->state = Unlisten;
+            }
+            else
+            {
+                //printf("Unlisten.\n");
+                dpkt->state = Unlisten;
+            }
             
-            pkt[0] = 'A';
-            int send_size = 1;
+            // send state response
             spi_data.send(pkt, 1);
-            //printf("sent %d bytes.\n", send_size);
         }
+        /*
         else
         {
             printf("gotit.\n");
             //delayMicroseconds(500);
             done = true;
         }
+        */
     }
 
     return 1;
