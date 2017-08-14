@@ -254,7 +254,6 @@ int main(void)
             iec.waitForClk();
             iec.setDataTrue();
             state = ReadingAtn;
-            //state = Listening;
         }
         if (state == ReadingAtn)
         {
@@ -306,23 +305,11 @@ int main(void)
                 // switch to next state
                 state = nextState;
                 nextState = Unlisten;
-                
-                /*
-                if (state == Unlisten)
-                {
-                    spi_data.sendAndRecvPacket((unsigned char*)&pkt, sizeof(pkt));
-                    pkt.size = 0;
-                    pkt.atn_size = 0;
-                    nextState = Unlisten;
-                }
-                */
             }
         }
         else if (state == Listening)
         {
             PORTD = 0x80;
-            //iec.waitForNotClk();
-            
             while (iec.clkTrue() && !iec.atnTrue());
             if (iec.atnTrue())
             {
@@ -337,46 +324,6 @@ int main(void)
             {
                 state = Unlisten;
             }
-            
-            
-            /*
-            PORTD = 0x80;
-            iec.waitForNotClk();
-            
-            // if there is data in the packet, and we are about to receive an ATN command,
-            // flush remaining data
-            bool isAtn = iec.atnTrue();
-            if (pkt.size > 0 && isAtn)
-            {
-                pkt.ss = state;
-                spi_data.sendAndRecvPacket((unsigned char*)&pkt, sizeof(pkt));
-                pkt.size = 0;
-                pkt.atn_size = 0;
-            }
-            
-            temp = iec.readByteWithHandshake(isLastByte);
-            if (isAtn)
-            {
-                // this is an atn byte, not data
-                pkt.atn_buffer[pkt.atn_size++] = temp;
-            }
-            else
-            {
-                // this is a data byte
-                pkt.buffer[pkt.size++] = temp;
-            }
-            
-            if (isLastByte || temp == UNLISTEN)
-            {
-                state = Unlisten;
-            }
-            
-            // about to unlisten the bus, wait for atn to deassert
-            if (temp == UNLISTEN)
-            {
-                iec.waitForNotAtn();
-            }
-            */
         }
         else if (state == Talking)
         {
