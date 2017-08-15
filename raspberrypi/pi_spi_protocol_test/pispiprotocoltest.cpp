@@ -14,9 +14,9 @@ typedef struct
     unsigned char ss;
     bool isAtn;
     unsigned char size;
-    unsigned char buffer[256];
+    unsigned char buffer[128];
     unsigned char atn_size;
-    unsigned char atn_buffer[64];
+    unsigned char atn_buffer[8];
 } dataPacket;
 
 typedef enum

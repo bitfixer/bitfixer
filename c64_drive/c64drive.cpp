@@ -34,7 +34,10 @@ extern "C" {
 #define SPI_CTL  DDRB
 #define MISO     0x10
 
+#define LISTEN   0x20
 #define UNLISTEN 0x3F
+#define TALK     0x40
+#define UNTALK   0x5F
 
 SPIData spi_data(&PORTB, &DDRB, PB0, &DDRB, PB4);
 
@@ -80,8 +83,6 @@ public:
     
     bool waitForClk(int timeoutUs = -1)
     {
-        //while ((*_iecInPort & _clkPinMask) != 0);
-        
         int timeUs = 0;
         while ((*_iecInPort & _clkPinMask) != 0)
         {
@@ -107,6 +108,21 @@ public:
         return ((*_iecInPort & _clkPinMask) == 0);
     }
     
+    // pull down the clock line
+    void setClockTrue()
+    {
+        unsigned char reg = *_iecReg;
+        reg |= _clkPinMask;
+        *_iecReg = reg;
+    }
+    
+    void setClockFalse()
+    {
+        unsigned char reg = *_iecReg;
+        reg &= ~_clkPinMask;
+        *_iecReg = reg;
+    }
+    
     // wait for either the ATN or CLK line to be released
     void waitForNotAtnOrNotClk()
     {
@@ -126,6 +142,16 @@ public:
         unsigned char reg = *_iecReg;
         reg &= ~_dataPinMask;
         *_iecReg = reg;
+    }
+    
+    void waitForData()
+    {
+        while ((*_iecInPort & _dataPinMask) != 0);
+    }
+    
+    void waitForNotData()
+    {
+        while ((*_iecInPort & _dataPinMask) == 0);
     }
     
     unsigned char readDataByte()
@@ -180,6 +206,54 @@ public:
         return byte;
     }
     
+    void writeByte(unsigned char byte, bool lastByte)
+    {
+        if (lastByte)
+        {
+            // last byte, need to indicate eoi
+            // wait at least 200 us
+            _delay_us(200);
+            
+            // wait for listener response
+            waitForData();
+            // wait for pulse to end
+            waitForNotData();
+        }
+        
+        _delay_us(30);
+        setClockTrue();
+        
+        // output 8 bits
+        for (int i = 0; i < 8; i++)
+        {
+            // output bit
+            if ((byte & 0x01) == 0)
+            {
+                // output a zero
+                setDataTrue();
+            }
+            else
+            {
+                setDataFalse();
+            }
+            
+            // shift byte
+            byte >>= 1;
+            
+            _delay_us(70);
+            setClockFalse();
+            
+            _delay_us(70);
+            setClockTrue();
+        }
+        // release data line
+        setDataFalse();
+        _delay_us(20);
+        
+        // wait for listener to accept
+        waitForData();
+    }
+    
 private:
     volatile unsigned char* _iecOutPort;
     volatile unsigned char* _iecInPort;
@@ -213,8 +287,9 @@ typedef enum
     WaitingForAtn = 0,
     ReadingAtn = 1,
     Listening = 2,
-    Talking = 3,
-    Unlisten = 4
+    TalkTurnaround = 3,
+    Talking = 4,
+    Unlisten = 5
 } DeviceState;
 
 typedef struct
@@ -223,14 +298,14 @@ typedef struct
     unsigned char ss;
     bool isAtn;
     unsigned char size;
-    unsigned char buffer[256];
+    unsigned char buffer[128];
     unsigned char atn_size;
-    unsigned char atn_buffer[64];
+    unsigned char atn_buffer[8];
 } dataPacket;
 
 int main(void)
 {
-    DDRD = 0xC0;
+    DDRD = 0xE0;
     PORTD = 0x00;
     dataPacket pkt;
     spi_data.spi_init();
@@ -240,6 +315,7 @@ int main(void)
     unsigned char bb;
     unsigned char temp;
     bool isLastByte;
+    int pgmindex = 0;
     DeviceState state = WaitingForAtn;
     DeviceState nextState = Unlisten;
     pkt.size = 0;
@@ -249,14 +325,20 @@ int main(void)
     {
         if (state == WaitingForAtn)
         {
-            PORTD = 0x00;
+            PORTD = 0x20;
             iec.waitForAtn();
+            PORTD = 0x00;
+            
+            // release clock
+            iec.setClockFalse();
+            
             iec.waitForClk();
             iec.setDataTrue();
             state = ReadingAtn;
         }
         if (state == ReadingAtn)
         {
+            PORTD = 0x20;
             iec.waitForNotAtnOrNotClk();
             if (iec.atnTrue())
             {
@@ -267,37 +349,28 @@ int main(void)
                     pkt.atn_size = 0;
                 }
                 
-                PORTD = 0x80;
                 // read one atn byte
                 temp = iec.readByteWithHandshake(isLastByte);
-                PORTD = 0x00;
                 
                 pkt.atn_buffer[pkt.atn_size++] = temp;
                 
-                if (temp == 0x3F)
-                {
-                    nextState = Unlisten;
-                }
-                //else if ((temp & 0x20) != 0)
-                else if (temp >= 0x20 && temp < 0x3F)
+                if (temp >= LISTEN && temp < UNLISTEN)
                 {
                     // listen
                     nextState = Listening;
                 }
-                else if (temp == 0xE1)
+                else if (temp == UNLISTEN)
                 {
-                    PORTD = 0x40;
+                    nextState = Unlisten;
                 }
-                /*
-                else if (temp == 0x5F)
+                else if (temp >= TALK && temp < UNTALK)
                 {
-                    // untalk
+                    nextState = TalkTurnaround;
                 }
-                else if ((temp & 0x40) != 0)
+                else if (temp == UNTALK)
                 {
-                    nextState = Talking;
+                    
                 }
-                */
             }
             else
             {
@@ -306,10 +379,10 @@ int main(void)
                 state = nextState;
                 nextState = Unlisten;
             }
+            PORTD = 0x00;
         }
         else if (state == Listening)
         {
-            PORTD = 0x80;
             while (iec.clkTrue() && !iec.atnTrue());
             if (iec.atnTrue())
             {
@@ -318,64 +391,72 @@ int main(void)
                 continue;
             }
             
+            PORTD = 0x80;
             pkt.buffer[pkt.size++] = iec.readByteWithHandshake(isLastByte);
+            PORTD = 0x00;
             
             if (isLastByte)
             {
                 state = Unlisten;
             }
         }
+        else if (state == TalkTurnaround)
+        {
+            // talker will hold data line down
+            // wait for talker to release clock line
+            iec.waitForNotClk();
+            
+            // release data line
+            iec.setDataFalse();
+            
+            // pull the clock line
+            iec.setClockTrue();
+            _delay_us(80);
+            
+            state = Talking;
+        }
         else if (state == Talking)
         {
+            if (pkt.atn_size > 0)
+            {
+                spi_data.sendAndRecvPacket((unsigned char*)&pkt, sizeof(pkt));
+                pgmindex = 0;
+                pkt.atn_size = 0;
+            }
             
+            // indicate ready to send
+            iec.setClockFalse();
+            
+            // wait for listener to indicate ready
+            iec.waitForNotData();
+            
+            bool lastByte = (pgmindex+1 == pkt.size);
+            
+            PORTD = 0x40;
+            iec.writeByte(pkt.buffer[pgmindex++], lastByte);
+            PORTD = 0x00;
+            
+            //bool lastByte = (testpgmind+1 == testpgmlen);
+            //iec.writeByte(testpgm[testpgmind++], lastByte);
+            
+            if (lastByte)
+            {
+                PORTD = 0x80;
+                state = Unlisten;
+            }
+            else
+            {
+                // wait for gap between bytes
+                _delay_us(100);
+            }
         }
         else if (state == Unlisten)
         {
+            //PORTD = 0x40;
             _delay_us(60);
             iec.setDataFalse();
             state = WaitingForAtn;
+            PORTD = 0x00;
         }
     }
-    
-    /*
-     else if (state == Listening)
-     {
-     PORTD = 0x80;
-     iec.waitForNotClk();
-     
-     // if there is data in the packet, and we are about to receive an ATN command,
-     // flush remaining data
-     bool isAtn = iec.atnTrue();
-     if (pkt.size > 0 && isAtn)
-     {
-     pkt.ss = state;
-     spi_data.sendAndRecvPacket((unsigned char*)&pkt, sizeof(pkt));
-     pkt.size = 0;
-     pkt.atn_size = 0;
-     }
-     
-     temp = iec.readByteWithHandshake(isLastByte);
-     if (isAtn)
-     {
-     // this is an atn byte, not data
-     pkt.atn_buffer[pkt.atn_size++] = temp;
-     }
-     else
-     {
-     // this is a data byte
-     pkt.buffer[pkt.size++] = temp;
-     }
-     
-     if (isLastByte || temp == UNLISTEN)
-     {
-     state = Unlisten;
-     }
-     
-     // about to unlisten the bus, wait for atn to deassert
-     if (temp == UNLISTEN)
-     {
-     iec.waitForNotAtn();
-     }
-     }
-     */
 }
