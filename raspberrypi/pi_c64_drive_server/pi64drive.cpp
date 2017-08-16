@@ -8,19 +8,6 @@
 #include "timer.hpp"
 #include "rpiSpiData.h"
 #include "c64drive.h"
-
-/*
-typedef struct
-{
-    unsigned char state;
-    unsigned char ss;
-    bool isAtn;
-    unsigned char size;
-    unsigned char buffer[128];
-    unsigned char atn_size;
-    unsigned char atn_buffer[8];
-} dataPacket;
-*/
  
 typedef enum
 {
@@ -49,7 +36,7 @@ int main(int argc, char **argv)
     delayMicroseconds(100000);
     digitalWrite(resetPin, HIGH);
 
-    printf("checking for commands_yo..\n");
+    printf("C64 Drive started.\n");
     delayMicroseconds(100000);
     bool done = false;
 
@@ -62,7 +49,6 @@ int main(int argc, char **argv)
     int fname_len = 0;
     
     FILE* fp_load = NULL;
-    unsigned char program[1024];
     int program_size = 0;
     int program_bytes_sent = 0;
 
@@ -103,20 +89,7 @@ int main(int argc, char **argv)
                         }
                         else if (b == 0xE1)
                         {
-                            /*
-                            // close open file
-                            fname[fname_len] = 0;
-                            printf("saving file %s data size %d\n", fname, program_size);
-                            
-                            FILE* fp = fopen(fname, "wb");
-                            fwrite(program, 1, program_size, fp);
-                            fclose(fp);
-                            
-                            fname_len = 0;
-                            program_size = 0;
-                            */
-                            
-                            printf("closing %s\n", fname);
+                            printf("Closing %s\n", fname);
                             fclose(fp_load);
                             fp_load = NULL;
                             fname_len = 0;
@@ -135,7 +108,7 @@ int main(int argc, char **argv)
                     {
                         printf("FNAME ATN %d: %c %d %X\n", atn_byte, dpkt->atn_buffer[atn_byte], dpkt->atn_buffer[atn_byte], dpkt->atn_buffer[atn_byte]);
                         unsigned char b = dpkt->atn_buffer[atn_byte++];
-                        if (b == 0x3F)
+                        if (b == UNLISTEN)
                         {
                             // reading a filename
                             state = Idle;
@@ -150,36 +123,16 @@ int main(int argc, char **argv)
                 }
                 else if (state == Saving)
                 {
-                    /*
-                    if (atn_byte < dpkt->atn_size)
-                    {
-                        printf("SAVING ATN %d: %c %d %X\n", atn_byte, dpkt->atn_buffer[atn_byte], dpkt->atn_buffer[atn_byte], dpkt->atn_buffer[atn_byte]);
-                        unsigned char b = dpkt->atn_buffer[atn_byte++];
-                        if (b == 0x3F)
-                        {
-                            // reading a filename
-                            state = Idle;
-                        }
-                    }
-                    else if (data_byte < dpkt->data_size)
-                    {
-                        printf("SAVING %d: %c %d %X\n", data_byte, dpkt->data_buffer[data_byte], dpkt->data_buffer[data_byte], dpkt->data_buffer[data_byte]);
-                        char b = dpkt->data_buffer[data_byte++];
-                        program[program_size++] = b;
-                    }
-                    */
-                    printf("saving\n");
                     if (dpkt->data_size > 0)
                     {
                         if (!fp_load)
                         {
                             fname[fname_len] = 0;
-                            printf("opening %s\n", fname);
                             fp_load = fopen(fname, "wb");
                         }
                         
                         program_size += dpkt->data_size;
-                        printf("saving %s: %d bytes (%d)\n", fname, dpkt->data_size, program_size);
+                        printf("Saving %s: %d bytes (%d)\n", fname, dpkt->data_size, program_size);
                         fwrite(dpkt->data_buffer, 1, dpkt->data_size, fp_load);
                         data_byte += dpkt->data_size;
                     }
@@ -187,7 +140,7 @@ int main(int argc, char **argv)
                     {
                         printf("SAVING ATN %d: %c %d %X\n", atn_byte, dpkt->atn_buffer[atn_byte], dpkt->atn_buffer[atn_byte], dpkt->atn_buffer[atn_byte]);
                         unsigned char b = dpkt->atn_buffer[atn_byte++];
-                        if (b == 0x3F)
+                        if (b == UNLISTEN)
                         {
                             // reading a filename
                             state = Idle;
@@ -232,34 +185,9 @@ int main(int argc, char **argv)
             }
             
             // send state response
-            printf("response\n");
             spi_data.send(pkt, sizeof(dataPacket));
         }
     }
-    
-    /*
-    while (!done)
-    {
-        int recv_size = spi_data.receive(pkt);
-        if (recv_size > 0)
-        {
-            dataPacket* dpkt = (dataPacket*)pkt;
-            
-            for (int i = 0; i < dpkt->atn_size; i++)
-            {
-                printf("ATN %d: %c %d %X\n", i, dpkt->atn_buffer[i], dpkt->atn_buffer[i], dpkt->atn_buffer[i]);
-            }
-            
-            for (int i = 0; i < dpkt->size; i++)
-            {
-                printf("%d: %c %d %X\n", i, dpkt->data_buffer[i], dpkt->data_buffer[i], dpkt->data_buffer[i]);
-            }
-            
-            // send state response
-            spi_data.send(pkt, 1);
-        }
-    }
-    */
 
     return 1;
 }

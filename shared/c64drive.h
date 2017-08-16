@@ -9,6 +9,11 @@
 #ifndef c64drive_h
 #define c64drive_h
 
+#define LISTEN   0x20
+#define UNLISTEN 0x3F
+#define TALK     0x40
+#define UNTALK   0x5F
+
 typedef struct
 {
     unsigned char data_size;

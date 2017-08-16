@@ -35,11 +35,6 @@ extern "C" {
 #define SPI_CTL  DDRB
 #define MISO     0x10
 
-#define LISTEN   0x20
-#define UNLISTEN 0x3F
-#define TALK     0x40
-#define UNTALK   0x5F
-
 SPIData spi_data(&PORTB, &DDRB, PB0, &DDRB, PB4);
 
 class c64iec
