@@ -406,15 +406,14 @@ int main(void)
         else if (state == Talking)
         {
             // if we do not have any bytes to send, ask the server
-            //if (pkt.atn_size > 0 || (pkt.data_size > 0 && pgmindex == pkt.data_size))
-            if (pkt.atn_size > 0)
+            if (pkt.atn_size > 0 || (pkt.data_size > 0 && pgmindex == pkt.data_size))
             {
                 spi_data.sendAndRecvPacket((unsigned char*)&pkt, sizeof(pkt));
                 pgmindex = 0;
                 pkt.atn_size = 0;
             }
             
-            bool lastByte = (pgmindex+1 == pkt.data_size);
+            bool lastByte = ((pgmindex+1 == pkt.data_size) && pkt.is_last_data_buffer);
             
             // indicate ready to send
             iec.setClockFalse();
@@ -424,12 +423,12 @@ int main(void)
             
             // if this is the final data buffer (indicated by server)
             // and this is the last byte in this data buffer, it's the last byte overall
-            //bool lastByte = ((pgmindex+1 == pkt.data_size) && pkt.is_last_data_buffer);
             iec.writeByte(pkt.data_buffer[pgmindex++], lastByte);
             
             if (lastByte)
             {
                 PORTD = 0x80;
+                pkt.data_size = 0;
                 state = Unlisten;
             }
             else
