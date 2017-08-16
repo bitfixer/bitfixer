@@ -178,7 +178,8 @@ int main(int argc, char **argv)
                             fp_load = fopen(fname, "wb");
                         }
                         
-                        printf("saving %s: %d bytes\n", fname, dpkt->data_size);
+                        program_size += dpkt->data_size;
+                        printf("saving %s: %d bytes (%d)\n", fname, dpkt->data_size, program_size);
                         fwrite(dpkt->data_buffer, 1, dpkt->data_size, fp_load);
                         data_byte += dpkt->data_size;
                     }

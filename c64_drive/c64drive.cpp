@@ -381,6 +381,14 @@ int main(void)
                 continue;
             }
             
+            // if buffer is full, send now
+            if (pkt.data_size == 128)
+            {
+                spi_data.sendAndRecvPacket((unsigned char*)&pkt, sizeof(pkt));
+                pkt.data_size = 0;
+                pkt.atn_size = 0;
+            }
+            
             pkt.data_buffer[pkt.data_size++] = iec.readByteWithHandshake(isLastByte);
             
             if (isLastByte)
