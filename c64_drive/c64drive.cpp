@@ -22,6 +22,7 @@
 #define F_CPU 8000000UL		//freq 8 MHz
 
 #include "spi_data_protocol.h"
+#include "c64drive.h"
 extern "C" {
 #include <avr/io.h>
 #include <avr/pgmspace.h>
@@ -292,17 +293,6 @@ typedef enum
     Unlisten = 5
 } DeviceState;
 
-typedef struct
-{
-    unsigned char state;
-    unsigned char ss;
-    bool isAtn;
-    unsigned char size;
-    unsigned char buffer[128];
-    unsigned char atn_size;
-    unsigned char atn_buffer[8];
-} dataPacket;
-
 int main(void)
 {
     DDRD = 0xE0;
@@ -318,7 +308,7 @@ int main(void)
     int pgmindex = 0;
     DeviceState state = WaitingForAtn;
     DeviceState nextState = Unlisten;
-    pkt.size = 0;
+    pkt.data_size = 0;
     pkt.atn_size = 0;
     
     while (1)
@@ -342,10 +332,10 @@ int main(void)
             iec.waitForNotAtnOrNotClk();
             if (iec.atnTrue())
             {
-                if (pkt.size > 0 || pkt.atn_size > 0)
+                if (pkt.data_size > 0 || pkt.atn_size > 0)
                 {
                     spi_data.sendAndRecvPacket((unsigned char*)&pkt, sizeof(pkt));
-                    pkt.size = 0;
+                    pkt.data_size = 0;
                     pkt.atn_size = 0;
                 }
                 
@@ -369,7 +359,7 @@ int main(void)
                 }
                 else if (temp == UNTALK)
                 {
-                    
+                    nextState = Unlisten;
                 }
             }
             else
@@ -391,9 +381,7 @@ int main(void)
                 continue;
             }
             
-            PORTD = 0x80;
-            pkt.buffer[pkt.size++] = iec.readByteWithHandshake(isLastByte);
-            PORTD = 0x00;
+            pkt.data_buffer[pkt.data_size++] = iec.readByteWithHandshake(isLastByte);
             
             if (isLastByte)
             {
@@ -417,6 +405,8 @@ int main(void)
         }
         else if (state == Talking)
         {
+            // if we do not have any bytes to send, ask the server
+            //if (pkt.atn_size > 0 || (pkt.data_size > 0 && pgmindex == pkt.data_size))
             if (pkt.atn_size > 0)
             {
                 spi_data.sendAndRecvPacket((unsigned char*)&pkt, sizeof(pkt));
@@ -424,20 +414,18 @@ int main(void)
                 pkt.atn_size = 0;
             }
             
+            bool lastByte = (pgmindex+1 == pkt.data_size);
+            
             // indicate ready to send
             iec.setClockFalse();
             
             // wait for listener to indicate ready
             iec.waitForNotData();
             
-            bool lastByte = (pgmindex+1 == pkt.size);
-            
-            PORTD = 0x40;
-            iec.writeByte(pkt.buffer[pgmindex++], lastByte);
-            PORTD = 0x00;
-            
-            //bool lastByte = (testpgmind+1 == testpgmlen);
-            //iec.writeByte(testpgm[testpgmind++], lastByte);
+            // if this is the final data buffer (indicated by server)
+            // and this is the last byte in this data buffer, it's the last byte overall
+            //bool lastByte = ((pgmindex+1 == pkt.data_size) && pkt.is_last_data_buffer);
+            iec.writeByte(pkt.data_buffer[pgmindex++], lastByte);
             
             if (lastByte)
             {
@@ -452,7 +440,6 @@ int main(void)
         }
         else if (state == Unlisten)
         {
-            //PORTD = 0x40;
             _delay_us(60);
             iec.setDataFalse();
             state = WaitingForAtn;
