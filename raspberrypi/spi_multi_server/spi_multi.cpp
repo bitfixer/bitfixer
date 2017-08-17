@@ -5,17 +5,11 @@
 #include <sys/time.h>
 #include <math.h>
 #include <string.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include "timer.hpp"
 #include "rpiSpiData.h"
-#include "c64drive.h"
- 
-typedef enum
-{
-    Idle,
-    GettingFilename,
-    Saving,
-    Loading
-} driveState;
 
 typedef struct
 {
@@ -25,20 +19,45 @@ typedef struct
     rpiSpiData* spi_data;
 } spiInfo;
 
+int main2(int argc, char **argv)
+{
+    int fd, fd_in;
+    char * myfifo = "/tmp/c64drive";
+    //char * infifo = "/tmp/spiserver";
+    char buf[1024];
+    
+    mkfifo(myfifo, 0666);
+    //mkfifo(infifo, 0666);
+    
+    fd = open(myfifo, O_WRONLY);
+    //fd_in = open(infifo, O_RDONLY);
+    
+    write(fd, "Hi", sizeof("Hi"));
+    
+    //read(fd_in, buf, 1024);
+    //printf("received %s\n", buf);
+    close(fd);
+    //close(fd_in);
+    
+    unlink(myfifo);
+    
+    return 0;
+}
+
 // test - watch for input
 int main(int argc, char **argv)
 {
-
+    printf("yo\n");
+    //return 0;
+    int fd, fd_in;
+    char * myfifo = "/tmp/c64drive";
+    char * infifo = "/tmp/spiserver";
+    mkfifo(myfifo, 0666);
+    mkfifo(infifo, 0666);
+    fd = open(myfifo, O_WRONLY);
+    fd_in = open(infifo, O_RDONLY);
+    
     spiInfo spiInfo[2];
-    
-    // SPI 0
-    /*
-    int resetPin = 3; // wiringPi number
-    // BCM GPIO 22
-    int spiReqPin = 0;
-    int spiInterface = 0;
-    */
-    
     spiInfo[0].resetPin = 3;
     spiInfo[0].spiReqPin = 0;
     spiInfo[0].spiInterface = 0;
@@ -46,6 +65,8 @@ int main(int argc, char **argv)
     spiInfo[1].resetPin = 7;
     spiInfo[1].spiReqPin = 4;
     spiInfo[1].spiInterface = 1;
+     
+    printf("here.\n");
     
     wiringPiSetup();
     
@@ -62,29 +83,6 @@ int main(int argc, char **argv)
         spiInfo[i].spi_data = new rpiSpiData(spiInfo[i].spiReqPin, spi);
     }
     
-    
-    
-     
-    // SPI 1
-    //int resetPin = 7; // wiringPi number
-    // BCM GPIO 4
-    //int spiReqPin = 4;
-    //int spiInterface = 1;
-    
-    /*
-    wiringPiSetup();
-    pinMode(spiReqPin, INPUT);
-    pullUpDnControl(spiReqPin, PUD_UP);
-
-    pinMode(resetPin, OUTPUT);
-    pullUpDnControl(resetPin, PUD_OFF);
-    digitalWrite(resetPin, LOW); // reset MCU
-
-    //int spi = wiringPiSPISetup(0, 2000000);
-    int spi = wiringPiSPISetup(spiInterface, 2000000);
-    rpiSpiData spi_data(spiReqPin, spi);
-    */
-     
     delayMicroseconds(100000);
     
     for (int i = 0; i < 2; i++)
@@ -105,7 +103,18 @@ int main(int argc, char **argv)
             if (recv_size > 0)
             {
                 printf("recv interface %d id %d %d %d bytes\n", i, pkt[0], pkt[1], recv_size);
-                spiInfo[i].spi_data->send(pkt, 1);
+                
+                if (i == 1)
+                {
+                    printf("writing to pipe\n");
+                    write(fd, pkt, recv_size);
+                    //write(fd, "Hi There!", sizeof("Hi There!"));
+                    //write(fd, "Hi", sizeof("Hi"));
+                    recv_size = read(fd_in, pkt, 1024);
+                    printf("recv %d bytes\n", recv_size);
+                }
+                
+                spiInfo[i].spi_data->send(pkt, recv_size);
             }
         }
         

@@ -5,10 +5,14 @@
 #include <sys/time.h>
 #include <math.h>
 #include <string.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include "timer.hpp"
 #include "rpiSpiData.h"
 #include "c64drive.h"
- 
+
+#define MAX_BUF 1024
+
 typedef enum
 {
     Idle,
@@ -17,9 +21,34 @@ typedef enum
     Loading
 } driveState;
 
+int main2(int argc, char **argv)
+{
+    int fd, fd_out;
+    char * myfifo = "/tmp/c64drive";
+    char * outfifo = "/tmp/spiserver";
+    char buf[MAX_BUF];
+    
+    /* open, read, and display the message from the FIFO */
+    fd = open(myfifo, O_RDONLY);
+    fd_out = open(outfifo, O_WRONLY);
+    printf("here\n");
+    while (1)
+    {
+        int rb = read(fd, buf, MAX_BUF);
+        printf("Received id %d %d\n", buf[0], buf[1]);
+        //write(fd_out, "There", sizeof("There"));
+        write(fd_out, buf, rb);
+    }
+    close(fd);
+    close(fd_out);
+    
+    return 0;
+}
+
 // test - watch for input
 int main(int argc, char **argv)
 {
+    /*
     // SPI 0
     int resetPin = 3; // wiringPi number
     // BCM GPIO 22
@@ -50,6 +79,16 @@ int main(int argc, char **argv)
     printf("C64 Drive started.\n");
     delayMicroseconds(100000);
     bool done = false;
+    */
+    
+    int fd, fd_out;
+    char * myfifo = "/tmp/c64drive";
+    char * outfifo = "/tmp/spiserver";
+    char buf[MAX_BUF];
+    
+    /* open, read, and display the message from the FIFO */
+    fd = open(myfifo, O_RDONLY);
+    fd_out = open(outfifo, O_WRONLY);
 
     Tools::Timer timer;
     unsigned char pkt[1025];
@@ -63,6 +102,7 @@ int main(int argc, char **argv)
     int program_size = 0;
     int program_bytes_sent = 0;
     
+    /*
     // test
     while (1)
     {
@@ -74,10 +114,13 @@ int main(int argc, char **argv)
         // send state response
         spi_data.send(pkt, 1);
     }
+    */
 
+    printf("C64 server\n");
     while (1)
     {
-        int recv_size = spi_data.receive(pkt);
+        //int recv_size = spi_data.receive(pkt);
+        int recv_size = read(fd, pkt, 1024);
         if (recv_size > 0)
         {
             dataPacket* dpkt = (dataPacket*)pkt;
@@ -208,7 +251,8 @@ int main(int argc, char **argv)
             }
             
             // send state response
-            spi_data.send(pkt, sizeof(dataPacket));
+            //spi_data.send(pkt, sizeof(dataPacket));
+            write(fd_out, pkt, sizeof(dataPacket));
         }
     }
 
