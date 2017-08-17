@@ -6,6 +6,17 @@
 
 int rpiSpiData::receive(unsigned char* buffer)
 {
+    if (digitalRead(_deviceReadyPin) == HIGH)
+    {
+        return 0;
+    }
+    
+    return receive_sync(buffer);
+}
+
+
+int rpiSpiData::receive_sync(unsigned char* buffer)
+{
     // wait for device to signal ready
     while (digitalRead(_deviceReadyPin) == HIGH)
     {

@@ -13,6 +13,8 @@
 #include <util/delay.h>
 #include "spi_data_protocol.h"
 
+#define DEVICE_ID 19
+
 void output_byte(unsigned char byte)
 {
     PORTC = byte;
@@ -74,6 +76,12 @@ unsigned char get_command()
     return byte;
 }
 
+typedef struct
+{
+    unsigned char device_id;
+    unsigned char cmd;
+} dataPacket;
+
 int main(void)
 {
     unsigned char val;
@@ -81,12 +89,22 @@ int main(void)
     int recv_size;
     unsigned char buffer[2048];
     PORTB = 0x01;
-
     memset(buffer, 0, 2048);
+    
+    dataPacket cmdPkt;
+    cmdPkt.device_id = DEVICE_ID;
 
-    SPIData spi_data(&PORTB, &DDRB, PB0);
+    SPIData spi_data(&PORTB, &DDRB, PB0, &DDRB, PB6);
     init();
     spi_data.spi_init();
+    
+    cmdPkt.cmd = 0;
+    while (1)
+    {
+        recv_size = spi_data.sendAndRecvPacket((unsigned char*)&cmdPkt, sizeof(cmdPkt));
+        cmdPkt.cmd++;
+        _delay_us(2000000);
+    }
 
     // wait for command byte
     while (1)

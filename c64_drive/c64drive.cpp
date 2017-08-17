@@ -35,6 +35,8 @@ extern "C" {
 #define SPI_CTL  DDRB
 #define MISO     0x10
 
+#define C64_DRIVE_ID    0x12
+
 SPIData spi_data(&PORTB, &DDRB, PB0, &DDRB, PB4);
 
 class c64iec
@@ -260,13 +262,6 @@ private:
     unsigned char _dataPinMask;
 };
 
-
-
-void log(const char* string)
-{
-    spi_data.sendAndRecvPacket((unsigned char*)string, strlen(string));
-}
-
 void port_init(void)
 {
 }
@@ -305,6 +300,7 @@ int main(void)
     DeviceState nextState = Unlisten;
     pkt.data_size = 0;
     pkt.atn_size = 0;
+    pkt.device_id = C64_DRIVE_ID;
     
     while (1)
     {

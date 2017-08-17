@@ -17,21 +17,61 @@ typedef enum
     Loading
 } driveState;
 
+typedef struct
+{
+    int resetPin;
+    int spiReqPin;
+    int spiInterface;
+    rpiSpiData* spi_data;
+} spiInfo;
+
 // test - watch for input
 int main(int argc, char **argv)
 {
+
+    spiInfo spiInfo[2];
+    
     // SPI 0
+    /*
     int resetPin = 3; // wiringPi number
     // BCM GPIO 22
     int spiReqPin = 0;
     int spiInterface = 0;
+    */
     
+    spiInfo[0].resetPin = 3;
+    spiInfo[0].spiReqPin = 0;
+    spiInfo[0].spiInterface = 0;
+    
+    spiInfo[1].resetPin = 7;
+    spiInfo[1].spiReqPin = 4;
+    spiInfo[1].spiInterface = 1;
+    
+    wiringPiSetup();
+    
+    for (int i = 0; i < 2; i++)
+    {
+        pinMode(spiInfo[i].spiReqPin, INPUT);
+        pullUpDnControl(spiInfo[i].spiReqPin, PUD_UP);
+        
+        pinMode(spiInfo[i].resetPin, OUTPUT);
+        pullUpDnControl(spiInfo[i].resetPin, PUD_OFF);
+        digitalWrite(spiInfo[i].resetPin, LOW); // reset this device
+        
+        int spi = wiringPiSPISetup(spiInfo[i].spiInterface, 2000000);
+        spiInfo[i].spi_data = new rpiSpiData(spiInfo[i].spiReqPin, spi);
+    }
+    
+    
+    
+     
     // SPI 1
     //int resetPin = 7; // wiringPi number
     // BCM GPIO 4
     //int spiReqPin = 4;
     //int spiInterface = 1;
     
+    /*
     wiringPiSetup();
     pinMode(spiReqPin, INPUT);
     pullUpDnControl(spiReqPin, PUD_UP);
@@ -43,38 +83,36 @@ int main(int argc, char **argv)
     //int spi = wiringPiSPISetup(0, 2000000);
     int spi = wiringPiSPISetup(spiInterface, 2000000);
     rpiSpiData spi_data(spiReqPin, spi);
-
+    */
+     
     delayMicroseconds(100000);
-    digitalWrite(resetPin, HIGH);
+    
+    for (int i = 0; i < 2; i++)
+    {
+        digitalWrite(spiInfo[i].resetPin, HIGH);
+    }
 
-    printf("C64 Drive started.\n");
+    printf("SPI server started.\n");
     delayMicroseconds(100000);
-    bool done = false;
-
-    Tools::Timer timer;
     unsigned char pkt[1025];
-    unsigned char size_bytes[2];
-    driveState state = Idle;
-    
-    char fname[256];
-    int fname_len = 0;
-    
-    FILE* fp_load = NULL;
-    int program_size = 0;
-    int program_bytes_sent = 0;
     
     // test
     while (1)
     {
-        int recv_size = spi_data.receive(pkt);
-        if (recv_size > 0)
+        for (int i = 0; i < 2; i++)
         {
-            printf("recv id %d %d %d bytes\n", pkt[0], pkt[1], recv_size);
+            int recv_size = spiInfo[i].spi_data->receive(pkt);
+            if (recv_size > 0)
+            {
+                printf("recv interface %d id %d %d %d bytes\n", i, pkt[0], pkt[1], recv_size);
+                spiInfo[i].spi_data->send(pkt, 1);
+            }
         }
-        // send state response
-        spi_data.send(pkt, 1);
+        
+        delayMicroseconds(10);
     }
 
+    /*
     while (1)
     {
         int recv_size = spi_data.receive(pkt);
@@ -211,6 +249,6 @@ int main(int argc, char **argv)
             spi_data.send(pkt, sizeof(dataPacket));
         }
     }
-
+     */
     return 1;
 }

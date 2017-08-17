@@ -16,6 +16,7 @@
 
 typedef struct
 {
+    unsigned char device_id;
     unsigned char data_size;
     unsigned char data_buffer[128];
     unsigned char is_last_data_buffer;

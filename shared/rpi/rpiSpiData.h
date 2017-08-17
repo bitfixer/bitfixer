@@ -12,6 +12,7 @@ public:
 
     // receive a packet from a device
     int receive(unsigned char* buffer);
+    int receive_sync(unsigned char* buffer);
     void send(unsigned char* buffer, int send_size);
 
 private:
