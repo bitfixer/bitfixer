@@ -323,12 +323,14 @@ int main(void)
             iec.waitForNotAtnOrNotClk();
             if (iec.atnTrue())
             {
+                /*
                 if (pkt.data_size > 0 || pkt.atn_size > 0)
                 {
                     spi_data.sendAndRecvPacket((unsigned char*)&pkt, sizeof(pkt));
                     pkt.data_size = 0;
                     pkt.atn_size = 0;
                 }
+                */
                 
                 // read one atn byte
                 temp = iec.readByteWithHandshake(isLastByte);
@@ -373,7 +375,8 @@ int main(void)
             }
             
             // if buffer is full, send now
-            if (pkt.data_size == 128)
+            if (pkt.data_size == 128 || pkt.atn_size > 0)
+            //if (pkt.data_size == )
             {
                 spi_data.sendAndRecvPacket((unsigned char*)&pkt, sizeof(pkt));
                 pkt.data_size = 0;

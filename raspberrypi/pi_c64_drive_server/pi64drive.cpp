@@ -122,7 +122,7 @@ int main(int argc, char **argv)
     
     // TEST: from cbmdos
     dosInitDrives();
-    dosMountDisk("sca-crk1.d64", 0);
+    dosMountDisk("sca-sg1.d64", 0);
     
     CBMDOSChannel aChan;
     aChan.file = NULL;
@@ -213,6 +213,25 @@ int main(int argc, char **argv)
                 }
                 else if (state == GettingFilename)
                 {
+                    if (data_byte < dpkt->data_size)
+                    {
+                        printf("FNAME %d: %c %d %X\n", data_byte, dpkt->data_buffer[data_byte], dpkt->data_buffer[data_byte], dpkt->data_buffer[data_byte]);
+                        char b = dpkt->data_buffer[data_byte++];
+                        fname[fname_len++] = b;
+                    }
+                    else if (atn_byte < dpkt->atn_size)
+                    {
+                        printf("FNAME ATN %d: %c %d %X\n", atn_byte, dpkt->atn_buffer[atn_byte], dpkt->atn_buffer[atn_byte], dpkt->atn_buffer[atn_byte]);
+                        unsigned char b = dpkt->atn_buffer[atn_byte++];
+                        if (b == UNLISTEN)
+                        {
+                            // reading a filename
+                            state = Idle;
+                        }
+                    }
+                    
+                    
+                    /*
                     if (atn_byte < dpkt->atn_size)
                     {
                         printf("FNAME ATN %d: %c %d %X\n", atn_byte, dpkt->atn_buffer[atn_byte], dpkt->atn_buffer[atn_byte], dpkt->atn_buffer[atn_byte]);
@@ -229,6 +248,7 @@ int main(int argc, char **argv)
                         char b = dpkt->data_buffer[data_byte++];
                         fname[fname_len++] = b;
                     }
+                    */
                 }
                 else if (state == Saving)
                 {
