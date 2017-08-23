@@ -1,10 +1,11 @@
 REMOTE := 192.168.1.19
 
 all:
-	g++ -o pi64drive -lwiringPi -std=c++11 pi64drive.cpp timer.cpp rpiSpiData.cpp
+	g++ -o pi64drive -std=c++11 pi64drive.cpp timer.cpp cbmdos.cpp d64fs.cpp localfs.cpp
 
 transfer:
-	scp pi64drive.cpp pi@$(REMOTE):~/pi64drive/pi64drive.cpp
+	scp *.cpp pi@$(REMOTE):~/pi64drive/
+	scp *.h pi@$(REMOTE):~/pi64drive/
 	scp Makefile pi@$(REMOTE):~/pi64drive/Makefile
 	scp ../../shared/timer.hpp pi@$(REMOTE):~/pi64drive/timer.hpp
 	scp ../../shared/timer.cpp pi@$(REMOTE):~/pi64drive/timer.cpp

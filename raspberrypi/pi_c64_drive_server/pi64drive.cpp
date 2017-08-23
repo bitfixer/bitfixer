@@ -1,6 +1,7 @@
 #include <wiringPi.h>
 #include <wiringPiSPI.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/time.h>
 #include <math.h>
@@ -10,6 +11,9 @@
 #include "timer.hpp"
 #include "rpiSpiData.h"
 #include "c64drive.h"
+
+// test from cbmdos
+#include "cbmdos.h"
 
 #define MAX_BUF 1024
 
@@ -115,8 +119,36 @@ int main(int argc, char **argv)
         spi_data.send(pkt, 1);
     }
     */
-
+    
+    // TEST: from cbmdos
+    dosInitDrives();
+    dosMountDisk("sca-crk1.d64", 0);
+    
+    CBMDOSChannel aChan;
+    aChan.file = NULL;
+    aChan.buffer = NULL;
     printf("C64 server\n");
+    
+    /*
+    fname[0] = '$';
+    fname[1] = 0;
+    
+    aChan = dosOpenFile(fname, 0);
+    if (!aChan.file)
+    {
+        printf("%s: file not found\n", fname);
+    }
+    
+    printf("here\n");
+    fseek(aChan.file, 0, SEEK_END);
+    printf("yy\n");
+    int dirsize = ftell(aChan.file);
+    fseek(aChan.file, 0, SEEK_SET);
+    printf("dir size %d\n", dirsize);
+    
+    return 1;
+    */
+     
     while (1)
     {
         //int recv_size = spi_data.receive(pkt);
@@ -153,11 +185,22 @@ int main(int argc, char **argv)
                             program_size = 0;
                             state = Saving;
                         }
-                        else if (b == 0xE1)
+                        else if (b == 0xE1 || b == 0xE0)
                         {
                             printf("Closing %s\n", fname);
-                            fclose(fp_load);
-                            fp_load = NULL;
+                            
+                            if (aChan.file)
+                            {
+                                fclose(aChan.file);
+                                aChan.file = NULL;
+                            }
+                            if (aChan.buffer)
+                            {
+                                free(aChan.buffer);
+                                aChan.buffer = NULL;
+                                aChan.length = 0;
+                            }
+                            
                             fname_len = 0;
                             program_size = 0;
                         }
@@ -191,15 +234,30 @@ int main(int argc, char **argv)
                 {
                     if (dpkt->data_size > 0)
                     {
-                        if (!fp_load)
+                        if (!aChan.file)
                         {
                             fname[fname_len] = 0;
-                            fp_load = fopen(fname, "wb");
+                            //fp_load = fopen(fname, "wb");
+                            
+                            // open for saving, try opening dos channel
+                            aChan = dosOpenFile(fname, 1);
+                            if (!aChan.file && !aChan.buffer)
+                            {
+                                printf("file not found error!\n");
+                            }
+                            
                         }
                         
                         program_size += dpkt->data_size;
                         printf("Saving %s: %d bytes (%d)\n", fname, dpkt->data_size, program_size);
-                        fwrite(dpkt->data_buffer, 1, dpkt->data_size, fp_load);
+                        
+                        if (aChan.file)
+                        {
+                            printf("writing to file..\n");
+                            fwrite(dpkt->data_buffer, 1, dpkt->data_size, aChan.file);
+                        }
+                        
+                        //fwrite(dpkt->data_buffer, 1, dpkt->data_size, fp_load);
                         data_byte += dpkt->data_size;
                     }
                     else if (atn_byte < dpkt->atn_size)
@@ -217,33 +275,85 @@ int main(int argc, char **argv)
                 else if (state == Loading)
                 {
                     // load next chunk of data into the packet
-                    if (!fp_load)
+                    if (!aChan.file && !aChan.buffer)
                     {
                         fname[fname_len] = 0;
+                        /*
                         fp_load = fopen(fname, "rb");
                         // get size
                         fseek(fp_load, 0, SEEK_END);
                         program_size = ftell(fp_load);
                         fseek(fp_load, 0, SEEK_SET);
+                        */
+                        
+                        aChan = dosOpenFile(fname, 0);
+                        if (!aChan.file && !aChan.buffer)
+                        {
+                            printf("file not found error.\n");
+                        }
+                        
+                        if (aChan.file)
+                        {
+                            fseek(aChan.file, 0, SEEK_END);
+                            program_size = ftell(aChan.file);
+                            fseek(aChan.file, 0, SEEK_SET);
+                        }
+                        else if (aChan.buffer)
+                        {
+                            program_size = aChan.length;
+                            printf("pgm size %d\n", program_size);
+                        }
                     }
                     
-                    int bytes_read = (int)fread(dpkt->data_buffer, 1, 128, fp_load);
-                    dpkt->data_size = (unsigned char)bytes_read;
-                    program_bytes_sent += bytes_read;
-                    printf("Loading %s: %d / %d (%f %%)\n", fname, program_bytes_sent, program_size, (float)program_bytes_sent*100.0 / (float)program_size);
-                    
-                    if (program_bytes_sent >= program_size)
+                    if (aChan.file || aChan.buffer)
                     {
-                        dpkt->is_last_data_buffer = 1;
-                        program_bytes_sent = 0;
-                        program_size = 0;
-                        fclose(fp_load);
-                        fp_load = NULL;
-                        state = Idle;
-                    }
-                    else
-                    {
-                        dpkt->is_last_data_buffer = 0;
+                        printf("reading from file..\n");
+                        int bytes_read = 0;
+                        if (aChan.file)
+                        {
+                            bytes_read = (int)fread(dpkt->data_buffer, 1, 128, aChan.file);
+                        }
+                        else if (aChan.buffer)
+                        {
+                            printf("reading from buffer pos %d\n", aChan.sent);
+                            int bytes_to_read = aChan.length - aChan.sent;
+                            if (bytes_to_read > 128)
+                            {
+                                bytes_to_read = 128;
+                            }
+                            
+                            memcpy(dpkt->data_buffer, &aChan.buffer[aChan.sent], bytes_to_read);
+                            bytes_read = bytes_to_read;
+                            aChan.sent += bytes_read;
+                        }
+                        
+                        
+                        dpkt->data_size = (unsigned char)bytes_read;
+                        program_bytes_sent += bytes_read;
+                        printf("Loading %s: %d / %d (%f %%)\n", fname, program_bytes_sent, program_size, (float)program_bytes_sent*100.0 / (float)program_size);
+                        
+                        if (program_bytes_sent >= program_size)
+                        {
+                            printf("last\n");
+                            dpkt->is_last_data_buffer = 1;
+                            program_bytes_sent = 0;
+                            program_size = 0;
+                            //fclose(fp_load);
+                            //fp_load = NULL;
+                            
+                            if (aChan.file)
+                            {
+                                fclose(aChan.file);
+                                aChan.file = NULL;
+                            }
+                            
+                            state = Idle;
+                        }
+                        else
+                        {
+                            printf("not last\n");
+                            dpkt->is_last_data_buffer = 0;
+                        }
                     }
                     
                     break;
