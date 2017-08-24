@@ -122,12 +122,13 @@ int main(int argc, char **argv)
     
     // TEST: from cbmdos
     dosInitDrives();
-    dosMountDisk("sca-sg1.d64", 0);
+    dosMountDisk("POOLOFR0.D64", 0);
     
     CBMDOSChannel aChan;
     aChan.file = NULL;
     aChan.buffer = NULL;
     printf("C64 server\n");
+    int channel = 0;
     
     /*
     fname[0] = '$';
@@ -176,14 +177,26 @@ int main(int argc, char **argv)
                             fname_len = 0;
                             state = GettingFilename;
                         }
-                        else if (b == 0x60)
-                        {
-                            state = Loading;
-                        }
                         else if (b == 0x61)
                         {
                             program_size = 0;
                             state = Saving;
+                        }
+                        else if (b >= 0x60 && b <= 0x6F)
+                        {
+                            printf("b = %X\n", b);
+                            channel = b & 0x0F;
+                            
+                            if (b == 0x6F)
+                            {
+                                printf("atn_byte %d, atn_size %d\n", atn_byte, dpkt->atn_size);
+                                for (int ab = atn_byte; ab < dpkt->atn_size; ab++)
+                                {
+                                    printf("atnbyte: %X\n", dpkt->atn_buffer[ab]);
+                                }
+                            }
+                            
+                            state = Loading;
                         }
                         else if (b == 0xE1 || b == 0xE0)
                         {
@@ -306,7 +319,17 @@ int main(int argc, char **argv)
                         fseek(fp_load, 0, SEEK_SET);
                         */
                         
-                        aChan = dosOpenFile(fname, 0);
+                        printf("loading channel %d\n", channel);
+                        if (channel == 15)
+                        {
+                            printf("dosSendError\n");
+                            aChan = dosSendError();
+                        }
+                        else
+                        {
+                            aChan = dosOpenFile(fname, channel);
+                        }
+                        
                         if (!aChan.file && !aChan.buffer)
                         {
                             printf("file not found error.\n");
