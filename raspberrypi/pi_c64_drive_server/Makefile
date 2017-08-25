@@ -1,7 +1,7 @@
 REMOTE := 192.168.1.19
 
 all:
-	g++ -o pi64drive -std=c++11 pi64drive.cpp timer.cpp cbmdos.cpp d64fs.cpp localfs.cpp
+	g++ -o pi64drive -std=c++11 pi64drive.cpp timer.cpp cbmdos.cpp d64fs.cpp localfs.cpp C64Dos.cpp
 
 transfer:
 	scp *.cpp pi@$(REMOTE):~/pi64drive/

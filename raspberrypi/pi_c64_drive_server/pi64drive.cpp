@@ -12,8 +12,7 @@
 #include "rpiSpiData.h"
 #include "c64drive.h"
 
-// test from cbmdos
-#include "cbmdos.h"
+#include "C64Dos.h"
 
 #define MAX_BUF 1024
 
@@ -120,6 +119,7 @@ int main(int argc, char **argv)
     }
     */
     
+    /*
     // TEST: from cbmdos
     dosInitDrives();
     dosMountDisk("POOLOFR0.D64", 0);
@@ -127,6 +127,10 @@ int main(int argc, char **argv)
     CBMDOSChannel aChan;
     aChan.file = NULL;
     aChan.buffer = NULL;
+    */
+    C64Dos c64dos;
+    c64dos.init();
+    
     printf("C64 server\n");
     int channel = 0;
     
@@ -202,6 +206,7 @@ int main(int argc, char **argv)
                         {
                             printf("Closing %s\n", fname);
                             
+                            /*
                             if (aChan.file)
                             {
                                 fclose(aChan.file);
@@ -213,6 +218,9 @@ int main(int argc, char **argv)
                                 aChan.buffer = NULL;
                                 aChan.length = 0;
                             }
+                            */
+                            
+                            c64dos.close();
                             
                             fname_len = 0;
                             program_size = 0;
@@ -267,28 +275,39 @@ int main(int argc, char **argv)
                 {
                     if (dpkt->data_size > 0)
                     {
-                        if (!aChan.file)
+                        //if (!aChan.file)
+                        if (!c64dos.fileIsOpen())
                         {
                             fname[fname_len] = 0;
                             //fp_load = fopen(fname, "wb");
                             
+                            /*
                             // open for saving, try opening dos channel
                             aChan = dosOpenFile(fname, 1);
                             if (!aChan.file && !aChan.buffer)
                             {
                                 printf("file not found error!\n");
                             }
+                            */
                             
+                            if (!c64dos.open(fname, 1))
+                            {
+                                printf("error opening file %s for writing\n", fname);
+                            }
                         }
                         
                         program_size += dpkt->data_size;
                         printf("Saving %s: %d bytes (%d)\n", fname, dpkt->data_size, program_size);
                         
+                        /*
                         if (aChan.file)
                         {
                             printf("writing to file..\n");
                             fwrite(dpkt->data_buffer, 1, dpkt->data_size, aChan.file);
                         }
+                        */
+                        
+                        c64dos.write(dpkt->data_buffer, dpkt->data_size);
                         
                         //fwrite(dpkt->data_buffer, 1, dpkt->data_size, fp_load);
                         data_byte += dpkt->data_size;
@@ -308,18 +327,19 @@ int main(int argc, char **argv)
                 else if (state == Loading)
                 {
                     // load next chunk of data into the packet
-                    if (!aChan.file && !aChan.buffer)
+                    //if (!aChan.file && !aChan.buffer)
+                    
+                    if (!c64dos.fileIsOpen())
                     {
                         fname[fname_len] = 0;
-                        /*
-                        fp_load = fopen(fname, "rb");
-                        // get size
-                        fseek(fp_load, 0, SEEK_END);
-                        program_size = ftell(fp_load);
-                        fseek(fp_load, 0, SEEK_SET);
-                        */
+                        
                         
                         printf("loading channel %d\n", channel);
+                        if (!c64dos.open(fname, channel))
+                        {
+                            printf("file not found error.\n");
+                        }
+                        /*
                         if (channel == 15)
                         {
                             printf("dosSendError\n");
@@ -346,12 +366,16 @@ int main(int argc, char **argv)
                             program_size = aChan.length;
                             printf("pgm size %d\n", program_size);
                         }
+                        */
                     }
                     
-                    if (aChan.file || aChan.buffer)
+                    //if (aChan.file || aChan.buffer)
+                    if (c64dos.fileIsOpen())
                     {
                         printf("reading from file..\n");
                         int bytes_read = 0;
+                        
+                        /*
                         if (aChan.file)
                         {
                             bytes_read = (int)fread(dpkt->data_buffer, 1, 128, aChan.file);
@@ -369,27 +393,41 @@ int main(int argc, char **argv)
                             bytes_read = bytes_to_read;
                             aChan.sent += bytes_read;
                         }
+                        */
                         
+                        bool last = false;
+                        // read from open file
+                        bytes_read = c64dos.read(dpkt->data_buffer, 128, last);
                         
                         dpkt->data_size = (unsigned char)bytes_read;
-                        program_bytes_sent += bytes_read;
-                        printf("Loading %s: %d / %d (%f %%)\n", fname, program_bytes_sent, program_size, (float)program_bytes_sent*100.0 / (float)program_size);
+                        //program_bytes_sent += bytes_read;
                         
-                        if (program_bytes_sent >= program_size)
+                        int sent = c64dos.getFileBytesSent();
+                        int length = c64dos.getFileLength();
+                        
+                        printf("Loading %s: %d / %d (%f %%)\n",
+                               fname,
+                               sent,
+                               length,
+                               (float)sent*100.0 / (float)length);
+                        
+                        //if (program_bytes_sent >= program_size)
+                        if (last)
                         {
                             printf("last\n");
                             dpkt->is_last_data_buffer = 1;
                             program_bytes_sent = 0;
                             program_size = 0;
-                            //fclose(fp_load);
-                            //fp_load = NULL;
                             
+                            /*
                             if (aChan.file)
                             {
                                 fclose(aChan.file);
                                 aChan.file = NULL;
                             }
+                            */
                             
+                            c64dos.close();
                             state = Idle;
                         }
                         else
