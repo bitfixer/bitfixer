@@ -64,19 +64,32 @@ public:
     {
     }
     
+    unsigned char readDebounced()
+    {
+        unsigned char tmp;
+        do {
+            tmp = *_iecInPort;
+            _delay_us(2);
+        } while (tmp != *_iecInPort);
+        return tmp;
+    }
+    
     void waitForAtn()
     {
-        while ((*_iecInPort & _atnPinMask) != 0);
+        //while ((*_iecInPort & _atnPinMask) != 0);
+        while ((readDebounced() & _atnPinMask) != 0);
     }
     
     void waitForNotAtn()
     {
-        while ((*_iecInPort & _atnPinMask) == 0);
+        //while ((*_iecInPort & _atnPinMask) == 0);
+        while ((readDebounced() &_atnPinMask) == 0);
     }
     
     bool atnTrue()
     {
-        return ((*_iecInPort & _atnPinMask) == 0);
+        //return ((*_iecInPort & _atnPinMask) == 0);
+        return ((readDebounced() & _atnPinMask) == 0);
     }
     
     bool waitForClk(int timeoutUs = -1)
@@ -98,12 +111,14 @@ public:
     
     void waitForNotClk()
     {
-        while ((*_iecInPort & _clkPinMask) == 0);
+        //while ((*_iecInPort & _clkPinMask) == 0);
+        while ((readDebounced() & _clkPinMask) == 0);
     }
     
     bool clkTrue()
     {
-        return ((*_iecInPort & _clkPinMask) == 0);
+        //return ((*_iecInPort & _clkPinMask) == 0);
+        return ((readDebounced() & _clkPinMask) == 0);
     }
     
     // pull down the clock line
@@ -144,12 +159,14 @@ public:
     
     void waitForData()
     {
-        while ((*_iecInPort & _dataPinMask) != 0);
+        //while ((*_iecInPort & _dataPinMask) != 0);
+        while ((readDebounced() & _dataPinMask) != 0);
     }
     
     void waitForNotData()
     {
-        while ((*_iecInPort & _dataPinMask) == 0);
+        //while ((*_iecInPort & _dataPinMask) == 0);
+        while ((readDebounced() & _dataPinMask) == 0);
     }
     
     unsigned char readDataByte()
@@ -218,6 +235,45 @@ public:
             waitForNotData();
         }
         
+        setClockTrue();
+        _delay_us(40);
+        
+        waitForNotData();
+        _delay_us(21);
+        
+        for (int i = 0; i < 8; i++)
+        {
+            _delay_us(45);
+            if ((byte & 0x01) == 0)
+            {
+                // output a zero
+                setDataTrue();
+            }
+            else
+            {
+                setDataFalse();
+            }
+            byte >>= 1;
+         
+            _delay_us(22);
+            
+            setClockFalse();
+            
+            _delay_us(75);
+            
+            setClockTrue();
+            
+            _delay_us(22);
+            
+            setDataFalse();
+            
+            _delay_us(14);
+        }
+        
+        waitForData();
+        
+        
+        /*
         _delay_us(30);
         setClockTrue();
         
@@ -250,6 +306,7 @@ public:
         
         // wait for listener to accept
         waitForData();
+        */
     }
     
 private:
@@ -307,11 +364,12 @@ int main(void)
         if (state == WaitingForAtn)
         {
             PORTD = 0x20;
+            
             iec.waitForAtn();
             PORTD = 0x00;
             
             // release clock
-            iec.setClockFalse();
+            //iec.setClockFalse();
             
             iec.waitForClk();
             iec.setDataTrue();
@@ -331,7 +389,6 @@ int main(void)
                     pkt.atn_size = 0;
                 }
                 */
-                
                 // read one atn byte
                 temp = iec.readByteWithHandshake(isLastByte);
                 
@@ -376,7 +433,6 @@ int main(void)
             
             // if buffer is full, send now
             if (pkt.data_size == 128 || pkt.atn_size > 0)
-            //if (pkt.data_size == )
             {
                 spi_data.sendAndRecvPacket((unsigned char*)&pkt, sizeof(pkt));
                 pkt.data_size = 0;
@@ -443,6 +499,7 @@ int main(void)
         {
             _delay_us(60);
             iec.setDataFalse();
+            iec.setClockFalse();
             state = WaitingForAtn;
             PORTD = 0x00;
         }

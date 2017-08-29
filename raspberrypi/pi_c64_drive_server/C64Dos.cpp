@@ -5,8 +5,14 @@
 
 void C64Dos::init()
 {
+    for (int i = 0; i < 15; i++)
+    {
+        _buffers[i] = NULL;
+        _bufferSize[i] = 0;
+    }
+    
     dosInitDrives();
-    dosMountDisk(".", 0);
+    dosMountDisk("lcp.d64", 0);
 }
 
 bool C64Dos::open(const char* path, int channel)
@@ -15,9 +21,17 @@ bool C64Dos::open(const char* path, int channel)
     {
         _channel = dosSendError();
     }
-    else
+    else if (channel < 2)
     {
         _channel = dosOpenFile(path, channel);
+    }
+    else
+    {
+        // create buffer if it doesn't exist
+        if (_buffers[channel] == NULL)
+        {
+            _buffers[channel] = (unsigned char*)malloc(10000);
+        }
     }
     
     if (!_channel.file && !_channel.buffer)
@@ -86,6 +100,7 @@ void C64Dos::write(unsigned char* data, int size)
     if (_channel.file)
     {
         fwrite(data, 1, size, _channel.file);
+        fflush(_channel.file);
     }
     else
     {

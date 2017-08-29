@@ -36,6 +36,8 @@ private:
     CBMDOSChannel _channel;
     bool _fileOpen;
     
+    unsigned char* _buffers[15];
+    int _bufferSize[15];
 };
 
 #endif

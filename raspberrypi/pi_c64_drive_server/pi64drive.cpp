@@ -205,23 +205,7 @@ int main(int argc, char **argv)
                         else if (b == 0xE1 || b == 0xE0)
                         {
                             printf("Closing %s\n", fname);
-                            
-                            /*
-                            if (aChan.file)
-                            {
-                                fclose(aChan.file);
-                                aChan.file = NULL;
-                            }
-                            if (aChan.buffer)
-                            {
-                                free(aChan.buffer);
-                                aChan.buffer = NULL;
-                                aChan.length = 0;
-                            }
-                            */
-                            
                             c64dos.close();
-                            
                             fname_len = 0;
                             program_size = 0;
                         }
@@ -250,26 +234,6 @@ int main(int argc, char **argv)
                             state = Idle;
                         }
                     }
-                    
-                    
-                    /*
-                    if (atn_byte < dpkt->atn_size)
-                    {
-                        printf("FNAME ATN %d: %c %d %X\n", atn_byte, dpkt->atn_buffer[atn_byte], dpkt->atn_buffer[atn_byte], dpkt->atn_buffer[atn_byte]);
-                        unsigned char b = dpkt->atn_buffer[atn_byte++];
-                        if (b == UNLISTEN)
-                        {
-                            // reading a filename
-                            state = Idle;
-                        }
-                    }
-                    else if (data_byte < dpkt->data_size)
-                    {
-                        printf("FNAME %d: %c %d %X\n", data_byte, dpkt->data_buffer[data_byte], dpkt->data_buffer[data_byte], dpkt->data_buffer[data_byte]);
-                        char b = dpkt->data_buffer[data_byte++];
-                        fname[fname_len++] = b;
-                    }
-                    */
                 }
                 else if (state == Saving)
                 {
@@ -279,17 +243,6 @@ int main(int argc, char **argv)
                         if (!c64dos.fileIsOpen())
                         {
                             fname[fname_len] = 0;
-                            //fp_load = fopen(fname, "wb");
-                            
-                            /*
-                            // open for saving, try opening dos channel
-                            aChan = dosOpenFile(fname, 1);
-                            if (!aChan.file && !aChan.buffer)
-                            {
-                                printf("file not found error!\n");
-                            }
-                            */
-                            
                             if (!c64dos.open(fname, 1))
                             {
                                 printf("error opening file %s for writing\n", fname);
@@ -299,17 +252,7 @@ int main(int argc, char **argv)
                         program_size += dpkt->data_size;
                         printf("Saving %s: %d bytes (%d)\n", fname, dpkt->data_size, program_size);
                         
-                        /*
-                        if (aChan.file)
-                        {
-                            printf("writing to file..\n");
-                            fwrite(dpkt->data_buffer, 1, dpkt->data_size, aChan.file);
-                        }
-                        */
-                        
                         c64dos.write(dpkt->data_buffer, dpkt->data_size);
-                        
-                        //fwrite(dpkt->data_buffer, 1, dpkt->data_size, fp_load);
                         data_byte += dpkt->data_size;
                     }
                     else if (atn_byte < dpkt->atn_size)
@@ -327,80 +270,24 @@ int main(int argc, char **argv)
                 else if (state == Loading)
                 {
                     // load next chunk of data into the packet
-                    //if (!aChan.file && !aChan.buffer)
-                    
                     if (!c64dos.fileIsOpen())
                     {
                         fname[fname_len] = 0;
-                        
                         
                         printf("loading channel %d\n", channel);
                         if (!c64dos.open(fname, channel))
                         {
                             printf("file not found error.\n");
                         }
-                        /*
-                        if (channel == 15)
-                        {
-                            printf("dosSendError\n");
-                            aChan = dosSendError();
-                        }
-                        else
-                        {
-                            aChan = dosOpenFile(fname, channel);
-                        }
-                        
-                        if (!aChan.file && !aChan.buffer)
-                        {
-                            printf("file not found error.\n");
-                        }
-                        
-                        if (aChan.file)
-                        {
-                            fseek(aChan.file, 0, SEEK_END);
-                            program_size = ftell(aChan.file);
-                            fseek(aChan.file, 0, SEEK_SET);
-                        }
-                        else if (aChan.buffer)
-                        {
-                            program_size = aChan.length;
-                            printf("pgm size %d\n", program_size);
-                        }
-                        */
                     }
                     
-                    //if (aChan.file || aChan.buffer)
                     if (c64dos.fileIsOpen())
                     {
-                        printf("reading from file..\n");
-                        int bytes_read = 0;
-                        
-                        /*
-                        if (aChan.file)
-                        {
-                            bytes_read = (int)fread(dpkt->data_buffer, 1, 128, aChan.file);
-                        }
-                        else if (aChan.buffer)
-                        {
-                            printf("reading from buffer pos %d\n", aChan.sent);
-                            int bytes_to_read = aChan.length - aChan.sent;
-                            if (bytes_to_read > 128)
-                            {
-                                bytes_to_read = 128;
-                            }
-                            
-                            memcpy(dpkt->data_buffer, &aChan.buffer[aChan.sent], bytes_to_read);
-                            bytes_read = bytes_to_read;
-                            aChan.sent += bytes_read;
-                        }
-                        */
-                        
                         bool last = false;
                         // read from open file
-                        bytes_read = c64dos.read(dpkt->data_buffer, 128, last);
+                        int bytes_read = c64dos.read(dpkt->data_buffer, 128, last);
                         
                         dpkt->data_size = (unsigned char)bytes_read;
-                        //program_bytes_sent += bytes_read;
                         
                         int sent = c64dos.getFileBytesSent();
                         int length = c64dos.getFileLength();
@@ -411,21 +298,12 @@ int main(int argc, char **argv)
                                length,
                                (float)sent*100.0 / (float)length);
                         
-                        //if (program_bytes_sent >= program_size)
                         if (last)
                         {
                             printf("last\n");
                             dpkt->is_last_data_buffer = 1;
                             program_bytes_sent = 0;
                             program_size = 0;
-                            
-                            /*
-                            if (aChan.file)
-                            {
-                                fclose(aChan.file);
-                                aChan.file = NULL;
-                            }
-                            */
                             
                             c64dos.close();
                             state = Idle;
@@ -442,7 +320,6 @@ int main(int argc, char **argv)
             }
             
             // send state response
-            //spi_data.send(pkt, sizeof(dataPacket));
             write(fd_out, pkt, sizeof(dataPacket));
         }
     }
