@@ -7,6 +7,7 @@
 #include <string.h>
 #include "NetPort.h"
 #include "rpiSpiData.h"
+#include "Fifo.h"
 
 class Timer
 {
@@ -631,6 +632,8 @@ int main(int argc, char **argv)
     }
 
     PETNetworkFrameDataSource petDataSource;
+    
+    /*
     int resetPin = 3;
 
     wiringPiSetup();
@@ -646,6 +649,10 @@ int main(int argc, char **argv)
 
     delayMicroseconds(100000);
     digitalWrite(resetPin, HIGH);
+    */
+    
+    Fifo fifo;
+    fifo.init("/tmp/pipix_in", "/tmp/pipix_out");
 
     printf("checking for commands2..\n");
 
@@ -657,7 +664,8 @@ int main(int argc, char **argv)
     while (!done)
     {
         //printf("checking for command\n");
-        int recv_size = spi_data.receive_sync(buffer);
+        //int recv_size = spi_data.receive_sync(buffer);
+        int recv_size = fifo.recv(buffer, 1024);
         if (recv_size > 0)
         {
             unsigned char cmd = buffer[0];
@@ -676,7 +684,8 @@ int main(int argc, char **argv)
 
                 const unsigned char *frameChunk = source->getFrameChunk(cmd);
                 //int s = write(spi, frameChunk, 1024);
-                spi_data.send((unsigned char*)frameChunk, 1024);
+                //spi_data.send((unsigned char*)frameChunk, 1024);
+                fifo.send((unsigned char*)frameChunk, 1024);
 
                 float currTime = playbackTimer.getCurrentElapsedTime();
                 float currFps = (float)frames / currTime;
@@ -687,17 +696,20 @@ int main(int argc, char **argv)
                 //printf("cmd chunk\n");
                 const unsigned char *frameChunk = source->getFrameChunk(cmd);
                 //int s = write(spi, frameChunk, 1024);
-                spi_data.send((unsigned char*)frameChunk, 1024);
+                //spi_data.send((unsigned char*)frameChunk, 1024);
+                fifo.send((unsigned char*)frameChunk, 1024);
             }
 
             //printf("sent.\n");
             float curr_playback_time = playbackTimer.getCurrentElapsedTime();
             source->workForChunk(cmd, curr_playback_time);
         }
+        /*
         else
         {
             delayMicroseconds(500);
         }
+        */
     }
 
     /*

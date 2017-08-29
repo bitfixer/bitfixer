@@ -14,6 +14,7 @@
 #include <thread>
 #include <mutex>
 
+#include "Fifo.h"
 #include "C64Dos.h"
 
 #define MAX_BUF 1024
@@ -70,15 +71,19 @@ void userInputThread()
 // test - watch for input
 int main(int argc, char **argv)
 {
+    /*
     int fd, fd_out;
     char * myfifo = "/tmp/c64drive";
     char * outfifo = "/tmp/spiserver";
     char buf[MAX_BUF];
     
-    /* open, read, and display the message from the FIFO */
     fd = open(myfifo, O_RDONLY);
     fd_out = open(outfifo, O_WRONLY);
-
+    */
+    
+    Fifo fifo;
+    fifo.init("/tmp/spiserver", "/tmp/c64drive");
+     
     Tools::Timer timer;
     unsigned char pkt[1025];
     unsigned char size_bytes[2];
@@ -101,7 +106,8 @@ int main(int argc, char **argv)
     while (1)
     {
         //int recv_size = spi_data.receive(pkt);
-        int recv_size = read(fd, pkt, 1024);
+        //int recv_size = read(fd, pkt, 1024);
+        int recv_size = fifo.recv(pkt, 1024);
         if (recv_size > 0)
         {
             std::lock_guard<std::mutex> guard(mutex);
@@ -266,7 +272,8 @@ int main(int argc, char **argv)
             }
             
             // send state response
-            write(fd_out, pkt, sizeof(dataPacket));
+            //write(fd_out, pkt, sizeof(dataPacket));
+            fifo.send(pkt, sizeof(dataPacket));
         }
     }
 

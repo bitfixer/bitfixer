@@ -16,3 +16,4 @@ transfer:
 	scp ../../external/Net/Net.h pi@$(REMOTE):~/pinetrecv/Net.h
 	scp ../../shared/rpi/rpiSpiData.h pi@$(REMOTE):~/pinetrecv/rpiSpiData.h
 	scp ../../shared/rpi/rpiSpiData.cpp pi@$(REMOTE):~/pinetrecv/rpiSpiData.cpp
+	scp ../../shared/rpi/Fifo.h pi@$(REMOTE):~/pinetrecv/Fifo.h

@@ -11,3 +11,4 @@ transfer:
 	scp ../../shared/c64drive.h pi@$(REMOTE):~/spi_multi/c64drive.h
 	scp ../../shared/rpi/rpiSpiData.h pi@$(REMOTE):~/spi_multi/rpiSpiData.h
 	scp ../../shared/rpi/rpiSpiData.cpp pi@$(REMOTE):~/spi_multi/rpiSpiData.cpp
+	scp ../../shared/rpi/Fifo.h pi@$(REMOTE):~/spi_multi/Fifo.h
