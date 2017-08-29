@@ -12,6 +12,7 @@ public:
     
     ~C64Dos() {};
     void init();
+    void mount(const char* path, int drive);
     bool open(const char* path, int channel);
     void close();
     int read(unsigned char* data, int size, bool& last);

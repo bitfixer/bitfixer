@@ -12,6 +12,7 @@
 #include "rpiSpiData.h"
 #include "c64drive.h"
 #include <thread>
+#include <mutex>
 
 #include "C64Dos.h"
 
@@ -49,53 +50,26 @@ int main2(int argc, char **argv)
     return 0;
 }
 
+std::mutex mutex;
+C64Dos c64dos;
+
 void userInputThread()
 {
     char tmp[256];
     while (1)
     {
         printf("reading..\n");
-        int r = fscanf(stdin, "%s\n", tmp);
+        int r = fscanf(stdin, "%s", tmp);
+        
+        std::lock_guard<std::mutex> guard(mutex);
         printf("got %d : %s\n", r, tmp);
+        c64dos.mount(tmp, 0);
     }
 }
 
 // test - watch for input
 int main(int argc, char **argv)
 {
-    /*
-    // SPI 0
-    int resetPin = 3; // wiringPi number
-    // BCM GPIO 22
-    int spiReqPin = 0;
-    int spiInterface = 0;
-    
-    // SPI 1
-    //int resetPin = 7; // wiringPi number
-    // BCM GPIO 4
-    //int spiReqPin = 4;
-    //int spiInterface = 1;
-    
-    wiringPiSetup();
-    pinMode(spiReqPin, INPUT);
-    pullUpDnControl(spiReqPin, PUD_UP);
-
-    pinMode(resetPin, OUTPUT);
-    pullUpDnControl(resetPin, PUD_OFF);
-    digitalWrite(resetPin, LOW); // reset MCU
-
-    //int spi = wiringPiSPISetup(0, 2000000);
-    int spi = wiringPiSPISetup(spiInterface, 2000000);
-    rpiSpiData spi_data(spiReqPin, spi);
-
-    delayMicroseconds(100000);
-    digitalWrite(resetPin, HIGH);
-
-    printf("C64 Drive started.\n");
-    delayMicroseconds(100000);
-    bool done = false;
-    */
-    
     int fd, fd_out;
     char * myfifo = "/tmp/c64drive";
     char * outfifo = "/tmp/spiserver";
@@ -117,73 +91,12 @@ int main(int argc, char **argv)
     int program_size = 0;
     int program_bytes_sent = 0;
     
-    /*
-    // test
-    while (1)
-    {
-        int recv_size = spi_data.receive(pkt);
-        if (recv_size > 0)
-        {
-            printf("recv id %d %d %d bytes\n", pkt[0], pkt[1], recv_size);
-        }
-        // send state response
-        spi_data.send(pkt, 1);
-    }
-    */
-    
-    /*
-    // TEST: from cbmdos
-    dosInitDrives();
-    dosMountDisk("POOLOFR0.D64", 0);
-    
-    CBMDOSChannel aChan;
-    aChan.file = NULL;
-    aChan.buffer = NULL;
-    */
-    C64Dos c64dos;
     c64dos.init();
     
     printf("C64 server\n");
     int channel = 0;
     
-    /*
-    fname[0] = '$';
-    fname[1] = 0;
-    
-    aChan = dosOpenFile(fname, 0);
-    if (!aChan.file)
-    {
-        printf("%s: file not found\n", fname);
-    }
-    
-    printf("here\n");
-    fseek(aChan.file, 0, SEEK_END);
-    printf("yy\n");
-    int dirsize = ftell(aChan.file);
-    fseek(aChan.file, 0, SEEK_SET);
-    printf("dir size %d\n", dirsize);
-    
-    return 1;
-    */
-    
     std::thread inputThread(userInputThread);
-    
-    /*
-    while (1)
-    {
-        unsigned char tmp[128];
-        int r = fread(tmp, 1, 10, stdin);
-        if (r > 0)
-        {
-            printf("read: %s\n", tmp);
-        }
-        else
-        {
-            printf("*");
-            delayMicroseconds(1000000);
-        }
-    }
-    */
      
     while (1)
     {
@@ -191,6 +104,8 @@ int main(int argc, char **argv)
         int recv_size = read(fd, pkt, 1024);
         if (recv_size > 0)
         {
+            std::lock_guard<std::mutex> guard(mutex);
+            
             dataPacket* dpkt = (dataPacket*)pkt;
             printf("recv id %d %d bytes data bytes %d atn bytes %d\n", dpkt->device_id, recv_size, dpkt->data_size, dpkt->atn_size);
             

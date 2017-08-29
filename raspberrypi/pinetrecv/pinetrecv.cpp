@@ -656,8 +656,8 @@ int main(int argc, char **argv)
 
     while (!done)
     {
-        printf("checking for command\n");
-        int recv_size = spi_data.receive(buffer);
+        //printf("checking for command\n");
+        int recv_size = spi_data.receive_sync(buffer);
         if (recv_size > 0)
         {
             unsigned char cmd = buffer[0];

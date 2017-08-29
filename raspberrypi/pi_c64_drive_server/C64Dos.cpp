@@ -12,7 +12,12 @@ void C64Dos::init()
     }
     
     dosInitDrives();
-    dosMountDisk("lcp.d64", 0);
+    dosMountDisk(".", 0);
+}
+
+void C64Dos::mount(const char* path, int drive)
+{
+    dosMountDisk(path, drive);
 }
 
 bool C64Dos::open(const char* path, int channel)
