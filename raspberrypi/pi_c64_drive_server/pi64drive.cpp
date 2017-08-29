@@ -11,6 +11,7 @@
 #include "timer.hpp"
 #include "rpiSpiData.h"
 #include "c64drive.h"
+#include <thread>
 
 #include "C64Dos.h"
 
@@ -46,6 +47,17 @@ int main2(int argc, char **argv)
     close(fd_out);
     
     return 0;
+}
+
+void userInputThread()
+{
+    char tmp[256];
+    while (1)
+    {
+        printf("reading..\n");
+        int r = fscanf(stdin, "%s\n", tmp);
+        printf("got %d : %s\n", r, tmp);
+    }
 }
 
 // test - watch for input
@@ -152,6 +164,25 @@ int main(int argc, char **argv)
     printf("dir size %d\n", dirsize);
     
     return 1;
+    */
+    
+    std::thread inputThread(userInputThread);
+    
+    /*
+    while (1)
+    {
+        unsigned char tmp[128];
+        int r = fread(tmp, 1, 10, stdin);
+        if (r > 0)
+        {
+            printf("read: %s\n", tmp);
+        }
+        else
+        {
+            printf("*");
+            delayMicroseconds(1000000);
+        }
+    }
     */
      
     while (1)
