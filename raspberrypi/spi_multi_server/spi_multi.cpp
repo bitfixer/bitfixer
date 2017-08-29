@@ -44,11 +44,51 @@ int main2(int argc, char **argv)
     return 0;
 }
 
+/*
+typedef struct {
+    int fd_out;
+    int fd_in;
+    char in_fifo[256];
+    char out_fifo[256];
+};
+*/
+
+class Fifo {
+public:
+    
+    Fifo() {};
+    ~Fifo() {};
+    
+    void init(const char* outName, const char* inName)
+    {
+        mkfifo(outName, 0666);
+        mkfifo(inName, 0666);
+        _fdOut = open(outName, O_WRONLY);
+        _fdIn = open(inName, O_RDONLY);
+    }
+    
+    void send(unsigned char* data, int size)
+    {
+        write(_fdOut, data, size);
+    }
+    
+    int recv(unsigned char* data, int size)
+    {
+        return read(_fdIn, data, size);
+    }
+    
+private:
+    int _fdOut;
+    int _fdIn;
+};
+
+
 // test - watch for input
 int main(int argc, char **argv)
 {
     printf("yo\n");
     //return 0;
+    /*
     int fd, fd_in;
     char * myfifo = "/tmp/c64drive";
     char * infifo = "/tmp/spiserver";
@@ -56,6 +96,12 @@ int main(int argc, char **argv)
     mkfifo(infifo, 0666);
     fd = open(myfifo, O_WRONLY);
     fd_in = open(infifo, O_RDONLY);
+    */
+    
+    Fifo fifos[2];
+    //fifos[0].init("/tmp/pipix_out", "/tmp/pipix_in");
+    fifos[1].init("/tmp/c64drive", "/tmp/spiserver");
+    
     
     spiInfo spiInfo[2];
     spiInfo[0].resetPin = 3;
@@ -107,10 +153,11 @@ int main(int argc, char **argv)
                 if (i == 1)
                 {
                     printf("writing to pipe\n");
-                    write(fd, pkt, recv_size);
-                    //write(fd, "Hi There!", sizeof("Hi There!"));
-                    //write(fd, "Hi", sizeof("Hi"));
-                    recv_size = read(fd_in, pkt, 1024);
+                    //write(fd, pkt, recv_size);
+                    //recv_size = read(fd_in, pkt, 1024);
+                    fifos[i].send(pkt, recv_size);
+                    fifos[i].recv(pkt, 1024);
+                    
                     printf("recv %d bytes\n", recv_size);
                 }
                 
