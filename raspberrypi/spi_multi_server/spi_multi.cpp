@@ -11,6 +11,13 @@
 #include "timer.hpp"
 #include "rpiSpiData.h"
 #include "Fifo.h"
+#include "TCP.h"
+#include <thread>
+#include <mutex>
+
+TCPServer server(44444);
+std::mutex mutex;
+CommPort* ports[2];
 
 typedef struct
 {
@@ -20,38 +27,31 @@ typedef struct
     rpiSpiData* spi_data;
 } spiInfo;
 
-int main2(int argc, char **argv)
+void threadproc()
 {
-    int fd, fd_in;
-    char * myfifo = "/tmp/c64drive";
-    //char * infifo = "/tmp/spiserver";
-    char buf[1024];
-    
-    mkfifo(myfifo, 0666);
-    //mkfifo(infifo, 0666);
-    
-    fd = open(myfifo, O_WRONLY);
-    //fd_in = open(infifo, O_RDONLY);
-    
-    write(fd, "Hi", sizeof("Hi"));
-    
-    //read(fd_in, buf, 1024);
-    //printf("received %s\n", buf);
-    close(fd);
-    //close(fd_in);
-    
-    unlink(myfifo);
-    
-    return 0;
+    while (1)
+    {
+        CommPort* port = server.getNewConnection();
+        std::lock_guard<std::mutex> guard(mutex);
+        fprintf(stderr, "adding connection..\n");
+        if (ports[1])
+        {
+            delete ports[1];
+        }
+        
+        ports[1] = port;
+    }
 }
 
 // test - watch for input
 int main(int argc, char **argv)
 {
+    /*
     printf("yo\n");
     Fifo fifos[2];
     fifos[0].init("/tmp/pipix_out", "/tmp/pipix_in", true);
     fifos[1].init("/tmp/c64drive", "/tmp/spiserver", true);
+    */
     
     spiInfo spiInfo[2];
     spiInfo[0].resetPin = 3;
@@ -63,6 +63,14 @@ int main(int argc, char **argv)
     spiInfo[1].spiInterface = 1;
      
     printf("here.\n");
+    
+    for (int i = 0; i < 2; i++)
+    {
+        ports[i] = NULL;
+    }
+    
+    server.init();
+    std::thread thread(threadproc);
     
     wiringPiSetup();
     
@@ -98,23 +106,23 @@ int main(int argc, char **argv)
             int recv_size = spiInfo[i].spi_data->receive(pkt);
             if (recv_size > 0)
             {
+                
                 printf("recv interface %d id %d %d %d bytes\n", i, pkt[0], pkt[1], recv_size);
                 
-                /*
-                if (i == 1)
+                std::lock_guard<std::mutex> guard(mutex);
+                if (ports[i])
                 {
-                    printf("writing to pipe\n");
-                    fifos[i].send(pkt, recv_size);
-                    fifos[i].recv(pkt, 1024);
-                    printf("recv %d bytes\n", recv_size);
+                    ports[i]->send(pkt, recv_size);
+                    recv_size = ports[i]->recv(pkt, recv_size);
                 }
-                */
                 
+                /*
                 printf("writing to pipe\n");
                 fifos[i].send(pkt, recv_size);
                 recv_size = fifos[i].recv(pkt, 1024);
                 printf("recv %d bytes\n", recv_size);
-                
+                */
+                 
                 spiInfo[i].spi_data->send(pkt, recv_size);
             }
         }

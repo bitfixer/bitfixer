@@ -8,34 +8,56 @@
 
 #include "NetPort.h"
 
-NetPort::NetPort(unsigned char a, unsigned char b, unsigned char c, unsigned char d, int inport, int outport) :
+NetPort::NetPort(unsigned char a,
+                 unsigned char b,
+                 unsigned char c,
+                 unsigned char d,
+                 int inport,
+                 int outport,
+                 bool tcp) :
 port(inport),
-destination(a, b, c, d, outport)
+destination(a, b, c, d, outport),
+_tcp(tcp)
 {
-    socket.Open(port);
+    fprintf(stderr, "Opening port %d %d %d %d (tcp=%d)\n", a,b,c,d,tcp);
+    socket.Open(port, tcp);
+    fprintf(stderr, "Opened port.\n");
     timer.start();
 }
 
 int NetPort::send(unsigned char *data, int length)
 {
-    bool res = socket.Send(destination, data, length);
-    if (res)
+    if (_tcp)
     {
-        return length;
+        return socket.Send(data, length);
     }
-    else
-    {
-        return -1;
+    else {
+        bool res = socket.Send(destination, data, length);
+        if (res)
+        {
+            return length;
+        }
+        else
+        {
+            return -1;
+        }
     }
 }
 
 int NetPort::recv(unsigned char *data, int length)
 {
-    net::Address addr;
-    int ret = socket.Receive(addr, data, length);
-    
-    printf("addr %d %d %d %d : %d\n", addr.GetA(), addr.GetB(), addr.GetC(), addr.GetD(), ret);
-    return ret;
+    if (_tcp)
+    {
+        return socket.Receive(data, length);
+    }
+    else
+    {
+        net::Address addr;
+        int ret = socket.Receive(addr, data, length);
+        
+        printf("addr %d %d %d %d : %d\n", addr.GetA(), addr.GetB(), addr.GetC(), addr.GetD(), ret);
+        return ret;
+    }
 }
 
 int NetPort::recv_sync(unsigned char *data, int length, int timeout_ms)

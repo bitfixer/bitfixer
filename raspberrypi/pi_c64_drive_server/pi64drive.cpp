@@ -17,6 +17,8 @@
 #include "Fifo.h"
 #include "C64Dos.h"
 
+#include "TCP.h"
+
 #define MAX_BUF 1024
 
 typedef enum
@@ -81,8 +83,16 @@ int main(int argc, char **argv)
     fd_out = open(outfifo, O_WRONLY);
     */
     
-    Fifo fifo;
-    fifo.init("/tmp/spiserver", "/tmp/c64drive");
+    //Fifo fifo;
+    //fifo.init("/tmp/spiserver", "/tmp/c64drive");
+    
+    
+    TCPClient client("127.0.0.1", 44444);
+    
+    printf("connecting..\n");
+    client.connect();
+    printf("connected.\n");
+    
      
     Tools::Timer timer;
     unsigned char pkt[1025];
@@ -107,7 +117,10 @@ int main(int argc, char **argv)
     {
         //int recv_size = spi_data.receive(pkt);
         //int recv_size = read(fd, pkt, 1024);
-        int recv_size = fifo.recv(pkt, 1024);
+        //int recv_size = fifo.recv(pkt, 1024);
+        printf("waiting..\n");
+        int recv_size = client.recv(pkt, 1024);
+        printf("received %d\n", recv_size);
         if (recv_size > 0)
         {
             std::lock_guard<std::mutex> guard(mutex);
@@ -273,7 +286,8 @@ int main(int argc, char **argv)
             
             // send state response
             //write(fd_out, pkt, sizeof(dataPacket));
-            fifo.send(pkt, sizeof(dataPacket));
+            //fifo.send(pkt, sizeof(dataPacket));
+            client.send(pkt, sizeof(dataPacket));
         }
     }
 

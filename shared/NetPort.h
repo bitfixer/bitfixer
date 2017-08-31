@@ -24,7 +24,14 @@ public:
         unsigned char buffer[256];
     } TimedPacket;
     
-    NetPort(unsigned char a, unsigned char b, unsigned char c, unsigned char d, int inport, int output);
+    NetPort(unsigned char a,
+            unsigned char b,
+            unsigned char c,
+            unsigned char d,
+            int inport,
+            int output,
+            bool tcp = false);
+    
     ~NetPort();
     int send(unsigned char* data, int length);
     int recv(unsigned char* data, int length);
@@ -40,6 +47,7 @@ private:
     TimedPacket pkt;
     int port_id = -1;
     int port;
+    bool _tcp;
 };
 
 #endif /* defined(__soundcontroller__NetPort__) */

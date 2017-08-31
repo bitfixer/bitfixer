@@ -164,13 +164,20 @@ namespace net
 			Close();
 		}
 	
-		bool Open( unsigned short port )
+		bool Open(unsigned short port, bool tcp = false)
 		{
 			assert( !IsOpen() );
 		
 			// create socket
 
-			socket = ::socket( AF_INET, SOCK_DGRAM, IPPROTO_UDP );
+            if (tcp)
+            {
+                socket = ::socket(AF_INET, SOCK_STREAM, 0);
+            }
+            else
+            {
+                socket = ::socket( AF_INET, SOCK_DGRAM, IPPROTO_UDP );
+            }
 
 			if ( socket <= 0 )
 			{
@@ -193,29 +200,48 @@ namespace net
 				return false;
 			}
 
-			// set non-blocking io
-
-			#if PLATFORM == PLATFORM_MAC || PLATFORM == PLATFORM_UNIX
-		
-				int nonBlocking = 1;
-				if ( fcntl( socket, F_SETFL, O_NONBLOCK, nonBlocking ) == -1 )
-				{
-					printf( "failed to set non-blocking socket\n" );
-					Close();
-					return false;
-				}
-			
-			#elif PLATFORM == PLATFORM_WINDOWS
-		
-				DWORD nonBlocking = 1;
-				if ( ioctlsocket( socket, FIONBIO, &nonBlocking ) != 0 )
-				{
-					printf( "failed to set non-blocking socket\n" );
-					Close();
-					return false;
-				}
-
-			#endif
+            
+            if (tcp)
+            {
+                listen(socket, 5);
+                
+                sockaddr_in cli_addr;
+                int clilen;
+                unsigned short newsockfd;
+                
+                printf("waiting for connection..");
+                // waiting for connection
+                newsockfd = accept(socket, (struct sockaddr *) &cli_addr, (socklen_t*) &clilen);
+                if (newsockfd < 0)
+                {
+                    printf("error on accept!");
+                }
+                _clientSocketFd = newsockfd;
+            }
+            else
+            {
+                // set non-blocking io
+                #if PLATFORM == PLATFORM_MAC || PLATFORM == PLATFORM_UNIX
+            
+                    int nonBlocking = 1;
+                    if ( fcntl( socket, F_SETFL, O_NONBLOCK, nonBlocking ) == -1 )
+                    {
+                        printf( "failed to set non-blocking socket\n" );
+                        Close();
+                        return false;
+                    }
+                
+                #elif PLATFORM == PLATFORM_WINDOWS
+            
+                    DWORD nonBlocking = 1;
+                    if ( ioctlsocket( socket, FIONBIO, &nonBlocking ) != 0 )
+                    {
+                        printf( "failed to set non-blocking socket\n" );
+                        Close();
+                        return false;
+                    }
+                #endif
+            }
 		
 			return true;
 		}
@@ -238,6 +264,18 @@ namespace net
 			return socket != 0;
 		}
 	
+        bool Send(const void* data, int size)
+        {
+            int n = write(_clientSocketFd, data, size);
+            if (n < 0)
+            {
+                fprintf(stderr, "error sending data.\n");
+                return false;
+            }
+            
+            return true;
+        }
+        
 		bool Send( const Address & destination, const void * data, int size )
 		{
 			assert( data );
@@ -256,6 +294,19 @@ namespace net
 			return sent_bytes == size;
 		}
 	
+        int Receive(void* data, int size)
+        {
+            printf("in receive.\n");
+            int n = read(_clientSocketFd, data, size);
+            if (n < 0)
+            {
+                fprintf(stderr, "error recv data.\n");
+                return n;
+            }
+            
+            return n;
+        }
+        
 		int Receive( Address & sender, void * data, int size )
 		{
 			assert( data );
@@ -287,6 +338,7 @@ namespace net
 	private:
 	
 		int socket;
+        int _clientSocketFd;
 	};
 }
 

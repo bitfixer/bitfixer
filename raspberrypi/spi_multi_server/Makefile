@@ -1,7 +1,7 @@
 REMOTE := 192.168.1.19
 
 all:
-	g++ -o spi_multi -lwiringPi -std=c++11 spi_multi.cpp timer.cpp rpiSpiData.cpp
+	g++ -o spi_multi -lwiringPi -lpthread -std=c++11 spi_multi.cpp timer.cpp rpiSpiData.cpp TCP.cpp
 
 transfer:
 	scp spi_multi.cpp pi@$(REMOTE):~/spi_multi/spi_multi.cpp
@@ -12,3 +12,5 @@ transfer:
 	scp ../../shared/rpi/rpiSpiData.h pi@$(REMOTE):~/spi_multi/rpiSpiData.h
 	scp ../../shared/rpi/rpiSpiData.cpp pi@$(REMOTE):~/spi_multi/rpiSpiData.cpp
 	scp ../../shared/rpi/Fifo.h pi@$(REMOTE):~/spi_multi/Fifo.h
+	scp ../../shared/TCP.* pi@$(REMOTE):~/spi_multi/
+	scp ../../shared/CommPort.* pi@$(REMOTE):~/spi_multi/
