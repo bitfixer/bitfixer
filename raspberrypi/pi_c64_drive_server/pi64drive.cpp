@@ -93,6 +93,9 @@ int main(int argc, char **argv)
     client.connect();
     printf("connected.\n");
     
+    // send device id to server
+    unsigned char tmp = 0x12;
+    int s = client.send(&tmp, 1);
      
     Tools::Timer timer;
     unsigned char pkt[1025];

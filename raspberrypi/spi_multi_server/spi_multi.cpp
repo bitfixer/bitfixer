@@ -17,7 +17,7 @@
 
 TCPServer server(44444);
 std::mutex mutex;
-CommPort* ports[2];
+CommPort* ports[256];
 
 typedef struct
 {
@@ -33,26 +33,26 @@ void threadproc()
     {
         CommPort* port = server.getNewConnection();
         std::lock_guard<std::mutex> guard(mutex);
-        fprintf(stderr, "adding connection..\n");
-        if (ports[1])
-        {
-            delete ports[1];
-        }
         
-        ports[1] = port;
+        // get ID byte from service
+        unsigned char tmp;
+        int n = port->recv(&tmp, 1);
+        if (n == 1)
+        {
+            fprintf(stderr, "adding connection, ID %X..\n", tmp);
+            if (ports[tmp])
+            {
+                delete ports[tmp];
+            }
+            
+            ports[tmp] = port;
+        }
     }
 }
 
 // test - watch for input
 int main(int argc, char **argv)
 {
-    /*
-    printf("yo\n");
-    Fifo fifos[2];
-    fifos[0].init("/tmp/pipix_out", "/tmp/pipix_in", true);
-    fifos[1].init("/tmp/c64drive", "/tmp/spiserver", true);
-    */
-    
     spiInfo spiInfo[2];
     spiInfo[0].resetPin = 3;
     spiInfo[0].spiReqPin = 0;
@@ -62,9 +62,7 @@ int main(int argc, char **argv)
     spiInfo[1].spiReqPin = 4;
     spiInfo[1].spiInterface = 1;
      
-    printf("here.\n");
-    
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 256; i++)
     {
         ports[i] = NULL;
     }
@@ -108,21 +106,17 @@ int main(int argc, char **argv)
             {
                 
                 printf("recv interface %d id %d %d %d bytes\n", i, pkt[0], pkt[1], recv_size);
+                unsigned char id = pkt[0];
                 
-                std::lock_guard<std::mutex> guard(mutex);
-                if (ports[i])
                 {
-                    ports[i]->send(pkt, recv_size);
-                    recv_size = ports[i]->recv(pkt, recv_size);
+                    std::lock_guard<std::mutex> guard(mutex);
+                    if (ports[id])
+                    {
+                        ports[id]->send(pkt, recv_size);
+                        recv_size = ports[id]->recv(pkt, recv_size);
+                    }
                 }
                 
-                /*
-                printf("writing to pipe\n");
-                fifos[i].send(pkt, recv_size);
-                recv_size = fifos[i].recv(pkt, 1024);
-                printf("recv %d bytes\n", recv_size);
-                */
-                 
                 spiInfo[i].spi_data->send(pkt, recv_size);
             }
         }
