@@ -113,13 +113,6 @@ int main(int argc, char **argv)
         for (int i = 0; i < 2; i++)
         {
             int recv_size = spiInfo[i].spi_data->receive(pkt);
-            
-            /*
-            pkt[0] = 19;
-            pkt[1] = 8;
-            int recv_size = 2;
-            */
-             
             if (recv_size > 0)
             {
                 
@@ -153,7 +146,6 @@ int main(int argc, char **argv)
                 }
                 
                 spiInfo[i].spi_data->send(pkt, recv_size);
-                //sleep(2);
             }
         }
         
