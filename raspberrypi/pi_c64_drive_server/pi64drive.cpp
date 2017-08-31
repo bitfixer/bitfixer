@@ -1,5 +1,5 @@
-#include <wiringPi.h>
-#include <wiringPiSPI.h>
+//#include <wiringPi.h>
+//#include <wiringPiSPI.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -9,14 +9,11 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include "timer.hpp"
-#include "rpiSpiData.h"
 #include "c64drive.h"
 #include <thread>
 #include <mutex>
 
-#include "Fifo.h"
 #include "C64Dos.h"
-
 #include "TCP.h"
 
 #define MAX_BUF 1024
@@ -28,30 +25,6 @@ typedef enum
     Saving,
     Loading
 } driveState;
-
-int main2(int argc, char **argv)
-{
-    int fd, fd_out;
-    char * myfifo = "/tmp/c64drive";
-    char * outfifo = "/tmp/spiserver";
-    char buf[MAX_BUF];
-    
-    /* open, read, and display the message from the FIFO */
-    fd = open(myfifo, O_RDONLY);
-    fd_out = open(outfifo, O_WRONLY);
-    printf("here\n");
-    while (1)
-    {
-        int rb = read(fd, buf, MAX_BUF);
-        printf("Received id %d %d\n", buf[0], buf[1]);
-        //write(fd_out, "There", sizeof("There"));
-        write(fd_out, buf, rb);
-    }
-    close(fd);
-    close(fd_out);
-    
-    return 0;
-}
 
 std::mutex mutex;
 C64Dos c64dos;
@@ -70,26 +43,9 @@ void userInputThread()
     }
 }
 
-// test - watch for input
 int main(int argc, char **argv)
 {
-    /*
-    int fd, fd_out;
-    char * myfifo = "/tmp/c64drive";
-    char * outfifo = "/tmp/spiserver";
-    char buf[MAX_BUF];
-    
-    fd = open(myfifo, O_RDONLY);
-    fd_out = open(outfifo, O_WRONLY);
-    */
-    
-    //Fifo fifo;
-    //fifo.init("/tmp/spiserver", "/tmp/c64drive");
-    
-    
     TCPClient client("127.0.0.1", 44444);
-    
-    printf("connecting..\n");
     client.connect();
     printf("connected.\n");
     
@@ -113,17 +69,11 @@ int main(int argc, char **argv)
     
     printf("C64 server\n");
     int channel = 0;
-    
     std::thread inputThread(userInputThread);
      
     while (1)
     {
-        //int recv_size = spi_data.receive(pkt);
-        //int recv_size = read(fd, pkt, 1024);
-        //int recv_size = fifo.recv(pkt, 1024);
-        printf("waiting..\n");
         int recv_size = client.recv(pkt, 1024);
-        printf("received %d\n", recv_size);
         if (recv_size > 0)
         {
             std::lock_guard<std::mutex> guard(mutex);
@@ -288,8 +238,6 @@ int main(int argc, char **argv)
             }
             
             // send state response
-            //write(fd_out, pkt, sizeof(dataPacket));
-            //fifo.send(pkt, sizeof(dataPacket));
             client.send(pkt, sizeof(dataPacket));
         }
     }
