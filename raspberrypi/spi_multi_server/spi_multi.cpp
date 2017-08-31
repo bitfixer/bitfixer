@@ -15,17 +15,18 @@
 #include <thread>
 #include <mutex>
 
-TCPServer server(44444);
-std::mutex mutex;
-CommPort* ports[256];
-
 typedef struct
 {
     int resetPin;
     int spiReqPin;
     int spiInterface;
     rpiSpiData* spi_data;
-} spiInfo;
+} spiInfo_t;
+
+TCPServer server(44444);
+std::mutex mutex;
+CommPort* ports[256];
+spiInfo_t spiInfo[2];
 
 void threadproc()
 {
@@ -36,7 +37,10 @@ void threadproc()
         
         // get ID byte from service
         unsigned char tmp;
+        
+        printf("reading id\n");
         int n = port->recv(&tmp, 1);
+        printf("got id\n");
         if (n == 1)
         {
             fprintf(stderr, "adding connection, ID %X..\n", tmp);
@@ -46,6 +50,14 @@ void threadproc()
             }
             
             ports[tmp] = port;
+            
+            for (int i = 0; i < 2; i++)
+            {
+                printf("reset device %d\n", i);
+                digitalWrite(spiInfo[i].resetPin, LOW); // reset this device
+                delayMicroseconds(100000);
+                digitalWrite(spiInfo[i].resetPin, HIGH);
+            }
         }
     }
 }
@@ -53,7 +65,6 @@ void threadproc()
 // test - watch for input
 int main(int argc, char **argv)
 {
-    spiInfo spiInfo[2];
     spiInfo[0].resetPin = 3;
     spiInfo[0].spiReqPin = 0;
     spiInfo[0].spiInterface = 0;
@@ -102,6 +113,13 @@ int main(int argc, char **argv)
         for (int i = 0; i < 2; i++)
         {
             int recv_size = spiInfo[i].spi_data->receive(pkt);
+            
+            /*
+            pkt[0] = 19;
+            pkt[1] = 8;
+            int recv_size = 2;
+            */
+             
             if (recv_size > 0)
             {
                 
@@ -112,12 +130,30 @@ int main(int argc, char **argv)
                     std::lock_guard<std::mutex> guard(mutex);
                     if (ports[id])
                     {
-                        ports[id]->send(pkt, recv_size);
-                        recv_size = ports[id]->recv(pkt, recv_size);
+                        int bytessent = ports[id]->send(pkt, recv_size);
+                        if (bytessent <= 0)
+                        {
+                            // socket is dead
+                            delete ports[id];
+                            ports[id] = NULL;
+                        }
+                        
+                        if (ports[id])
+                        {
+                            recv_size = ports[id]->recv(pkt, 1024);
+                            printf("received %d bytes from %d\n", recv_size, id);
+                            
+                            if (recv_size <= 0)
+                            {
+                                delete ports[id];
+                                ports[id] = NULL;
+                            }
+                        }
                     }
                 }
                 
                 spiInfo[i].spi_data->send(pkt, recv_size);
+                //sleep(2);
             }
         }
         

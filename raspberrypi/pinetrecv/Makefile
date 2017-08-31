@@ -1,7 +1,7 @@
 REMOTE := 192.168.1.22
 
 all:
-	g++ -o pinetrecv -lwiringPi -std=c++11 pinetrecv.cpp CommPort.cpp timer.cpp NetPort.cpp rpiSpiData.cpp
+	g++ -o pinetrecv -lwiringPi -std=c++11 pinetrecv.cpp CommPort.cpp timer.cpp NetPort.cpp rpiSpiData.cpp TCP.cpp
 
 transfer:
 	scp pinetrecv.cpp pi@$(REMOTE):~/pinetrecv/pinetrecv.cpp
@@ -16,4 +16,4 @@ transfer:
 	scp ../../external/Net/Net.h pi@$(REMOTE):~/pinetrecv/Net.h
 	scp ../../shared/rpi/rpiSpiData.h pi@$(REMOTE):~/pinetrecv/rpiSpiData.h
 	scp ../../shared/rpi/rpiSpiData.cpp pi@$(REMOTE):~/pinetrecv/rpiSpiData.cpp
-	scp ../../shared/rpi/Fifo.h pi@$(REMOTE):~/pinetrecv/Fifo.h
+	scp ../../shared/TCP.* pi@$(REMOTE):~/pinetrecv/

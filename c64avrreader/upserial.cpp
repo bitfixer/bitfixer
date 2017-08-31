@@ -99,15 +99,7 @@ int main(void)
     spi_data.spi_init();
     
     cmdPkt.cmd = 0;
-    /*
-    while (1)
-    {
-        recv_size = spi_data.sendAndRecvPacket((unsigned char*)&cmdPkt, sizeof(cmdPkt));
-        cmdPkt.cmd++;
-        _delay_us(2000000);
-    }
-    */
-
+    
     // wait for command byte
     while (1)
     {
@@ -121,8 +113,12 @@ int main(void)
             val = PINA & (1<<PA0);
         } while (val != 0);
 
-        buffer[0] = cmd;
-        recv_size = spi_data.sendAndRecvPacket(buffer, 1);
+        //buffer[0] = cmd;
+        //recv_size = spi_data.sendAndRecvPacket(buffer, 1);
+        
+        buffer[0] = DEVICE_ID;
+        buffer[1] = cmd;
+        recv_size = spi_data.sendAndRecvPacket(buffer, 2);
 
         PORTB = 0x01;
         PORTD = 0x80;

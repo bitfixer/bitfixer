@@ -7,7 +7,8 @@
 #include <string.h>
 #include "NetPort.h"
 #include "rpiSpiData.h"
-#include "Fifo.h"
+//#include "Fifo.h"
+#include "TCP.h"
 
 class Timer
 {
@@ -105,6 +106,7 @@ public:
     {
         memset(frame, 0, frameSize);
         // get UDP frame
+        fprintf(stderr, "waiting for network frame\n");
         int ret = port.recv_sync(frame, frameSize);
         fprintf(stderr, "Received Network Frame\n");
     }
@@ -632,28 +634,16 @@ int main(int argc, char **argv)
     }
 
     PETNetworkFrameDataSource petDataSource;
+
+    TCPClient client("127.0.0.1", 44444);
+    client.connect();
+    printf("connected!\n");
     
-    /*
-    int resetPin = 3;
-
-    wiringPiSetup();
-    pinMode(0, INPUT);
-    pullUpDnControl(0, PUD_UP);
-
-    pinMode(resetPin, OUTPUT);
-    pullUpDnControl(resetPin, PUD_OFF);
-    digitalWrite(resetPin, LOW); // reset MCU
-
-    int spi = wiringPiSPISetup(0, 2000000);
-    rpiSpiData spi_data(0, spi);
-
-    delayMicroseconds(100000);
-    digitalWrite(resetPin, HIGH);
-    */
+    // send device id
+    unsigned char dev_id = 19;
+    int s = client.send(&dev_id, 1);
+    printf("client sent %d\n", s);
     
-    Fifo fifo;
-    fifo.init("/tmp/pipix_in", "/tmp/pipix_out");
-
     printf("checking for commands2..\n");
 
     int frames = 0;
@@ -663,17 +653,15 @@ int main(int argc, char **argv)
 
     while (!done)
     {
-        //printf("checking for command\n");
-        //int recv_size = spi_data.receive_sync(buffer);
-        int recv_size = fifo.recv(buffer, 1024);
+        int recv_size = client.recv(buffer, 1024);
         if (recv_size > 0)
         {
-            unsigned char cmd = buffer[0];
-            //printf("got command %d\n", cmd);
+            unsigned char cmd = buffer[1];
+            printf("received command %d\n", cmd);
             // start a frame
             if (cmd == 0)
             {
-                printf("cmd0\n");
+                //printf("cmd0\n");
                 if (!started)
                 {
                     started = true;
@@ -685,7 +673,9 @@ int main(int argc, char **argv)
                 const unsigned char *frameChunk = source->getFrameChunk(cmd);
                 //int s = write(spi, frameChunk, 1024);
                 //spi_data.send((unsigned char*)frameChunk, 1024);
-                fifo.send((unsigned char*)frameChunk, 1024);
+                //fifo.send((unsigned char*)frameChunk, 1024);
+                printf("sending\n");
+                client.send((unsigned char*)frameChunk, 1024);
 
                 float currTime = playbackTimer.getCurrentElapsedTime();
                 float currFps = (float)frames / currTime;
@@ -697,103 +687,15 @@ int main(int argc, char **argv)
                 const unsigned char *frameChunk = source->getFrameChunk(cmd);
                 //int s = write(spi, frameChunk, 1024);
                 //spi_data.send((unsigned char*)frameChunk, 1024);
-                fifo.send((unsigned char*)frameChunk, 1024);
+                //fifo.send((unsigned char*)frameChunk, 1024);
+                printf("sending\n");
+                client.send((unsigned char*)frameChunk, 1024);
             }
 
-            //printf("sent.\n");
             float curr_playback_time = playbackTimer.getCurrentElapsedTime();
             source->workForChunk(cmd, curr_playback_time);
         }
-        /*
-        else
-        {
-            delayMicroseconds(500);
-        }
-        */
     }
-
-    /*
-    while (!done)
-    {
-        // loop - check for updates
-        unsigned char cmd;
-        while (digitalRead(0) == HIGH)
-        {
-            delayMicroseconds(10);
-        }
-        // get byte
-        int r = read(spi, &cmd, 1);
-
-        // start a frame
-        if (cmd == 0)
-        {
-            if (!started)
-            {
-                started = true;
-                playbackTimer.start();
-            }
-
-            playbackTimer.end();
-
-            const unsigned char *frameChunk = source->getFrameChunk(cmd);
-            int s = write(spi, frameChunk, 1024);
-
-            float currTime = playbackTimer.getCurrentElapsedTime();
-            float currFps = (float)frames / currTime;
-
-        }
-        else if (cmd < 9)
-        {
-            const unsigned char *frameChunk = source->getFrameChunk(cmd);
-            int s = write(spi, frameChunk, 1024);
-        }
-        // PET frame
-        else if (cmd == 0x10)
-        {
-            const unsigned char *frameChunk = petDataSource.getFrameChunk(0);
-            int s = write(spi, frameChunk, 2000);
-            printf("sent %d bytes\n", s);
-        }
-        else if (cmd == 0x11)
-        {
-            const unsigned char *frameChunk = petDataSource.getFrameChunk(0);
-            int s = write(spi, frameChunk, 1000);
-            printf("pet40 sent %d bytes\n", s);
-        }
-        else if (cmd == 0x80)
-        {
-            unsigned char len;
-            char buf[256];
-            int r = read(spi, &len, 1);
-            printf("search command! got %d\n", len);
-            for (int x = 0; x < len; x++)
-            {
-                r = read(spi, &buf[x], 1);
-                printf("%d got %c %X\n", x, buf[x], buf[x]);
-            }
-            buf[len] = 0;
-            printf("got search string %s\n", buf);
-
-            int s = write(spi, &cmd, 1);
-        }
-        else if (cmd == 0x81)
-        {
-            static char a = '0';
-            memset(buffer, a, 1024);
-            a = (a + 1) % 10;
-            int s = write(spi, buffer, 1024);
-        }
-
-        // wait for deassert
-        while (digitalRead(0) == LOW)
-        {
-            delayMicroseconds(10);
-        }
-
-        float curr_playback_time = playbackTimer.getCurrentElapsedTime();
-        source->workForChunk(cmd, curr_playback_time);
-    }
-    */
 
     delete source;
     return 1;
