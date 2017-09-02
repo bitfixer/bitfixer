@@ -2,6 +2,7 @@
 #include <c64.h>
 #include <peekpoke.h>
 #include <string.h>
+#include <stdlib.h>
 //#include "../commands.h"
 
 #define PA2 0x04
@@ -299,52 +300,38 @@ int main(void)
     unsigned char val;
     int count;
     int i;
-    unsigned char data[128];
+    //unsigned char data[128];
+    unsigned char* data;
     unsigned char* ptr;
     
     init();
     textMode();
     //multicolorBitmapMode();
-    
-    //writeString("Welcome to YouTube!", 0, 0);
-    //writeString("ENTER SEARCH TERM:", 5, 5);
-    
-    //struct cmdPacket* pkt = (struct cmdPacket*)data;
-    //struct cmdPacket* pkt;
+    data = (unsigned char*)malloc(256);
     
     pkt = (cmdPacket*)data;
-    
     printf("Welcome to YouTube!\n");
-    printf("Enter search term: ");
-    //count = scanf("%s", searchString);
-    count = scanf("%s", pkt->data);
-    
-    printf("\n");
-    printf("Searching for %s..", pkt->data);
-    //printf("Searching..\n");
-    
-    // send search command
-    /*
-    send_command(0x80);
-    val = strlen(searchString);
-    send_command(val);
-    for (count = 0; count < val; count++)
+    while (1)
     {
-        printf("sending %d %c\n", count, searchString[count]);
-        send_command(searchString[count]);
+        memset(pkt->data, 0, 64);
+        printf("Enter search term: ");
+        count = scanf("%s", pkt->data);
+        
+        printf("\n");
+        printf("Searching for %s..", pkt->data);
+        
+        pkt->len = strlen(pkt->data);
+        pkt->cmd = 11;
+        count = 2 + pkt->len;
+        for (i = 0; i < count; i++)
+        {
+            send_command(data[i]);
+        }
+        printf("\n");
+        
+        load_mem(data, 1);
+        printf("got %s\n", data);
     }
-    */
-    
-    //val = strlen(searchString);
-    pkt->len = strlen(pkt->data);
-    pkt->cmd = 11;
-    count = 2 + pkt->len;
-    for (i = 0; i < count; i++)
-    {
-        //printf("sending %d %d\n", i, data[i]);
-        send_command(data[i]);
-    }
-    
     /*
     send_command(val);
     for (count = 0; count < val; count++)
@@ -375,8 +362,6 @@ int main(void)
     while (1)
     {
         val = *(unsigned char *)KEYPRESS;
-        //printf("%d\n", val);
-        
         if (val == 62)
         {
             break;

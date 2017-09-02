@@ -88,9 +88,67 @@ typedef struct
 {
     unsigned char device_id;
     unsigned char cmd;
+    unsigned char size;
     unsigned char data[128];
 } dataPacket;
- 
+
+// receive a full data packet
+void recvPacket(dataPacket* pkt)
+{
+    int size;
+    pkt->device_id = DEVICE_ID;
+    pkt->cmd = get_command();
+    // get size byte
+    pkt->size = get_command();
+    // get data
+    for (int i = 0; i < pkt->size; i++)
+    {
+        pkt->data[i] = get_command();
+    }
+}
+
+void sendData(unsigned char* buffer, int size)
+{
+    unsigned char val;
+    // switch to output mode
+    set_data_output();
+    
+    // wait for PA0 low
+    // master signals to send bytes
+    do {
+        val = PINA & (1<<PA0);
+    } while (val != 0);
+    
+    // lower flag to indicate ready
+    lower_flag();
+    
+    // do the transfer
+    // clock on PA1 pin, handshake line from user port
+    for (int i = 0; i < size; i++)
+    {
+        output_byte(buffer[i]);
+        // wait for handshake pulse to end
+        do {
+            val = PINA & (1<<PA1);
+        } while (val == 0);
+        
+        // wait for handshake pulse to start
+        do {
+            val = PINA & (1<<PA1);
+        } while (val != 0);
+    }
+    output_byte(0x00);
+    set_data_input();
+    
+    // raise flag, done
+    raise_flag();
+    
+    // wait for PA0 high, master is done
+    do {
+        val = PINA & (1<<PA0);
+    } while (val == 0);
+}
+
 int main(void)
 {
     unsigned char val;
@@ -105,22 +163,18 @@ int main(void)
     init();
     spi_data.spi_init();
     
+    int cc = 0;
     while (1)
     {
         dataPacket* pkt = (dataPacket*)buffer;
-        pkt->cmd = get_command();
+        recvPacket(pkt);
+        recv_size = spi_data.sendAndRecvPacket(buffer, 3+pkt->size);
         
-        // get size byte
-        recv_size = get_command();
+        // clear buffer
+        memset(buffer, 0, 2048);
+        sprintf((char*)buffer, "number %d", cc++);
         
-        // get data
-        for (int i = 0; i < recv_size; i++)
-        {
-            pkt->data[i] = get_command();
-        }
-        
-        pkt->device_id = DEVICE_ID;
-        recv_size = spi_data.sendAndRecvPacket(buffer, 2+recv_size);
+        sendData(buffer, 256);
     }
     
     // wait for command byte
