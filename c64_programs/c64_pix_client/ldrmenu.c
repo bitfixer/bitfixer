@@ -286,11 +286,20 @@ void writeString(const char* string, int x, int y)
     }
 }
 
+typedef struct
+{
+    unsigned char cmd;
+    unsigned char len;
+    unsigned char data[64];
+} cmdPacket;
+
 int main(void)
 {
+    cmdPacket* pkt;
     unsigned char val;
     int count;
-    char searchString[128];
+    int i;
+    unsigned char data[128];
     unsigned char* ptr;
     
     init();
@@ -300,11 +309,18 @@ int main(void)
     //writeString("Welcome to YouTube!", 0, 0);
     //writeString("ENTER SEARCH TERM:", 5, 5);
     
+    //struct cmdPacket* pkt = (struct cmdPacket*)data;
+    //struct cmdPacket* pkt;
+    
+    pkt = (cmdPacket*)data;
+    
     printf("Welcome to YouTube!\n");
     printf("Enter search term: ");
-    count = scanf("%s", searchString);
+    //count = scanf("%s", searchString);
+    count = scanf("%s", pkt->data);
+    
     printf("\n");
-    printf("Searching for %s..", searchString);
+    printf("Searching for %s..", pkt->data);
     //printf("Searching..\n");
     
     // send search command
@@ -319,13 +335,24 @@ int main(void)
     }
     */
     
-    val = strlen(searchString);
+    //val = strlen(searchString);
+    pkt->len = strlen(pkt->data);
+    pkt->cmd = 11;
+    count = 2 + pkt->len;
+    for (i = 0; i < count; i++)
+    {
+        //printf("sending %d %d\n", i, data[i]);
+        send_command(data[i]);
+    }
+    
+    /*
     send_command(val);
     for (count = 0; count < val; count++)
     {
         printf("sending %d %c\n", count, searchString[count]);
         send_command(searchString[count]);
     }
+    */
     
     /*
     send_command(0x81);

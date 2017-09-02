@@ -86,7 +86,8 @@ typedef struct
 
 typedef struct
 {
-    unsigned char size;
+    unsigned char device_id;
+    unsigned char cmd;
     unsigned char data[128];
 } dataPacket;
  
@@ -96,8 +97,6 @@ int main(void)
     unsigned char cmd;
     int recv_size;
     unsigned char buffer[2048];
-    dataPacket pkt;
-    
     
     PORTB = 0x01;
     memset(buffer, 0, 2048);
@@ -106,26 +105,22 @@ int main(void)
     init();
     spi_data.spi_init();
     
-    //_delay_us(1000000);
     while (1)
     {
+        dataPacket* pkt = (dataPacket*)buffer;
+        pkt->cmd = get_command();
+        
         // get size byte
-        pkt.size = get_command();
+        recv_size = get_command();
         
         // get data
-        for (int i = 0; i < pkt.size; i++)
+        for (int i = 0; i < recv_size; i++)
         {
-            pkt.data[i] = get_command();
+            pkt->data[i] = get_command();
         }
         
-        // now send to host
-        buffer[0] = DEVICE_ID;
-        buffer[1] = 10;
-        
-        memcpy(&buffer[2], pkt.data, pkt.size);
-        recv_size = spi_data.sendAndRecvPacket(buffer, 2+pkt.size);
-        
-        _delay_us(1000000);
+        pkt->device_id = DEVICE_ID;
+        recv_size = spi_data.sendAndRecvPacket(buffer, 2+recv_size);
     }
     
     // wait for command byte
