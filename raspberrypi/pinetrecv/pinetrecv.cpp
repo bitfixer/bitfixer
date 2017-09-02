@@ -92,6 +92,13 @@ private:
     unsigned char frame[4000];
 };
 
+typedef struct
+{
+    unsigned char device_id;
+    unsigned char cmd;
+    unsigned char data[256];
+} cmdPacket;
+
 // test - watch for input
 int main(int argc, char **argv)
 {
@@ -102,7 +109,6 @@ int main(int argc, char **argv)
     memset(buffer, 0, 1024);
 
     FrameDataSource* source = new NetworkFrameDataSource();
-
     PETNetworkFrameDataSource petDataSource;
 
     TCPClient client("127.0.0.1", 44444);
@@ -116,6 +122,27 @@ int main(int argc, char **argv)
     int frames = 0;
     bool done = false;
     
+    while (!done)
+    {
+        int recv_size = client.recv(buffer, 1024);
+        if (recv_size > 0)
+        {
+            /*
+            unsigned char cmd = buffer[1];
+            printf("received command %d size %d\n", cmd, recv_size);
+            */
+            
+            cmdPacket* pkt = (cmdPacket*)buffer;
+            printf("received command %d size %d\n", pkt->cmd, recv_size);
+            
+            int dataSize = recv_size - 2;
+            pkt->data[dataSize] = 0;
+            printf("got string %s\n", pkt->data);
+            client.send(buffer, 1);
+        }
+    }
+    
+    /*
     while (!done)
     {
         int recv_size = client.recv(buffer, 1024);
@@ -138,6 +165,7 @@ int main(int argc, char **argv)
             source->workForChunk(cmd, 0.0);
         }
     }
+    */
 
     delete source;
     return 1;

@@ -76,29 +76,57 @@ unsigned char get_command()
     return byte;
 }
 
+/*
 typedef struct
 {
     unsigned char device_id;
     unsigned char cmd;
 } dataPacket;
+*/
 
+typedef struct
+{
+    unsigned char size;
+    unsigned char data[128];
+} dataPacket;
+ 
 int main(void)
 {
     unsigned char val;
     unsigned char cmd;
     int recv_size;
     unsigned char buffer[2048];
+    dataPacket pkt;
+    
+    
     PORTB = 0x01;
     memset(buffer, 0, 2048);
     
-    dataPacket cmdPkt;
-    cmdPkt.device_id = DEVICE_ID;
-
     SPIData spi_data(&PORTB, &DDRB, PB0, &DDRB, PB6);
     init();
     spi_data.spi_init();
     
-    cmdPkt.cmd = 0;
+    //_delay_us(1000000);
+    while (1)
+    {
+        // get size byte
+        pkt.size = get_command();
+        
+        // get data
+        for (int i = 0; i < pkt.size; i++)
+        {
+            pkt.data[i] = get_command();
+        }
+        
+        // now send to host
+        buffer[0] = DEVICE_ID;
+        buffer[1] = 10;
+        
+        memcpy(&buffer[2], pkt.data, pkt.size);
+        recv_size = spi_data.sendAndRecvPacket(buffer, 2+pkt.size);
+        
+        _delay_us(1000000);
+    }
     
     // wait for command byte
     while (1)

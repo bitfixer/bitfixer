@@ -1,3 +1,5 @@
+REMOTE := 192.168.1.15
+
 clean:
 	rm -f *.prg
 	rm -f *.o
@@ -7,6 +9,9 @@ clean:
 %.prg: %.c
 	cl65 -t c64 $< -o $@
 	rm $*.o
+
+%.transfer: %.prg
+	scp $< pi@$(REMOTE):~/pi64drive
 
 %.tap: %.prg
 	prg2wav -s -t $@ -m c64ntsc $<
