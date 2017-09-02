@@ -170,11 +170,14 @@ int main(void)
         recvPacket(pkt);
         recv_size = spi_data.sendAndRecvPacket(buffer, 3+pkt->size);
         
+        /*
         // clear buffer
         memset(buffer, 0, 2048);
         sprintf((char*)buffer, "number %d", cc++);
-        
         sendData(buffer, 256);
+        */
+        
+        sendData(buffer, recv_size);
     }
     
     // wait for command byte

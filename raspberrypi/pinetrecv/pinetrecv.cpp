@@ -6,6 +6,9 @@
 #include "NetPort.h"
 #include "TCP.h"
 
+#define SEARCHCMD   11
+#define SEARCHPAGE  12
+
 class FrameDataSource
 {
 public:
@@ -122,6 +125,7 @@ int main(int argc, char **argv)
     int frames = 0;
     bool done = false;
     
+    int vv = 0;
     while (!done)
     {
         int recv_size = client.recv(buffer, 1024);
@@ -138,7 +142,12 @@ int main(int argc, char **argv)
             int dataSize = recv_size - 2;
             pkt->data[dataSize] = 0;
             printf("got string %s\n", pkt->data);
-            client.send(buffer, 1);
+            memcpy(temp, pkt->data, 256);
+            //client.send(buffer, 1);
+            
+            memset(buffer, 0, 2048);
+            sprintf((char*)buffer, "%s: resp %d", temp, vv++);
+            client.send(buffer, 256);
         }
     }
     

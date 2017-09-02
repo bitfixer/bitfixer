@@ -118,6 +118,54 @@ void set_vic_bank(unsigned char bank)
     CIA2.pra = val;
 }
 
+/*
+void load_byte(unsigned addr)
+{
+    unsigned char lo;
+    unsigned char hi;
+    
+    lo = addr & 0x00FF;
+    hi = (addr >> 8) & 0x00FF;
+    
+    // store destination address
+    *((unsigned char *)0x00FB) = lo;
+    *((unsigned char *)0x00FC) = hi;
+    
+    // clear FLAG
+    asm("lda %w", 0xDD0D);
+    
+    asm("ldx $FD");
+    asm("ldy #$00");
+    
+    // lower PA2
+    asm("lda %w", 0xDD00);
+    asm("and #$FB");
+    asm("sta %w", 0xDD00);
+    
+    // wait for FLAG
+wait:
+    asm("lda %w", KEYPRESS);
+    asm("cmp #$3E"); // Q
+    asm("beq %g", quit);
+    
+    asm("lda %w", 0xDD0D);
+    asm("and #$10");
+    asm("beq %g", wait);
+    
+    // load byte
+    asm("lda %w", 0xDD01);
+    asm("sta ($FB), y");
+    
+    // raise PA2
+    asm("lda %w", 0xDD00);
+    asm("ora #$04");
+    asm("sta %w", 0xDD00);
+    
+quit:
+    return;
+}
+*/
+
 // load specified number of 256 byte pages into memory
 void load_mem(unsigned addr, unsigned char pages)
 {
@@ -300,7 +348,6 @@ int main(void)
     unsigned char val;
     int count;
     int i;
-    //unsigned char data[128];
     unsigned char* data;
     unsigned char* ptr;
     
@@ -311,7 +358,7 @@ int main(void)
     
     pkt = (cmdPacket*)data;
     printf("Welcome to YouTube!\n");
-    while (1)
+    //while (1)
     {
         memset(pkt->data, 0, 64);
         printf("Enter search term: ");
@@ -328,7 +375,6 @@ int main(void)
             send_command(data[i]);
         }
         printf("\n");
-        
         load_mem(data, 1);
         printf("got %s\n", data);
     }
@@ -358,7 +404,8 @@ int main(void)
     printf("Select video: ");
     count = scanf("%s", searchString);
     */
-     
+    
+    /*
     while (1)
     {
         val = *(unsigned char *)KEYPRESS;
@@ -367,8 +414,11 @@ int main(void)
             break;
         }
     }
+    */
     
     //textMode();
+    
+    free(pkt);
     
     return 0;
 }
