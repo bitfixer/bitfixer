@@ -5,6 +5,7 @@
 #include <string.h>
 #include "NetPort.h"
 #include "TCP.h"
+#include "URLFetcher.h"
 
 #define SEARCHCMD   11
 #define SEARCHPAGE  12

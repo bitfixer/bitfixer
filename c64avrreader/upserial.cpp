@@ -76,14 +76,6 @@ unsigned char get_command()
     return byte;
 }
 
-/*
-typedef struct
-{
-    unsigned char device_id;
-    unsigned char cmd;
-} dataPacket;
-*/
-
 typedef struct
 {
     unsigned char device_id;
@@ -169,17 +161,10 @@ int main(void)
         dataPacket* pkt = (dataPacket*)buffer;
         recvPacket(pkt);
         recv_size = spi_data.sendAndRecvPacket(buffer, 3+pkt->size);
-        
-        /*
-        // clear buffer
-        memset(buffer, 0, 2048);
-        sprintf((char*)buffer, "number %d", cc++);
-        sendData(buffer, 256);
-        */
-        
         sendData(buffer, recv_size);
     }
     
+    /*
     // wait for command byte
     while (1)
     {
@@ -231,4 +216,5 @@ int main(void)
             val = PINA & (1<<PA0);
         } while (val == 0);
     }
+    */
 }
