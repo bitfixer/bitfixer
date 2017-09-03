@@ -10,9 +10,18 @@
 #include "URLFetcher.h"
 #include <string>
 #include <sstream>
+#include <algorithm>
+#include <regex>
 
 namespace YouTube
 {
+    struct InvalidChar
+    {
+        bool operator()(char c) const {
+            return !isprint((unsigned)c);
+        }
+    };
+    
     std::vector<Video> search(std::string term, int page)
     {
         URLFetcher fetcher;
@@ -26,8 +35,6 @@ namespace YouTube
         bool ret = fetcher.fetchURL(url, mem);
         if (ret)
         {
-            printf("success! size %d\n", mem.size);
-            
             // parse the results
             std::stringstream ss((char*)mem.memory);
             std::string to;
@@ -58,9 +65,10 @@ namespace YouTube
                         end = rem.find("\"");
                         
                         std::string title = to.substr(n, end);
+                        title.erase(std::remove_if(title.begin(), title.end(), InvalidChar()), title.end());
                         
-                        printf("%d: %s %s\n", i, yt_id.c_str(), title.c_str());
-                        
+                        title = std::regex_replace(title, std::regex("&amp;"), "&");
+                        title = std::regex_replace(title, std::regex("&#39;"), "'");
                         // create new video and add to response
                         videos.push_back(Video(yt_id, title));
                     }
