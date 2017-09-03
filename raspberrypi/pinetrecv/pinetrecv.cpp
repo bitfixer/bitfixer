@@ -7,6 +7,8 @@
 #include "TCP.h"
 #include "URLFetcher.h"
 
+#include "YTVideo.h"
+
 #define SEARCHCMD   11
 #define SEARCHPAGE  12
 
@@ -100,6 +102,7 @@ typedef struct
 {
     unsigned char device_id;
     unsigned char cmd;
+    unsigned char len;
     unsigned char data[256];
 } cmdPacket;
 
@@ -132,22 +135,31 @@ int main(int argc, char **argv)
         int recv_size = client.recv(buffer, 1024);
         if (recv_size > 0)
         {
-            /*
-            unsigned char cmd = buffer[1];
-            printf("received command %d size %d\n", cmd, recv_size);
-            */
-            
             cmdPacket* pkt = (cmdPacket*)buffer;
             printf("received command %d size %d\n", pkt->cmd, recv_size);
             
-            int dataSize = recv_size - 2;
+            int dataSize = recv_size - 3;
             pkt->data[dataSize] = 0;
             printf("got string %s\n", pkt->data);
             memcpy(temp, pkt->data, 256);
             //client.send(buffer, 1);
             
+            for (int d = 0; d < dataSize; d++)
+            {
+                printf("data %d is %d 0x%X\n", d, temp[d], temp[d]);
+            }
+            
+            //std::vector<YouTube::Video> videos = YouTube::search("cats", 1);
+            std::vector<YouTube::Video> videos = YouTube::search(temp, 1);
+            printf("got %d results.\n", videos.size());
+            
+            printf("video: %s\n", videos[0].title().c_str());
+            
+            
             memset(buffer, 0, 2048);
-            sprintf((char*)buffer, "%s: resp %d", temp, vv++);
+            //sprintf((char*)buffer, "%s: resp %d", temp, vv++);
+            
+            memcpy(buffer, videos[0].title().c_str(), videos[0].title().length());
             client.send(buffer, 256);
         }
     }

@@ -28,13 +28,18 @@ namespace YouTube
         MemoryStruct mem;
         
         char url[1024];
+        std::transform(term.begin(), term.end(), term.begin(), ::tolower);
         sprintf(url, "https://www.youtube.com/results?search_query=%s&page=%d", term.c_str(), page);
+        printf("url is: %s\n", url);
         
         std::vector<Video> videos;
         
         bool ret = fetcher.fetchURL(url, mem);
         if (ret)
         {
+            printf("result size %d\n", mem.size);
+            //printf("result: %s\n", mem.memory);
+            
             // parse the results
             std::stringstream ss((char*)mem.memory);
             std::string to;
