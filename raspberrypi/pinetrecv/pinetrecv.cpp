@@ -6,8 +6,9 @@
 #include "NetPort.h"
 #include "TCP.h"
 #include "URLFetcher.h"
-
 #include "YTVideo.h"
+#include "petscii.h"
+
 
 #define SEARCHCMD   11
 #define SEARCHPAGE  12
@@ -158,8 +159,20 @@ int main(int argc, char **argv)
             
             memset(buffer, 0, 2048);
             //sprintf((char*)buffer, "%s: resp %d", temp, vv++);
+            std::string petsciiTitle = Petscii::asciiToPetscii(videos[0].title());
             
-            memcpy(buffer, videos[0].title().c_str(), videos[0].title().length());
+            printf("petscii title len %d\n", petsciiTitle.length());
+            
+            memcpy(buffer, petsciiTitle.c_str(), petsciiTitle.length());
+            
+            /*
+            for (int i = 0; i < 256; i++)
+            {
+                printf("buffer %d: %d %X\n", i, buffer[i], buffer[i]);
+            }
+            */
+            
+            //memcpy(buffer, videos[0].title().c_str(), videos[0].title().length());
             client.send(buffer, 256);
         }
     }

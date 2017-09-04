@@ -16,3 +16,4 @@ transfer:
 	scp ../../shared/TCP.* pi@$(REMOTE):~/pinetrecv/
 	scp ../../shared/rpi/URLFetcher.* pi@$(REMOTE):~/pinetrecv/
 	scp ../../shared/youtube/YTVideo.* pi@$(REMOTE):~/pinetrecv/
+	scp ../../shared/c64/petscii.h pi@$(REMOTE):~/pinetrecv/
