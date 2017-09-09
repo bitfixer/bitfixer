@@ -118,54 +118,6 @@ void set_vic_bank(unsigned char bank)
     CIA2.pra = val;
 }
 
-/*
-void load_byte(unsigned addr)
-{
-    unsigned char lo;
-    unsigned char hi;
-    
-    lo = addr & 0x00FF;
-    hi = (addr >> 8) & 0x00FF;
-    
-    // store destination address
-    *((unsigned char *)0x00FB) = lo;
-    *((unsigned char *)0x00FC) = hi;
-    
-    // clear FLAG
-    asm("lda %w", 0xDD0D);
-    
-    asm("ldx $FD");
-    asm("ldy #$00");
-    
-    // lower PA2
-    asm("lda %w", 0xDD00);
-    asm("and #$FB");
-    asm("sta %w", 0xDD00);
-    
-    // wait for FLAG
-wait:
-    asm("lda %w", KEYPRESS);
-    asm("cmp #$3E"); // Q
-    asm("beq %g", quit);
-    
-    asm("lda %w", 0xDD0D);
-    asm("and #$10");
-    asm("beq %g", wait);
-    
-    // load byte
-    asm("lda %w", 0xDD01);
-    asm("sta ($FB), y");
-    
-    // raise PA2
-    asm("lda %w", 0xDD00);
-    asm("ora #$04");
-    asm("sta %w", 0xDD00);
-    
-quit:
-    return;
-}
-*/
-
 // load specified number of 256 byte pages into memory
 void load_mem(unsigned addr, unsigned char pages)
 {
@@ -278,7 +230,7 @@ void textMode()
     val = *addr;
     val &= 0xDF; // lower bit 5
     *addr = val;
-    
+
     addr = (unsigned char*)VICII_REG2;
     val = *addr;
     val &= 0xEF; // lower bit 4
@@ -323,13 +275,10 @@ void writeString(const char* string, int x, int y)
     int c;
     int width = 40;
     int start = y*width + x;
-    unsigned char* ptr = (unsigned char*)SCREENRAM;
+    unsigned char* ptr = (unsigned char*)(SCREENRAM+start);
     int len = strlen(string);
-    //unsigned char* ptr;
     for (c = 0; c < len; c++)
     {
-        //ptr[start+c] = 1;
-        //ptr = (unsigned char*)
         *ptr = string[c];
         ptr++;
     }
@@ -342,89 +291,25 @@ typedef struct
     unsigned char data[64];
 } cmdPacket;
 
-int main(void)
+typedef struct
 {
-    cmdPacket* pkt;
-    unsigned char val;
-    int count;
-    int i;
-    unsigned char* data;
-    unsigned char* ptr;
-    
-    init();
-    textMode();
-    //multicolorBitmapMode();
-    data = (unsigned char*)malloc(256);
-    
-    pkt = (cmdPacket*)data;
-    printf("Welcome to YouTube!\n");
-    //while (1)
+    unsigned char index;
+    unsigned char numresults;
+    unsigned char data[254];
+} vidResult;
+
+void sendPacket(cmdPacket* pkt)
+{
+    unsigned char i;
+    send_command(pkt->cmd);
+    send_command(pkt->len);
+    for (i = 0; i < pkt->len; i++)
     {
-        memset(pkt->data, 0, 64);
-        printf("Enter search term: ");
-        count = scanf("%s", pkt->data);
-        
-        printf("\n");
-        printf("Searching for %s..", pkt->data);
-        
-        pkt->len = strlen(pkt->data);
-        pkt->cmd = 11;
-        count = 2 + pkt->len;
-        for (i = 0; i < count; i++)
-        {
-            send_command(data[i]);
-        }
-        printf("\n");
-        load_mem(data, 1);
-        printf("got %s\n", data);
+        send_command(pkt->data[i]);
     }
-    /*
-    send_command(val);
-    for (count = 0; count < val; count++)
-    {
-        printf("sending %d %c\n", count, searchString[count]);
-        send_command(searchString[count]);
-    }
-    */
-    
-    /*
-    send_command(0x81);
-    set_userport_input();
-    load_mem(UPPER_RAM, 4);
-    set_userport_output();
-    
-    ptr = (unsigned char*)UPPER_RAM;
-    for (count = 0; count < 100; count++)
-    {
-        printf("%c", *ptr);
-        ptr++;
-    }
-    printf("\n");
-    
-    printf("Select video: ");
-    count = scanf("%s", searchString);
-    */
-    
-    /*
-    while (1)
-    {
-        val = *(unsigned char *)KEYPRESS;
-        if (val == 62)
-        {
-            break;
-        }
-    }
-    */
-    
-    //textMode();
-    
-    free(pkt);
-    
-    return 0;
 }
 
-/*
-int main(void)
+void playVideo(void)
 {
     unsigned base = 8192;
     unsigned page = 16384;
@@ -454,16 +339,16 @@ int main(void)
     set_border_color(0);
     set_background_color(0);
     set_vic_bank(1);
-    
+
     memset((unsigned char*)SCREENRAM, 0xFF, 1000);
-    
+
     val = 0;
     for (i = 0; i < 1000; i++)
     {
         addr = (unsigned char*)(COLORRAM + i);
         *addr = 0x11;
     }
-    
+
     // send command
     while (1)
     {
@@ -476,6 +361,8 @@ int main(void)
         }
 
         send_command(0);
+        send_command(0);
+
         set_userport_input();
         load_mem(SCREENRAM+(currpage*page), 4);
         set_userport_output();
@@ -483,6 +370,8 @@ int main(void)
         for (j = 1; j < 9; j++)
         {
             send_command(j);
+            send_command(0);
+
             set_userport_input();
             load_mem(base+(currpage*page)+((j-1)*1024), 4);
             set_userport_output();
@@ -494,32 +383,94 @@ int main(void)
         if (currpage > 1)
             currpage = 0;
     }
-     
-    set_vic_bank(0);
-    return 1;
-}
-*/
 
-/*
- // TEST switching between text and graphics modes
- while (1)
- {
- // check for keypress
- val = *(unsigned char *)KEYPRESS;
- if (val == 62)
- {
- // quit
- break;
- }
- else if (val == 10)
- {
- textMode();
- }
- else if (val == 13)
- {
- multicolorBitmapMode();
- }
- 
- send_command(0);
- }
- */
+    set_vic_bank(0);
+    // return 1;
+}
+
+
+int main(void)
+{
+    unsigned base = 8192;
+    unsigned page = 16384;
+    unsigned char currpage;
+
+    cmdPacket* pkt;
+    vidResult* result;
+    unsigned char val;
+    int count;
+    int i;
+    int numresults;
+    unsigned char* data;
+
+    init();
+    textMode();
+    memset((unsigned char*)COLORRAM, 0, 1000);
+    //multicolorBitmapMode();
+    data = (unsigned char*)malloc(256);
+    pkt = (cmdPacket*)data;
+
+    //writeString("hello there", 10, 10);
+    //printf("Welcome to YouTube!\n");
+
+    // get search term and send to rpi
+    memset(pkt->data, 0, 64);
+    //printf("Enter search term: ");
+    writeString("enter search term: ", 0, 5);
+    //count = scanf("%s", pkt->data);
+
+
+
+    /*
+    //printf("Searching for %s..", pkt->data);
+    writeString("searching.", 0, 6);
+
+    pkt->len = strlen(pkt->data);
+    pkt->cmd = 11;
+    count = 2 + pkt->len;
+    for (i = 0; i < count; i++)
+    {
+        send_command(data[i]);
+    }
+    //printf("\n");
+
+    // get response
+    load_mem(data, 1);
+    result = (vidResult*)data;
+    //printf("%d: %s\n", result->index, result->data);
+    writeString(result->data, 0, 7);
+
+    numresults = result->numresults;
+
+    for (i = 0; i < 3; i++)
+    {
+        // send search request with no body
+        pkt = (cmdPacket*)data;
+        memset(pkt->data, 0, 64);
+        pkt->len = 0;
+        pkt->cmd = 11;
+
+        for (count = 0; count < 2; count++)
+        {
+            send_command(data[count]);
+        }
+        load_mem(data, 1);
+        result = (vidResult*)data;
+        //printf("%d: %s\n", result->index, result->data);
+        writeString(result->data, 0, 8+i);
+    }
+
+    //printf("select video: ");
+    writeString("select:", 0, 12);
+    count = scanf("%d", &pkt->data[0]);
+    pkt->cmd = 12;
+    pkt->len = 1;
+
+    sendPacket(pkt);
+
+
+    playVideo();
+    */
+    free(data);
+    return 0;
+}

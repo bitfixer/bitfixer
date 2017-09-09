@@ -11,7 +11,7 @@
 
 
 #define SEARCHCMD   11
-#define SEARCHPAGE  12
+#define PLAYCMD     12
 
 class FrameDataSource
 {
@@ -107,6 +107,13 @@ typedef struct
     unsigned char data[256];
 } cmdPacket;
 
+typedef struct
+{
+    unsigned char index;
+    unsigned char numresults;
+    unsigned char data[254];
+} vidResult;
+
 // test - watch for input
 int main(int argc, char **argv)
 {
@@ -129,6 +136,8 @@ int main(int argc, char **argv)
 
     int frames = 0;
     bool done = false;
+    std::vector<YouTube::Video> videos;
+    int videoIndex = 0;
     
     int vv = 0;
     while (!done)
@@ -137,43 +146,59 @@ int main(int argc, char **argv)
         if (recv_size > 0)
         {
             cmdPacket* pkt = (cmdPacket*)buffer;
-            printf("received command %d size %d\n", pkt->cmd, recv_size);
+            printf("received command %d len %d recv_size %d\n", pkt->cmd, pkt->len, recv_size);
             
-            int dataSize = recv_size - 3;
-            pkt->data[dataSize] = 0;
-            printf("got string %s\n", pkt->data);
-            memcpy(temp, pkt->data, 256);
-            //client.send(buffer, 1);
-            
-            for (int d = 0; d < dataSize; d++)
+            if (pkt->cmd == SEARCHCMD)
             {
-                printf("data %d is %d 0x%X\n", d, temp[d], temp[d]);
+                if (pkt->len > 0)
+                {
+                    pkt->data[pkt->len] = 0;
+                    printf("got string %s\n", pkt->data);
+                    memcpy(temp, pkt->data, 256);
+                    
+                    videos = YouTube::search(temp, 1);
+                    printf("got %d results.\n", videos.size());
+                    //printf("video: %s\n", videos[0].title().c_str());
+                    videoIndex = 0;
+                }
+                
+                memset(buffer, 0, 2048);
+                std::string petsciiTitle = Petscii::asciiToPetscii(videos[videoIndex].title());
+                //memcpy(buffer, petsciiTitle.c_str(), petsciiTitle.length());
+                vidResult* result = (vidResult*)buffer;
+                result->index = videoIndex;
+                result->numresults = videos.size();
+                memcpy(result->data, petsciiTitle.c_str(), petsciiTitle.length());
+                printf("sending: %d %d %s\n", result->index, result->numresults, result->data);
+                
+                client.send(buffer, 256);
+                videoIndex++;
             }
-            
-            //std::vector<YouTube::Video> videos = YouTube::search("cats", 1);
-            std::vector<YouTube::Video> videos = YouTube::search(temp, 1);
-            printf("got %d results.\n", videos.size());
-            
-            printf("video: %s\n", videos[0].title().c_str());
-            
-            
-            memset(buffer, 0, 2048);
-            //sprintf((char*)buffer, "%s: resp %d", temp, vv++);
-            std::string petsciiTitle = Petscii::asciiToPetscii(videos[0].title());
-            
-            printf("petscii title len %d\n", petsciiTitle.length());
-            
-            memcpy(buffer, petsciiTitle.c_str(), petsciiTitle.length());
-            
-            /*
-            for (int i = 0; i < 256; i++)
+            else if (pkt->cmd == PLAYCMD)
             {
-                printf("buffer %d: %d %X\n", i, buffer[i], buffer[i]);
+                if (pkt->len > 0)
+                {
+                    printf("got selection: %d\n", pkt->data[0]);
+                    int selection = pkt->data[0];
+                    printf("yt id: %s\n", videos[selection].id().c_str());
+                }
             }
-            */
-            
-            //memcpy(buffer, videos[0].title().c_str(), videos[0].title().length());
-            client.send(buffer, 256);
+            else if (pkt->cmd < 9)
+            {
+                printf("chunk command: %d\n", pkt->cmd);
+                if (pkt->cmd == 0)
+                {
+                    const unsigned char *frameChunk = source->getFrameChunk(pkt->cmd);
+                    client.send((unsigned char*)frameChunk, 1024);
+                }
+                else if (pkt->cmd < 9)
+                {
+                    const unsigned char *frameChunk = source->getFrameChunk(pkt->cmd);
+                    client.send((unsigned char*)frameChunk, 1024);
+                }
+                
+                source->workForChunk(pkt->cmd, 0.0);
+            }
         }
     }
     
