@@ -55,15 +55,15 @@ public:
     , _clkPinMask(1<<clkPin)
     , _dataPinMask(1<<dataPin)
     {
-        
+
     }
-    
+
     ~c64iec() {};
-    
+
     void init()
     {
     }
-    
+
     unsigned char readDebounced()
     {
         unsigned char tmp;
@@ -73,25 +73,25 @@ public:
         } while (tmp != *_iecInPort);
         return tmp;
     }
-    
+
     void waitForAtn()
     {
         //while ((*_iecInPort & _atnPinMask) != 0);
         while ((readDebounced() & _atnPinMask) != 0);
     }
-    
+
     void waitForNotAtn()
     {
         //while ((*_iecInPort & _atnPinMask) == 0);
         while ((readDebounced() &_atnPinMask) == 0);
     }
-    
+
     bool atnTrue()
     {
         //return ((*_iecInPort & _atnPinMask) == 0);
         return ((readDebounced() & _atnPinMask) == 0);
     }
-    
+
     bool waitForClk(int timeoutUs = -1)
     {
         int timeUs = 0;
@@ -101,26 +101,26 @@ public:
             {
                 return false;
             }
-            
+
             _delay_us(10);
             timeUs += 10;
         }
-        
+
         return true;
     }
-    
+
     void waitForNotClk()
     {
         //while ((*_iecInPort & _clkPinMask) == 0);
         while ((readDebounced() & _clkPinMask) == 0);
     }
-    
+
     bool clkTrue()
     {
         //return ((*_iecInPort & _clkPinMask) == 0);
         return ((readDebounced() & _clkPinMask) == 0);
     }
-    
+
     // pull down the clock line
     void setClockTrue()
     {
@@ -128,20 +128,20 @@ public:
         reg |= _clkPinMask;
         *_iecReg = reg;
     }
-    
+
     void setClockFalse()
     {
         unsigned char reg = *_iecReg;
         reg &= ~_clkPinMask;
         *_iecReg = reg;
     }
-    
+
     // wait for either the ATN or CLK line to be released
     void waitForNotAtnOrNotClk()
     {
         while (atnTrue() && clkTrue());
     }
-    
+
     void setDataTrue()
     {
         // set data pin as output
@@ -149,26 +149,26 @@ public:
         reg |= _dataPinMask;
         *_iecReg = reg;
     }
-    
+
     void setDataFalse()
     {
         unsigned char reg = *_iecReg;
         reg &= ~_dataPinMask;
         *_iecReg = reg;
     }
-    
+
     void waitForData()
     {
         //while ((*_iecInPort & _dataPinMask) != 0);
         while ((readDebounced() & _dataPinMask) != 0);
     }
-    
+
     void waitForNotData()
     {
         //while ((*_iecInPort & _dataPinMask) == 0);
         while ((readDebounced() & _dataPinMask) == 0);
     }
-    
+
     unsigned char readDataByte()
     {
         unsigned char byte = 0;
@@ -177,29 +177,29 @@ public:
             byte >>= 1;
             // wait for clock
             waitForNotClk();
-            
+
             // get bit
             if ((*_iecInPort & _dataPinMask) != 0)
             {
                 byte |= 0x80;
             }
-            
+
             waitForClk();
         }
-        
+
         return byte;
     }
-    
+
     unsigned char readByteWithHandshake(bool& lastByte)
     {
         unsigned char byte;
         lastByte = false;
         // wait for talker to be ready
         //waitForNotClk();
-        
+
         // signal ready by releasing data line
         setDataFalse();
-        
+
         // talker will pull clock to true in < 200us
         // if not, need to perform EOI (last byte)
         if (!waitForClk(200))
@@ -213,14 +213,14 @@ public:
             setDataFalse();
             waitForClk();
         }
-        
+
         byte = readDataByte();
-        
+
         setDataTrue();
-        
+
         return byte;
     }
-    
+
     void writeByte(unsigned char byte, bool lastByte)
     {
         if (lastByte)
@@ -228,19 +228,19 @@ public:
             // last byte, need to indicate eoi
             // wait at least 200 us
             _delay_us(200);
-            
+
             // wait for listener response
             waitForData();
             // wait for pulse to end
             waitForNotData();
         }
-        
+
         setClockTrue();
         _delay_us(40);
-        
+
         waitForNotData();
         _delay_us(21);
-        
+
         for (int i = 0; i < 8; i++)
         {
             _delay_us(45);
@@ -254,29 +254,29 @@ public:
                 setDataFalse();
             }
             byte >>= 1;
-         
+
             _delay_us(22);
-            
+
             setClockFalse();
-            
+
             _delay_us(75);
-            
+
             setClockTrue();
-            
+
             _delay_us(22);
-            
+
             setDataFalse();
-            
+
             _delay_us(14);
         }
-        
+
         waitForData();
-        
-        
+
+
         /*
         _delay_us(30);
         setClockTrue();
-        
+
         // output 8 bits
         for (int i = 0; i < 8; i++)
         {
@@ -290,30 +290,30 @@ public:
             {
                 setDataFalse();
             }
-            
+
             // shift byte
             byte >>= 1;
-            
+
             _delay_us(70);
             setClockFalse();
-            
+
             _delay_us(70);
             setClockTrue();
         }
         // release data line
         setDataFalse();
         _delay_us(20);
-        
+
         // wait for listener to accept
         waitForData();
         */
     }
-    
+
 private:
     volatile unsigned char* _iecOutPort;
     volatile unsigned char* _iecInPort;
     volatile unsigned char* _iecReg;
-    
+
     unsigned char _atnPinMask;
     unsigned char _clkPinMask;
     unsigned char _dataPinMask;
@@ -346,9 +346,9 @@ int main(void)
     PORTD = 0x00;
     dataPacket pkt;
     spi_data.spi_init();
-    
+
     c64iec iec(&PORTC, &PINC, &DDRC, PC0, PC1, PC2);
-    
+
     unsigned char bb;
     unsigned char temp;
     bool isLastByte;
@@ -358,26 +358,22 @@ int main(void)
     pkt.data_size = 0;
     pkt.atn_size = 0;
     pkt.device_id = C64_DRIVE_ID;
-    
+
     while (1)
     {
         if (state == WaitingForAtn)
         {
-            PORTD = 0x20;
-            
             iec.waitForAtn();
-            PORTD = 0x00;
-            
+
             // release clock
             //iec.setClockFalse();
-            
+
             iec.waitForClk();
             iec.setDataTrue();
             state = ReadingAtn;
         }
         if (state == ReadingAtn)
         {
-            PORTD = 0x20;
             iec.waitForNotAtnOrNotClk();
             if (iec.atnTrue())
             {
@@ -391,9 +387,9 @@ int main(void)
                 */
                 // read one atn byte
                 temp = iec.readByteWithHandshake(isLastByte);
-                
+
                 pkt.atn_buffer[pkt.atn_size++] = temp;
-                
+
                 if (temp >= LISTEN && temp < UNLISTEN)
                 {
                     // listen
@@ -419,7 +415,6 @@ int main(void)
                 state = nextState;
                 nextState = Unlisten;
             }
-            PORTD = 0x00;
         }
         else if (state == Listening)
         {
@@ -430,7 +425,7 @@ int main(void)
                 state = ReadingAtn;
                 continue;
             }
-            
+
             // if buffer is full, send now
             if (pkt.data_size == 128 || pkt.atn_size > 0)
             {
@@ -438,9 +433,9 @@ int main(void)
                 pkt.data_size = 0;
                 pkt.atn_size = 0;
             }
-            
+
             pkt.data_buffer[pkt.data_size++] = iec.readByteWithHandshake(isLastByte);
-            
+
             if (isLastByte)
             {
                 state = Unlisten;
@@ -451,14 +446,14 @@ int main(void)
             // talker will hold data line down
             // wait for talker to release clock line
             iec.waitForNotClk();
-            
+
             // release data line
             iec.setDataFalse();
-            
+
             // pull the clock line
             iec.setClockTrue();
             _delay_us(80);
-            
+
             state = Talking;
         }
         else if (state == Talking)
@@ -470,22 +465,21 @@ int main(void)
                 pgmindex = 0;
                 pkt.atn_size = 0;
             }
-            
+
             bool lastByte = ((pgmindex+1 == pkt.data_size) && pkt.is_last_data_buffer);
-            
+
             // indicate ready to send
             iec.setClockFalse();
-            
+
             // wait for listener to indicate ready
             iec.waitForNotData();
-            
+
             // if this is the final data buffer (indicated by server)
             // and this is the last byte in this data buffer, it's the last byte overall
             iec.writeByte(pkt.data_buffer[pgmindex++], lastByte);
-            
+
             if (lastByte)
             {
-                PORTD = 0x80;
                 pkt.data_size = 0;
                 state = Unlisten;
             }
@@ -501,7 +495,6 @@ int main(void)
             iec.setDataFalse();
             iec.setClockFalse();
             state = WaitingForAtn;
-            PORTD = 0x00;
         }
     }
 }

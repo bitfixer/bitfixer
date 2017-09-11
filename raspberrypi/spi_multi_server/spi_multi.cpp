@@ -34,10 +34,10 @@ void threadproc()
     {
         CommPort* port = server.getNewConnection();
         std::lock_guard<std::mutex> guard(mutex);
-        
+
         // get ID byte from service
         unsigned char tmp;
-        
+
         printf("reading id\n");
         int n = port->recv(&tmp, 1);
         printf("got id\n");
@@ -48,9 +48,9 @@ void threadproc()
             {
                 delete ports[tmp];
             }
-            
+
             ports[tmp] = port;
-            
+
             for (int i = 0; i < 2; i++)
             {
                 printf("reset device %d\n", i);
@@ -68,36 +68,36 @@ int main(int argc, char **argv)
     spiInfo[0].resetPin = 3;
     spiInfo[0].spiReqPin = 0;
     spiInfo[0].spiInterface = 0;
-    
+
     spiInfo[1].resetPin = 7;
     spiInfo[1].spiReqPin = 4;
     spiInfo[1].spiInterface = 1;
-     
+
     for (int i = 0; i < 256; i++)
     {
         ports[i] = NULL;
     }
-    
+
     server.init();
     std::thread thread(threadproc);
-    
+
     wiringPiSetup();
-    
+
     for (int i = 0; i < 2; i++)
     {
         pinMode(spiInfo[i].spiReqPin, INPUT);
         pullUpDnControl(spiInfo[i].spiReqPin, PUD_UP);
-        
+
         pinMode(spiInfo[i].resetPin, OUTPUT);
         pullUpDnControl(spiInfo[i].resetPin, PUD_OFF);
         digitalWrite(spiInfo[i].resetPin, LOW); // reset this device
-        
+
         int spi = wiringPiSPISetup(spiInfo[i].spiInterface, 2000000);
         spiInfo[i].spi_data = new rpiSpiData(spiInfo[i].spiReqPin, spi);
     }
-    
+
     delayMicroseconds(100000);
-    
+
     for (int i = 0; i < 2; i++)
     {
         digitalWrite(spiInfo[i].resetPin, HIGH);
@@ -106,7 +106,7 @@ int main(int argc, char **argv)
     printf("SPI server started.\n");
     delayMicroseconds(100000);
     unsigned char pkt[1025];
-    
+
     // test
     while (1)
     {
@@ -115,10 +115,10 @@ int main(int argc, char **argv)
             int recv_size = spiInfo[i].spi_data->receive(pkt);
             if (recv_size > 0)
             {
-                
+
                 printf("recv interface %d id %d %d %d bytes\n", i, pkt[0], pkt[1], recv_size);
                 unsigned char id = pkt[0];
-                
+
                 {
                     std::lock_guard<std::mutex> guard(mutex);
                     if (ports[id])
@@ -130,12 +130,12 @@ int main(int argc, char **argv)
                             delete ports[id];
                             ports[id] = NULL;
                         }
-                        
+
                         if (ports[id])
                         {
                             recv_size = ports[id]->recv(pkt, 1024);
                             printf("received %d bytes from %d\n", recv_size, id);
-                            
+
                             if (recv_size <= 0)
                             {
                                 delete ports[id];
@@ -144,11 +144,11 @@ int main(int argc, char **argv)
                         }
                     }
                 }
-                
+
                 spiInfo[i].spi_data->send(pkt, recv_size);
             }
         }
-        
+
         delayMicroseconds(10);
     }
     return 1;

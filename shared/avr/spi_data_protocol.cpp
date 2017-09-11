@@ -9,6 +9,8 @@
 #include "spi_data_protocol.h"
 #include <avr/io.h>
 
+//#define USE_READY 1
+
 unsigned char SPIData::spi_receive(void)
 {
     unsigned char data;
@@ -42,15 +44,10 @@ void SPIData::spi_init()
     *_readyReg = reg;
 
     // enable MISO as output
-    /*
-    reg = DDR_SPI;
-    reg |= 1<<DD_MISO;
-    DDR_SPI = reg;
-    */
     reg = *_spiReg;
     reg |= _spiMisoMask;
     *_spiReg = reg;
-     
+
     unsigned char port = *_readyOutPort;
     port |= _readyPinMask;
     *_readyOutPort = port;
@@ -72,17 +69,31 @@ int SPIData::sendAndRecvPacket(unsigned char* data, int send_size)
     size_bytes[0] = (send_size & 0xFF00) >> 8;
     size_bytes[1] = send_size & 0x00FF;
 
-    /*
-    // send ready byte
-    tmp = 0x12;
-    spi_transmit(tmp);
-    spi_transmit(tmp);
-    spi_transmit(tmp);
-    tmp = 0;
-    spi_transmit(tmp);
-    */
+    #ifdef USE_READY
+        *_readyOutPort = port;
+    #else
+        // send ready byte
 
-    *_readyOutPort = port;
+        PORTD = 0x80;
+        tmp = 0xFF;
+        spi_transmit(tmp);
+        PORTD = 0x00;
+
+        // send 3 byes 0xA5, align receiver
+        tmp = 0xA5;
+        spi_transmit(tmp);
+        PORTD = 0x80;
+        spi_transmit(tmp);
+        PORTD = 0x00;
+        spi_transmit(tmp);
+
+        // send 1 byte 0x5A, signal start of real data
+        tmp = 0x5A;
+        PORTD = 0x80;
+        spi_transmit(tmp);
+        PORTD = 0x00;
+    #endif
+
     spi_transmit(size_bytes[0]);
     spi_transmit(size_bytes[1]);
 
@@ -100,8 +111,11 @@ int SPIData::sendAndRecvPacket(unsigned char* data, int send_size)
     }
 
     port |= _readyPinMask;
-    // raise ready line
-    *_readyOutPort = port;
+
+    #ifdef USE_READY
+        // raise ready line
+        *_readyOutPort = port;
+    #endif
 
     // wait for one byte for sync
     tmp = spi_receive();
