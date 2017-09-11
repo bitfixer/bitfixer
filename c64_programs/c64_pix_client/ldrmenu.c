@@ -3,6 +3,8 @@
 #include <peekpoke.h>
 #include <string.h>
 #include <stdlib.h>
+#include <conio.h>
+
 //#include "../commands.h"
 
 #define PA2 0x04
@@ -19,6 +21,8 @@
 #define KEYCHECK 0xDC01
 #define KEYPRESS 0x00C5
 #define UPPER_RAM 0xC000
+
+unsigned char global_temp;
 
 typedef enum
 {
@@ -388,13 +392,34 @@ void playVideo(void)
     // return 1;
 }
 
+void getCursorLocation(unsigned char* x, unsigned char* y)
+{
+    asm("sec");
+    asm("jsr $FFF0");
+
+    asm("txa");
+    asm("sta %v", global_temp);
+    x = global_temp;
+    asm("tya");
+    asm("sta %v", global_temp);
+    y = global_temp;
+}
+
+int readString(unsigned char* data)
+{
+    unsigned char val, x, y;
+    *(unsigned char*)204 = 0;
+    val = *(unsigned char *)KEYPRESS;
+    while (val != 1)
+    {
+        val = *(unsigned char *)KEYPRESS;
+    }
+
+    getCursorLocation(&x, &y);
+}
 
 int main(void)
 {
-    unsigned base = 8192;
-    unsigned page = 16384;
-    unsigned char currpage;
-
     cmdPacket* pkt;
     vidResult* result;
     unsigned char val;
@@ -402,11 +427,11 @@ int main(void)
     int i;
     int numresults;
     unsigned char* data;
+    unsigned char x, y;
 
     init();
     textMode();
-    memset((unsigned char*)COLORRAM, 0, 1000);
-    //multicolorBitmapMode();
+    //memset((unsigned char*)COLORRAM, 0, 1000);
     data = (unsigned char*)malloc(256);
     pkt = (cmdPacket*)data;
 
@@ -416,14 +441,32 @@ int main(void)
     // get search term and send to rpi
     memset(pkt->data, 0, 64);
     //printf("Enter search term: ");
-    writeString("enter search term: ", 0, 5);
+    //writeString("enter search term: ", 0, 5);
+    clrscr();
+    chline(40);
+    cputs("Enter search term: ");
+    //getCursorLocation(&x, &y);
+    //writeString("Enter search term: ", 0, 0);
+    cursor(1);
+    i = 0;
+    pkt->data[i] = cgetc();
+    while (pkt->data[i] != '\n')
+    {
+        cputc(pkt->data[i]);
+        i++;
+        pkt->data[i] = cgetc();
+    }
+    pkt->data[i] = 0;
+    gotoxy(0, wherey()+1);
+    cputs("Searching for ");
+    cputs(pkt->data);
+    gotoxy(0, wherey()+1);
+
+    //printf("\ntyped %s\n", pkt->data);
+
     //count = scanf("%s", pkt->data);
-
-
-
-    /*
     //printf("Searching for %s..", pkt->data);
-    writeString("searching.", 0, 6);
+    //printf("Searching for %s..\n", pkt->data);
 
     pkt->len = strlen(pkt->data);
     pkt->cmd = 11;
@@ -432,13 +475,13 @@ int main(void)
     {
         send_command(data[i]);
     }
-    //printf("\n");
 
     // get response
     load_mem(data, 1);
     result = (vidResult*)data;
-    //printf("%d: %s\n", result->index, result->data);
-    writeString(result->data, 0, 7);
+    //cprintf("%d: %s", result->index, result->data);
+    cputs(result->data);
+    gotoxy(0, wherey()+1);
 
     numresults = result->numresults;
 
@@ -456,21 +499,21 @@ int main(void)
         }
         load_mem(data, 1);
         result = (vidResult*)data;
-        //printf("%d: %s\n", result->index, result->data);
-        writeString(result->data, 0, 8+i);
+        //cprintf("%d: %s", result->index, result->data);
+        cputs(result->data);
+        gotoxy(0, wherey()+1);
     }
 
     //printf("select video: ");
-    writeString("select:", 0, 12);
-    count = scanf("%d", &pkt->data[0]);
+    cputs("select video: ");
+    //count = scanf("%d", &pkt->data[0]);
+    pkt->data[0] = cgetc() - '0';
     pkt->cmd = 12;
     pkt->len = 1;
-
     sendPacket(pkt);
 
+    //playVideo();
 
-    playVideo();
-    */
     free(data);
     return 0;
 }

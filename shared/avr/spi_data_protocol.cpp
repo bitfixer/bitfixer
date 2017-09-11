@@ -73,25 +73,19 @@ int SPIData::sendAndRecvPacket(unsigned char* data, int send_size)
         *_readyOutPort = port;
     #else
         // send ready byte
-
-        PORTD = 0x80;
         tmp = 0xFF;
+        // clear SPI flag by sending FF (same as no response)
         spi_transmit(tmp);
-        PORTD = 0x00;
 
         // send 3 byes 0xA5, align receiver
         tmp = 0xA5;
         spi_transmit(tmp);
-        PORTD = 0x80;
         spi_transmit(tmp);
-        PORTD = 0x00;
         spi_transmit(tmp);
 
         // send 1 byte 0x5A, signal start of real data
         tmp = 0x5A;
-        PORTD = 0x80;
         spi_transmit(tmp);
-        PORTD = 0x00;
     #endif
 
     spi_transmit(size_bytes[0]);

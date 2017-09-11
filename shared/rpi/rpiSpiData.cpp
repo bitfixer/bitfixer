@@ -25,7 +25,6 @@ int rpiSpiData::receive(unsigned char* buffer)
     return receive_sync(buffer);
 }
 
-
 int rpiSpiData::receive_sync(unsigned char* buffer)
 {
     // wait for device to signal ready
@@ -35,7 +34,6 @@ int rpiSpiData::receive_sync(unsigned char* buffer)
             delayMicroseconds(5);
         }
     #else
-        //printf("hey!\n");
         unsigned char tmp;
         read(_spi, &tmp, 1);
         while (tmp != 0xA5)
@@ -54,7 +52,6 @@ int rpiSpiData::receive_sync(unsigned char* buffer)
     unsigned char size_bytes[2];
     read(_spi, &size_bytes[0], 1);
     read(_spi, &size_bytes[1], 1);
-    //printf("got %X %X\n", size_bytes[0], size_bytes[1]);
 
     int size = (size_bytes[0] << 8) + size_bytes[1];
 

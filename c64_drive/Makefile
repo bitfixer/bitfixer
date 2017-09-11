@@ -24,7 +24,7 @@ SPAREPORT = $(shell cat spare.port)
 DEVICE     = atmega168
 CLOCK      = 8000000
 #PROGRAMMER = -c stk500v2 -P $(MASTERPORT)
-PROGRAMMER = -c linuxspi -P /dev/spidev0.0
+PROGRAMMER = -c linuxspi -P /dev/spidev0.1
 OBJECTS    = c64drive.o ../shared/avr/spi_data_protocol.o
 FUSES      = -U efuse:w:0x01:m -U hfuse:w:0xdf:m -U lfuse:w:0xe2:m
 
