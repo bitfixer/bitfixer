@@ -324,7 +324,7 @@ void playVideo(void)
     int j;
     bool done = false;
 
-    init();
+    //init();
 
     // set bitmap at 8192
     addr = (unsigned char *)BITMAP_LOCATION_REG;
@@ -462,12 +462,6 @@ int main(void)
     cputs(pkt->data);
     gotoxy(0, wherey()+1);
 
-    //printf("\ntyped %s\n", pkt->data);
-
-    //count = scanf("%s", pkt->data);
-    //printf("Searching for %s..", pkt->data);
-    //printf("Searching for %s..\n", pkt->data);
-
     pkt->len = strlen(pkt->data);
     pkt->cmd = 11;
     count = 2 + pkt->len;
@@ -479,7 +473,6 @@ int main(void)
     // get response
     load_mem(data, 1);
     result = (vidResult*)data;
-    //cprintf("%d: %s", result->index, result->data);
     cputs(result->data);
     gotoxy(0, wherey()+1);
 
@@ -511,8 +504,9 @@ int main(void)
     pkt->cmd = 12;
     pkt->len = 1;
     sendPacket(pkt);
+    load_mem(data, 1);
 
-    //playVideo();
+    playVideo();
 
     free(data);
     return 0;
