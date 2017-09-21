@@ -55,7 +55,7 @@ int NetPort::recv(unsigned char *data, int length)
         net::Address addr;
         int ret = socket.Receive(addr, data, length);
         
-        printf("addr %d %d %d %d : %d\n", addr.GetA(), addr.GetB(), addr.GetC(), addr.GetD(), ret);
+        //printf("addr %d %d %d %d : %d\n", addr.GetA(), addr.GetB(), addr.GetC(), addr.GetD(), ret);
         return ret;
     }
 }
@@ -73,7 +73,7 @@ int NetPort::recv_sync(unsigned char *data, int length, int timeout_ms)
         }
     }
     
-    printf("addr %d %d %d %d port %d : %d\n", addr.GetA(), addr.GetB(), addr.GetC(), addr.GetD(), addr.GetPort(), ret);
+    //printf("addr %d %d %d %d port %d : %d\n", addr.GetA(), addr.GetB(), addr.GetC(), addr.GetD(), addr.GetPort(), ret);
     return ret;
 }
 

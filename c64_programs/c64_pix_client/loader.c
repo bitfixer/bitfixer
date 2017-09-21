@@ -319,6 +319,8 @@ int main(void)
         }
 
         send_command(0);
+        send_command(0);
+        
         set_userport_input();
         load_mem(SCREENRAM+(currpage*page), 4);
         set_userport_output();
@@ -326,6 +328,8 @@ int main(void)
         for (j = 1; j < 9; j++)
         {
             send_command(j);
+            send_command(0);
+            
             set_userport_input();
             load_mem(base+(currpage*page)+((j-1)*1024), 4);
             set_userport_output();
@@ -337,30 +341,6 @@ int main(void)
         if (currpage > 1)
             currpage = 0;
     }
-    
-    /*
-    // TEST switching between text and graphics modes
-    while (1)
-    {
-        // check for keypress
-        val = *(unsigned char *)KEYPRESS;
-        if (val == 62)
-        {
-            // quit
-            break;
-        }
-        else if (val == 10)
-        {
-            textMode();
-        }
-        else if (val == 13)
-        {
-            multicolorBitmapMode();
-        }
-        
-        send_command(0);
-    }
-    */
      
     set_vic_bank(0);
     return 1;
