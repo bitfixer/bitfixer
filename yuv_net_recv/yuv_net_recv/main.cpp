@@ -7,8 +7,9 @@
 //
 
 #include <iostream>
-#include "Netport.h"
+#include "NetPort.h"
 #include "timer.hpp"
+#include <string.h>
 
 typedef struct {
     unsigned char frame;
