@@ -1,0 +1,1 @@
+../yuv_net_recv/yuv_net_recv | avconv -f rawvideo -pixel_format yuv420p -s:v 320x200 -i - -pix_fmt rgb24 -f rawvideo pipe:1 2> /dev/null | ./imconv c64 6 2> /dev/null | ../c64_video_timed_writer/c64_video_timed_writer
