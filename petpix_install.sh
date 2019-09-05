@@ -20,10 +20,10 @@ rm ngrok-stable-linux-arm.zip
 cp /boot/config.txt config.txt; echo "core_freq=250" >> config.txt
 cp config.txt /boot/config.txt
 rm config.txt
-#cp /boot/cmdline.txt cmdline.txt; echo "spidev.bufsiz=65535 " >> cmdline.txt; tr -d '\n' < cmdline.txt > cmdline_new.txt
-#cp cmdline_new.txt /boot/cmdline.txt
-#rm cmdline.txt; rm cmdline_new.txt
+echo "spidev.bufsiz=65535" `cat /boot/cmdline.txt` > cmdline.txt
+cp cmdline.txt /boot/cmdline.txt
+rm cmdline.txt
 
-#git clone https://github.com/bitfixer/petpix_v2.git
-#cd petpix_v2
-#make all
+git clone https://github.com/bitfixer/petpix_v2.git
+cd petpix_v2
+make all
